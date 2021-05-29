@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.indexer.searches;
 
@@ -36,19 +36,19 @@ import java.util.Set;
 public abstract class SearchesClusterConfig {
     private static final Period DEFAULT_QUERY_TIME_RANGE_LIMIT = Period.ZERO;
     private static final Map<Period, String> DEFAULT_RELATIVE_TIMERANGE_OPTIONS = ImmutableMap.<Period, String>builder()
-            .put(Period.minutes(5), "Search in the last 5 minutes")
-            .put(Period.minutes(15), "Search in the last 15 minutes")
-            .put(Period.minutes(30), "Search in the last 30 minutes")
-            .put(Period.hours(1), "Search in the last 1 hour")
-            .put(Period.hours(2), "Search in the last 2 hours")
-            .put(Period.hours(8), "Search in the last 8 hours")
-            .put(Period.days(1), "Search in the last 1 day")
-            .put(Period.days(2), "Search in the last 2 days")
-            .put(Period.days(5), "Search in the last 5 days")
-            .put(Period.days(7), "Search in the last 7 days")
-            .put(Period.days(14), "Search in the last 14 days")
-            .put(Period.days(30), "Search in the last 30 days")
-            .put(Period.ZERO, "Search in all messages")
+            .put(Period.minutes(5), "5 minutes")
+            .put(Period.minutes(15), "15 minutes")
+            .put(Period.minutes(30), "30 minutes")
+            .put(Period.hours(1), "1 hour")
+            .put(Period.hours(2), "2 hours")
+            .put(Period.hours(8), "8 hours")
+            .put(Period.days(1), "1 day")
+            .put(Period.days(2), "2 days")
+            .put(Period.days(5), "5 days")
+            .put(Period.days(7), "7 days")
+            .put(Period.days(14), "14 days")
+            .put(Period.days(30), "30 days")
+            .put(Period.ZERO, "all messages")
             .build();
     private static final Map<Period, String> DEFAULT_SURROUNDING_TIMERANGE_OPTIONS = ImmutableMap.<Period, String>builder()
             .put(Period.seconds(1), "1 second")

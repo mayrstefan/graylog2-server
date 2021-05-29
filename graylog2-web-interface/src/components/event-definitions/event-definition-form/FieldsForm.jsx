@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
@@ -30,11 +46,13 @@ class FieldsForm extends React.Component {
   removeCustomField = (fieldName) => {
     const { eventDefinition, onChange } = this.props;
     const nextFieldSpec = lodash.omit(eventDefinition.field_spec, fieldName);
+
     onChange('field_spec', nextFieldSpec);
 
     // Filter out all non-existing field names from key_spec
     const fieldNames = Object.keys(nextFieldSpec);
     const nextKeySpec = eventDefinition.key_spec.filter((key) => fieldNames.includes(key));
+
     onChange('key_spec', nextKeySpec);
   };
 
@@ -43,16 +61,19 @@ class FieldsForm extends React.Component {
     const nextFieldSpec = (prevFieldName === fieldName
       ? lodash.cloneDeep(eventDefinition.field_spec)
       : lodash.omit(eventDefinition.field_spec, prevFieldName));
+
     nextFieldSpec[fieldName] = config;
     onChange('field_spec', nextFieldSpec);
 
     // Filter out all non-existing field names from key_spec and the current field name
     const fieldNames = Object.keys(nextFieldSpec);
     let nextKeySpec = eventDefinition.key_spec.filter((key) => fieldNames.includes(key) && key !== fieldName);
+
     if (isKey) {
       // Add key to its new position
       nextKeySpec = [...nextKeySpec.slice(0, keyPosition), fieldName, ...nextKeySpec.slice(keyPosition)];
     }
+
     onChange('key_spec', nextKeySpec);
 
     this.toggleFieldForm();
@@ -60,6 +81,7 @@ class FieldsForm extends React.Component {
 
   toggleFieldForm = (fieldName) => {
     const { showFieldForm } = this.state;
+
     this.setState({ showFieldForm: !showFieldForm, editField: showFieldForm ? undefined : fieldName });
   };
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -42,7 +58,7 @@ const SidecarConfig = createReactClass({
     };
   },
 
-  componentWillReceiveProps(newProps) {
+  UNSAFE_componentWillReceiveProps(newProps) {
     this.setState({ config: ObjectUtils.clone(newProps.config) });
   },
 
@@ -68,11 +84,13 @@ const SidecarConfig = createReactClass({
   _onUpdate(field) {
     return (value) => {
       const update = ObjectUtils.clone(this.state.config);
+
       if (typeof value === 'object') {
         update[field] = FormUtils.getValueFromInput(value.target);
       } else {
         update[field] = value;
       }
+
       this.setState({ config: update });
     };
   },
@@ -88,6 +106,7 @@ const SidecarConfig = createReactClass({
   _updateIntervalValidator(milliseconds) {
     const inactiveMilliseconds = this._durationMilliseconds(this.state.config.sidecar_inactive_threshold);
     const expirationMilliseconds = this._durationMilliseconds(this.state.config.sidecar_expiration_threshold);
+
     return milliseconds >= 1000 && milliseconds < inactiveMilliseconds && milliseconds < expirationMilliseconds;
   },
 

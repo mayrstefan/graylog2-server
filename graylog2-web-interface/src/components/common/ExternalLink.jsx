@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
@@ -24,26 +40,27 @@ class ExternalLink extends React.Component {
   static defaultProps = {
     href: '',
     target: '_blank',
-    iconClass: 'external-link',
+    iconClass: 'external-link-alt',
     className: '',
   };
 
   render() {
+    const { children, className, href, iconClass, target } = this.props;
     const content = (
       <span>
-        {this.props.children}
+        {children}
         &nbsp;
-        <Icon name={this.props.iconClass} />
+        <Icon name={iconClass} />
       </span>
     );
 
     // This makes the component usable as child element of a component that already renders a link (e.g. MenuItem)
-    if (_.trim(this.props.href) === '') {
+    if (_.trim(href) === '') {
       return content;
     }
 
     return (
-      <a href={this.props.href} target={this.props.target} className={this.props.className}>
+      <a href={href} target={target} className={className}>
         {content}
       </a>
     );

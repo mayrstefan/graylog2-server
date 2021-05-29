@@ -1,23 +1,24 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.plugin;
 
 import com.codahale.metrics.Meter;
 import com.eaio.uuid.UUID;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
@@ -29,6 +30,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.common.net.InetAddresses;
 import org.graylog2.indexer.IndexSet;
+import org.graylog2.indexer.messages.Indexable;
 import org.graylog2.plugin.streams.Stream;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
@@ -61,12 +63,17 @@ import java.util.regex.Pattern;
 
 import static com.google.common.base.Predicates.equalTo;
 import static com.google.common.base.Predicates.not;
+import static org.graylog.schema.GraylogSchemaFields.FIELD_ILLUMINATE_EVENT_CATEGORY;
+import static org.graylog.schema.GraylogSchemaFields.FIELD_ILLUMINATE_EVENT_SUBCATEGORY;
+import static org.graylog.schema.GraylogSchemaFields.FIELD_ILLUMINATE_EVENT_TYPE;
+import static org.graylog.schema.GraylogSchemaFields.FIELD_ILLUMINATE_EVENT_TYPE_CODE;
+import static org.graylog.schema.GraylogSchemaFields.FIELD_ILLUMINATE_TAGS;
 import static org.graylog2.plugin.Tools.ES_DATE_FORMAT_FORMATTER;
 import static org.graylog2.plugin.Tools.buildElasticSearchTimeFormat;
 import static org.joda.time.DateTimeZone.UTC;
 
 @NotThreadSafe
-public class Message implements Messages {
+public class Message implements Messages, Indexable {
     private static final Logger LOG = LoggerFactory.getLogger(Message.class);
 
     /**
@@ -203,6 +210,15 @@ public class Message implements Messages {
         FIELD_GL2_SOURCE_RADIO_INPUT
     );
 
+    // Graylog Illuminate Fields
+    private static final Set<String> ILLUMINATE_FIELDS = ImmutableSet.of(
+            FIELD_ILLUMINATE_EVENT_CATEGORY,
+            FIELD_ILLUMINATE_EVENT_SUBCATEGORY,
+            FIELD_ILLUMINATE_EVENT_TYPE,
+            FIELD_ILLUMINATE_EVENT_TYPE_CODE,
+            FIELD_ILLUMINATE_TAGS
+    );
+
     private static final ImmutableSet<String> CORE_MESSAGE_FIELDS = ImmutableSet.of(
         FIELD_MESSAGE,
         FIELD_SOURCE,
@@ -255,7 +271,7 @@ public class Message implements Messages {
      * The offset the message originally had in the journal it was read from. This will be MIN_VALUE if no journal
      * was involved.
      */
-    private long journalOffset = Long.MIN_VALUE;
+    private Object messageQueueId;
 
     private DateTime receiveTime;
     private DateTime processingTime;
@@ -341,15 +357,18 @@ public class Message implements Messages {
         return sb.toString();
     }
 
+    @Override
     public String getId() {
         return getFieldAs(String.class, FIELD_ID);
     }
 
+    @Override
     public DateTime getTimestamp() {
         return getFieldAs(DateTime.class, FIELD_TIMESTAMP).withZone(UTC);
     }
 
-    public Map<String, Object> toElasticSearchObject(@Nonnull final Meter invalidTimestampMeter) {
+    @Override
+    public Map<String, Object> toElasticSearchObject(ObjectMapper objectMapper, @Nonnull final Meter invalidTimestampMeter) {
         final Map<String, Object> obj = Maps.newHashMapWithExpectedSize(REQUIRED_FIELDS.size() + fields.size());
 
         for (Map.Entry<String, Object> entry : fields.entrySet()) {
@@ -542,7 +561,7 @@ public class Message implements Messages {
 
     private void updateSize(String fieldName, Object newValue, Object previousValue) {
         // don't count internal fields
-        if (GRAYLOG_FIELDS.contains(fieldName)) {
+        if (GRAYLOG_FIELDS.contains(fieldName) || ILLUMINATE_FIELDS.contains(fieldName)) {
             return;
         }
         long newValueSize = 0;
@@ -581,6 +600,7 @@ public class Message implements Messages {
         return valueSize;
     }
 
+    @Override
     public long getSize() {
         return sizeCounter.getCount();
     }
@@ -789,13 +809,30 @@ public class Message implements Messages {
     }
 
     public void setJournalOffset(long journalOffset) {
-        this.journalOffset = journalOffset;
+        this.messageQueueId = journalOffset;
     }
 
+    /**
+     * @deprecated Use {@link #getMessageQueueId()} instead.
+     */
+    @Deprecated
     public long getJournalOffset() {
-        return journalOffset;
+        if (messageQueueId == null) {
+            return Long.MIN_VALUE;
+        }
+        return (long) messageQueueId;
     }
 
+    public void setMessageQueueId(Object messageQueueId) {
+        this.messageQueueId = messageQueueId;
+    }
+
+    @Nullable
+    public Object getMessageQueueId() {
+        return messageQueueId;
+    }
+
+    @Override
     @Nullable
     public DateTime getReceiveTime() {
         return receiveTime;
@@ -823,13 +860,17 @@ public class Message implements Messages {
     // helper methods to optionally record timing information per message, useful for debugging or benchmarking
     // not thread safe!
     public void recordTiming(ServerStatus serverStatus, String name, long elapsedNanos) {
-        if (shouldNotRecord(serverStatus)) return;
+        if (shouldNotRecord(serverStatus)) {
+            return;
+        }
         lazyInitRecordings();
         recordings.add(Recording.timing(name, elapsedNanos));
     }
 
     public void recordCounter(ServerStatus serverStatus, String name, int counter) {
-        if (shouldNotRecord(serverStatus)) return;
+        if (shouldNotRecord(serverStatus)) {
+            return;
+        }
         lazyInitRecordings();
         recordings.add(Recording.counter(name, counter));
     }

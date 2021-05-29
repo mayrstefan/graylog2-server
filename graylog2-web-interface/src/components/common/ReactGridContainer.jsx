@@ -1,8 +1,24 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import { isEqual } from 'lodash';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
@@ -11,12 +27,14 @@ const WidthAdjustedReactGridLayout = WidthProvider(Responsive);
 
 const WidthProvidedGridLayout = (props) => {
   const { width } = props;
+
   return width ? <Responsive {...props} /> : <WidthAdjustedReactGridLayout {...props} />;
 };
+
 WidthProvidedGridLayout.propTypes = { width: PropTypes.number };
 WidthProvidedGridLayout.defaultProps = { width: undefined };
 
-const StyledWidthProvidedGridLayout = styled(WidthProvidedGridLayout)(({ theme }) => `
+const StyledWidthProvidedGridLayout = styled(WidthProvidedGridLayout)(({ theme }) => css`
   &.locked {
     .widget-drag-handle {
       display: none;
@@ -30,7 +48,7 @@ const StyledWidthProvidedGridLayout = styled(WidthProvidedGridLayout)(({ theme }
   }
 
   .react-grid-item.react-grid-placeholder {
-    background: ${theme.color.variant.info};
+    background: ${theme.colors.variant.info};
   }
 
   .actions {
@@ -59,14 +77,18 @@ const BREAKPOINTS = {
   xs: COLUMN_WIDTH * COLUMNS.xs,
 };
 
-const _gridClass = (locked, isResizable, useDragHandle) => {
+const _gridClass = (locked, isResizable, useDragHandle, propsClassName) => {
+  const className = `${propsClassName}`;
+
   if (locked || !isResizable) {
-    return 'locked';
+    return `${className} locked`;
   }
+
   if (useDragHandle) {
-    return '';
+    return className;
   }
-  return 'unlocked';
+
+  return `${className} unlocked`;
 };
 
 /**
@@ -98,6 +120,10 @@ class ReactGridContainer extends React.Component {
      * right value, the positioning will be wrong.
      */
     children: PropTypes.node.isRequired,
+    /**
+     * The className prop is necessary to style the component with styled-components `styled()` function.
+     */
+    className: PropTypes.string,
     /**
      * Function that will be called when positions change. The function
      * receives the new positions in the format:
@@ -163,26 +189,28 @@ class ReactGridContainer extends React.Component {
   };
 
   static defaultProps = {
-    locked: false,
-    isResizable: true,
-    rowHeight: ROW_HEIGHT,
+    animate: false,
+    className: undefined,
     columns: COLUMNS,
-    animate: true,
-    useDragHandle: undefined,
+    isResizable: true,
+    locked: false,
     measureBeforeMount: false,
+    rowHeight: ROW_HEIGHT,
+    useDragHandle: undefined,
     width: undefined,
   };
 
   constructor(props) {
     super(props);
+
     this.state = {
       layout: this.computeLayout(props.positions),
     };
   }
 
-  // eslint-disable-next-line camelcase
   UNSAFE_componentWillReceiveProps(nextProps) {
     const { positions } = this.props;
+
     if (!isEqual(nextProps.positions, positions)) {
       this.setState({ layout: this.computeLayout(nextProps.positions) });
     }
@@ -191,6 +219,7 @@ class ReactGridContainer extends React.Component {
   computeLayout = (positions) => {
     return Object.keys(positions).map((id) => {
       const { col, row, height, width } = positions[id];
+
       return {
         i: id,
         x: col ? Math.max(col - 1, 0) : 0,
@@ -206,11 +235,13 @@ class ReactGridContainer extends React.Component {
     // Filter out additional Object properties in nextLayout, as it comes directly from react-grid-layout
     const filteredNewLayout = newLayout.map((item) => ({ i: item.i, x: item.x, y: item.y, h: item.h, w: item.w }));
     const { layout } = this.state;
+
     if (isEqual(layout, filteredNewLayout)) {
       return;
     }
 
     const newPositions = [];
+
     newLayout.forEach((widget) => {
       newPositions.push({
         id: widget.i,
@@ -222,24 +253,26 @@ class ReactGridContainer extends React.Component {
     });
 
     const { onPositionsChange } = this.props;
+
     onPositionsChange(newPositions);
   };
 
   render() {
-    const { children, width, locked, isResizable, rowHeight, columns, animate, useDragHandle, measureBeforeMount } = this.props;
+    const { children, width, locked, isResizable, rowHeight, columns, animate, useDragHandle, measureBeforeMount, className } = this.props;
     const { layout } = this.state;
 
     // We need to use a className and draggableHandle to avoid re-rendering all graphs on lock/unlock. See:
     // https://github.com/STRML/react-grid-layout/issues/371
     return (
-      <StyledWidthProvidedGridLayout className={_gridClass(locked, isResizable, useDragHandle)}
+      <StyledWidthProvidedGridLayout className={_gridClass(locked, isResizable, useDragHandle, className)}
                                      width={width}
                                      layouts={{ xxl: layout, xl: layout, lg: layout, md: layout, sm: layout, xs: layout }}
                                      breakpoints={BREAKPOINTS}
                                      cols={columns}
                                      rowHeight={rowHeight}
                                      containerPadding={[0, 0]}
-                                     margin={[10, 10]}
+                                     margin={[6, 6]}
+                                     isResizable={isResizable}
                                      measureBeforeMount={measureBeforeMount}
         // Do not allow dragging from elements inside a `.actions` css class. This is
         // meant to avoid calling `onDragStop` callbacks when clicking on an action button.

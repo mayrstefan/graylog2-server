@@ -1,16 +1,31 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import Immutable from 'immutable';
-import { Link } from 'react-router';
 
+import { Link } from 'components/graylog/router';
 import { Button, ButtonGroup, Col, Label, MessageDetailsDefinitionList, Row } from 'components/graylog';
 import { ClipboardButton, Icon, Timestamp } from 'components/common';
-
 import StreamLink from 'components/streams/StreamLink';
 import MessageFields from 'components/search/MessageFields';
 import MessageDetailsTitle from 'components/search/MessageDetailsTitle';
-
 import Routes from 'routing/Routes';
+import AppConfig from 'util/AppConfig';
 
 class MessageDetail extends React.Component {
   static propTypes = {
@@ -31,6 +46,7 @@ class MessageDetail extends React.Component {
   _inputName = (inputId) => {
     const { inputs } = this.props;
     const input = inputs.get(inputId);
+
     return input ? <span style={{ wordBreak: 'break-word' }}>{input.title}</span> : 'deleted input';
   };
 
@@ -41,22 +57,29 @@ class MessageDetail extends React.Component {
 
     if (node) {
       const nodeURL = Routes.node(nodeId);
-      nodeInformation = (
-        <a href={nodeURL}>
-          <Icon name="code-fork" />
+
+      const nodeContent = (
+        <>
+          <Icon name="code-branch" />
           &nbsp;
           <span style={{ wordBreak: 'break-word' }}>{node.short_node_id}</span>&nbsp;/&nbsp;
           <span style={{ wordBreak: 'break-word' }}>{node.hostname}</span>
-        </a>
+        </>
       );
+
+      nodeInformation = AppConfig.isCloud()
+        ? nodeContent
+        : <a href={nodeURL}>{nodeContent}</a>;
     } else {
       nodeInformation = <span style={{ wordBreak: 'break-word' }}>stopped node</span>;
     }
+
     return nodeInformation;
   };
 
   _formatMessageActions = () => {
     const { message, customFieldActions } = this.props;
+
     if (!customFieldActions) {
       return <ButtonGroup className="pull-right" bsSize="small" />;
     }
@@ -67,7 +90,7 @@ class MessageDetail extends React.Component {
       <ButtonGroup className="pull-right" bsSize="small">
         <Button href={messageUrl}>Permalink</Button>
 
-        <ClipboardButton title="Copy ID" text={message.id} />
+        <ClipboardButton title="Copy ID" bsSize="small" text={message.id} />
       </ButtonGroup>
     );
   };
@@ -78,9 +101,11 @@ class MessageDetail extends React.Component {
     const streams = streamIds.map((id) => {
       // eslint-disable-next-line react/destructuring-assignment
       const stream = this.props.streams.get(id);
+
       if (stream !== undefined) {
         return <li key={stream.id}><StreamLink stream={stream} /></li>;
       }
+
       return null;
     });
 

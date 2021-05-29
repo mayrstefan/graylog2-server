@@ -1,10 +1,26 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import { Spinner } from 'components/common';
-
 import connect from 'stores/connect';
 import CombinedProvider from 'injection/CombinedProvider';
+
 import EventNotifications from './EventNotifications';
 
 // Import built-in Event Notification Types
@@ -45,12 +61,14 @@ class EventNotificationsContainer extends React.Component {
 
   handlePageChange = (nextPage, nextPageSize) => {
     const { notifications } = this.props;
+
     this.fetchData({ page: nextPage, pageSize: nextPageSize, query: notifications.query });
   };
 
   handleQueryChange = (nextQuery, callback = () => {}) => {
     const { notifications } = this.props;
     const promise = this.fetchData({ query: nextQuery, pageSize: notifications.pagination.pageSize });
+
     promise.finally(callback);
   };
 
@@ -70,7 +88,9 @@ class EventNotificationsContainer extends React.Component {
       if (this.testPromise) {
         this.testPromise.cancel();
       }
+
       this.testPromise = EventNotificationsActions.testPersisted(definition);
+
       this.testPromise
         .then(
           (response) => {
@@ -80,13 +100,16 @@ class EventNotificationsContainer extends React.Component {
               error: false,
               message: 'Notification was executed successfully.',
             };
+
             return response;
           },
           (errorResponse) => {
             testResult = { isLoading: false, id: definition.id, error: true };
+
             if (errorResponse.status !== 400 || !errorResponse.additional.body || !errorResponse.additional.body.failed) {
               testResult.message = errorResponse.responseMessage || 'Unknown errorResponse, please check your Graylog server logs.';
             }
+
             return errorResponse;
           },
         )

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -49,7 +65,7 @@ class SelectableList extends React.Component {
     idKey: 'value',
   };
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     if (this.props.selectedOptions !== nextProps.selectedOptions) {
       this.select.clearValue();
     }
@@ -69,6 +85,7 @@ class SelectableList extends React.Component {
     }
 
     const newSelectedOptions = this.props.selectedOptions.slice();
+
     if (this.props.selectedOptionsType === 'string') {
       newSelectedOptions.push(option);
     } else {
@@ -83,6 +100,7 @@ class SelectableList extends React.Component {
   _onRemoveOption = (optionIndex) => {
     return () => {
       const newSelectedOptions = this.props.selectedOptions.filter((_, idx) => idx !== optionIndex);
+
       if (typeof this.props.onChange === 'function') {
         this.props.onChange(newSelectedOptions);
       }
@@ -100,6 +118,7 @@ class SelectableList extends React.Component {
         </ListGroupItem>
       );
     });
+
     return (
       <div>
         <Select ref={(select) => { this.select = select; }} autoFocus={this.props.autoFocus} options={this.props.options} onChange={this._onAddOption} clearable={false} />

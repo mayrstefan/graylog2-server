@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 const compareIconNames = [
   { v4: 'address-book-o', v5: 'address-book' },
   { v4: 'address-card-o', v5: 'address-card' },
@@ -45,9 +61,7 @@ const compareIconNames = [
   { v4: 'circle-o', v5: 'circle' },
   { v4: 'circle-o-notch', v5: 'circle-notch' },
   { v4: 'circle-thin', v5: 'circle' },
-  { v4: 'clipboard', v5: 'clipboard' },
   { v4: 'clock-o', v5: 'clock' },
-  { v4: 'clone', v5: 'clone' },
   { v4: 'close', v5: 'times' },
   { v4: 'cloud-download', v5: 'cloud-download-alt' },
   { v4: 'cloud-upload', v5: 'cloud-upload-alt' },
@@ -57,9 +71,6 @@ const compareIconNames = [
   { v4: 'commenting', v5: 'comment-dots' },
   { v4: 'commenting-o', v5: 'comment-dots' },
   { v4: 'comments-o', v5: 'comments' },
-  { v4: 'compass', v5: 'compass' },
-  { v4: 'copyright', v5: 'copyright' },
-  { v4: 'credit-card', v5: 'credit-card' },
   { v4: 'credit-card-alt', v5: 'credit-card' },
   { v4: 'cutlery', v5: 'utensils' },
   { v4: 'dashboard', v5: 'tachometer-alt' },

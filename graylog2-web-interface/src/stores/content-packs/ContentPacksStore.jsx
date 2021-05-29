@@ -1,10 +1,25 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import Reflux from 'reflux';
 
-import URLUtils from 'util/URLUtils';
+import * as URLUtils from 'util/URLUtils';
 import ApiRoutes from 'routing/ApiRoutes';
 import fetch from 'logic/rest/FetchProvider';
 import ActionsProvider from 'injection/ActionsProvider';
-
 import ContentPackRevisions from 'logic/content-packs/ContentPackRevisions';
 
 const ContentPacksActions = ActionsProvider.getActions('ContentPacks');
@@ -23,6 +38,7 @@ const ContentPacksStore = Reflux.createStore({
           selectedVersion: contentPackRevision.latestRevision,
           constraints: constraints,
         };
+
         this.trigger(result);
 
         return result;
@@ -36,6 +52,7 @@ const ContentPacksStore = Reflux.createStore({
     const promise = fetch('GET', url)
       .then((result) => {
         this.trigger({ contentPack: result.content_pack });
+
         return result;
       });
 
@@ -62,11 +79,13 @@ const ContentPacksStore = Reflux.createStore({
 
   delete(contentPackId) {
     const promise = fetch('DELETE', URLUtils.qualifyUrl(ApiRoutes.ContentPacksController.delete(contentPackId).url));
+
     ContentPacksActions.delete.promise(promise);
   },
 
   deleteRev(contentPackId, revision) {
     const promise = fetch('DELETE', URLUtils.qualifyUrl(ApiRoutes.ContentPacksController.deleteRev(contentPackId, revision).url));
+
     ContentPacksActions.deleteRev.promise(promise);
   },
 
@@ -88,6 +107,7 @@ const ContentPacksStore = Reflux.createStore({
   },
   uninstall(contentPackId, installId) {
     const promise = fetch('DELETE', URLUtils.qualifyUrl(ApiRoutes.ContentPacksController.uninstall(contentPackId, installId).url));
+
     ContentPacksActions.uninstall.promise(promise);
   },
   uninstallDetails(contentPackId, installId) {

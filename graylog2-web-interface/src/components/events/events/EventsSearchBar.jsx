@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import moment from 'moment';
@@ -6,7 +22,7 @@ import lodash from 'lodash';
 import { ButtonGroup, ControlLabel, FormControl, FormGroup, Button } from 'components/graylog';
 import { SearchForm, TimeUnitInput, Icon } from 'components/common';
 import { extractDurationAndUnit } from 'components/common/TimeUnitInput';
-import FormsUtils from 'util/FormsUtils';
+import * as FormsUtils from 'util/FormsUtils';
 
 import styles from './EventsSearchBar.css';
 
@@ -39,12 +55,14 @@ class EventsSearchBar extends React.Component {
   updateSearchTimeRange = (nextValue, nextUnit) => {
     const { onTimeRangeChange } = this.props;
     const durationInSeconds = moment.duration(lodash.max([nextValue, 1]), nextUnit).asSeconds();
+
     onTimeRangeChange('relative', durationInSeconds);
     this.setState({ timeRangeDuration: nextValue, timeRangeUnit: nextUnit });
   };
 
   handlePageSizeChange = (event) => {
     const { onPageSizeChange } = this.props;
+
     onPageSizeChange(FormsUtils.getValueFromInput(event.target));
   };
 
@@ -55,6 +73,7 @@ class EventsSearchBar extends React.Component {
   handleSearchReload = () => {
     this.setState({ isReloadingResults: true });
     const { onSearchReload } = this.props;
+
     onSearchReload(this.resetLoadingState);
   };
 
@@ -77,7 +96,7 @@ class EventsSearchBar extends React.Component {
                         topMargin={0}
                         useLoadingState>
               <Button onClick={this.handleSearchReload} disabled={isReloadingResults}>
-                <Icon name="refresh" spin={isReloadingResults} />
+                <Icon name="sync" spin={isReloadingResults} />
               </Button>
             </SearchForm>
           </div>

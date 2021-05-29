@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.models.users.requests;
 
@@ -40,7 +40,11 @@ public abstract class ChangeUserRequest {
 
     @JsonProperty
     @Nullable
-    public abstract String fullName();
+    public abstract String firstName();
+
+    @JsonProperty
+    @Nullable
+    public abstract String lastName();
 
     @JsonProperty
     @Nullable
@@ -64,12 +68,13 @@ public abstract class ChangeUserRequest {
 
     @JsonCreator
     public static ChangeUserRequest create(@JsonProperty("email") @Nullable @Email String email,
-                                           @JsonProperty("full_name") @Nullable String fullName,
+                                           @JsonProperty("first_name") @Nullable String firstName,
+                                           @JsonProperty("last_name") @Nullable String lastName,
                                            @JsonProperty("permissions") @Nullable List<String> permissions,
                                            @JsonProperty("timezone") @Nullable String timezone,
                                            @JsonProperty("startpage") @Nullable @Valid Startpage startpage,
                                            @JsonProperty("session_timeout_ms") @Nullable @Min(1) Long sessionTimeoutMs,
                                            @JsonProperty("roles") @Nullable List<String> roles) {
-        return new AutoValue_ChangeUserRequest(email, fullName, permissions, timezone, startpage, sessionTimeoutMs, roles);
+        return new AutoValue_ChangeUserRequest(email, firstName, lastName, permissions, timezone, startpage, sessionTimeoutMs, roles);
     }
 }

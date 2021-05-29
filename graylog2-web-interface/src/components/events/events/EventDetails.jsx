@@ -1,14 +1,29 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
-import { Col, Row } from 'components/graylog';
-import { Link } from 'react-router';
 import { PluginStore } from 'graylog-web-plugin/plugin';
 
+import { Link } from 'components/graylog/router';
+import { Col, Row } from 'components/graylog';
 import { Timestamp } from 'components/common';
 import Routes from 'routing/Routes';
 import PermissionsMixin from 'util/PermissionsMixin';
-
 import EventDefinitionPriorityEnum from 'logic/alerts/EventDefinitionPriorityEnum';
 
 class EventDetails extends React.Component {
@@ -22,11 +37,13 @@ class EventDetails extends React.Component {
     if (type === undefined) {
       return {};
     }
+
     return PluginStore.exports('eventDefinitionTypes').find((edt) => edt.type === type) || {};
   };
 
   renderEventFields = (eventFields) => {
     const fieldNames = Object.keys(eventFields);
+
     return (
       <ul>
         {fieldNames.map((fieldName) => {
@@ -97,6 +114,10 @@ class EventDetails extends React.Component {
             {lodash.isEmpty(event.fields)
               ? <dd>No additional Fields added to this Event.</dd>
               : this.renderEventFields(event.fields)}
+            <dt>Group-By Fields</dt>
+            {lodash.isEmpty(event.group_by_fields)
+              ? <dd>No group-by fields on this Event.</dd>
+              : this.renderEventFields(event.group_by_fields)}
           </dl>
         </Col>
       </Row>

@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.resources.system.inputs;
 
@@ -35,7 +35,7 @@ import org.graylog2.rest.models.system.inputs.responses.InputStateSummary;
 import org.graylog2.rest.models.system.inputs.responses.InputStatesList;
 import org.graylog2.rest.models.system.inputs.responses.InputSummary;
 import org.graylog2.shared.inputs.InputRegistry;
-import org.graylog2.shared.rest.resources.RestResource;
+import org.graylog2.shared.inputs.MessageInputFactory;
 import org.graylog2.shared.security.RestPermissions;
 
 import javax.inject.Inject;
@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 @Api(value = "System/InputStates", description = "Message input states of this node")
 @Path("/system/inputstates")
 @Produces(MediaType.APPLICATION_JSON)
-public class InputStatesResource extends RestResource {
+public class InputStatesResource extends AbstractInputsResource {
     private final InputRegistry inputRegistry;
     private final EventBus serverEventBus;
     private final InputService inputService;
@@ -62,7 +62,9 @@ public class InputStatesResource extends RestResource {
     @Inject
     public InputStatesResource(InputRegistry inputRegistry,
                                EventBus serverEventBus,
-                               InputService inputService) {
+                               InputService inputService,
+                               MessageInputFactory messageInputFactory) {
+        super(messageInputFactory.getAvailableInputs());
         this.inputRegistry = inputRegistry;
         this.serverEventBus = serverEventBus;
         this.inputService = inputService;
@@ -132,13 +134,28 @@ public class InputStatesResource extends RestResource {
 
     private InputStateSummary getInputStateSummary(IOState<MessageInput> inputState) {
         final MessageInput messageInput = inputState.getStoppable();
-        return InputStateSummary.create(messageInput.getId(),
+        return InputStateSummary.create(
+                messageInput.getId(),
                 inputState.getState().toString(),
                 inputState.getStartedAt(),
                 inputState.getDetailedMessage(),
-                InputSummary.create(messageInput.getTitle(), messageInput.isGlobal(),
-                        messageInput.getName(), messageInput.getContentPack(), messageInput.getId(),
-                        messageInput.getCreatedAt(), messageInput.getType(), messageInput.getCreatorUserId(),
-                        messageInput.getConfiguration().getSource(), messageInput.getStaticFields(), messageInput.getNodeId()));
+                InputSummary.create(
+                        messageInput.getTitle(),
+                        messageInput.isGlobal(),
+                        messageInput.getName(),
+                        messageInput.getContentPack(),
+                        messageInput.getId(),
+                        messageInput.getCreatedAt(),
+                        messageInput.getType(),
+                        messageInput.getCreatorUserId(),
+                        // Ensure password masking!
+                        maskPasswordsInConfiguration(
+                                messageInput.getConfiguration().getSource(),
+                                messageInput.getRequestedConfiguration()
+                        ),
+                        messageInput.getStaticFields(),
+                        messageInput.getNodeId()
+                )
+        );
     }
 }

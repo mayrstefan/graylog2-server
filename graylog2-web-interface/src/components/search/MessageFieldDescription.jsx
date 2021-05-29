@@ -1,13 +1,31 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Alert } from 'components/graylog';
 import Immutable from 'immutable';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
-const MessageTerms = styled.span`
+import { Alert } from 'components/graylog';
+import { FULL_MESSAGE_FIELD, MESSAGE_FIELD } from 'views/Constants';
+
+const MessageTerms = styled.span(({ theme }) => css`
   margin-right: 8px;
-  font-family: monospace;
-`;
+  font-family: ${theme.fonts.family.monospace};
+`);
 
 class MessageFieldDescription extends React.Component {
   static propTypes = {
@@ -21,28 +39,35 @@ class MessageFieldDescription extends React.Component {
     customFieldActions: undefined,
   };
 
-  state = {
-    messageTerms: Immutable.List(),
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      messageTerms: Immutable.List(),
+    };
+  }
 
   _shouldShowTerms = () => {
     const { messageTerms } = this.state;
+
     return messageTerms.size !== 0;
   };
 
   _getFormattedTerms = () => {
     const { messageTerms } = this.state;
+
     return messageTerms.map((term) => <MessageTerms key={term}>{term}</MessageTerms>);
   };
 
   _getFormattedFieldActions = () => {
     const { customFieldActions, fieldName, message } = this.props;
+
     return customFieldActions ? React.cloneElement(customFieldActions, { fieldName, message }) : null;
   };
 
   render() {
     const { fieldName, renderForDisplay } = this.props;
-    const className = fieldName === 'message' || fieldName === 'full_message' ? 'message-field' : '';
+    const className = fieldName === MESSAGE_FIELD || fieldName === FULL_MESSAGE_FIELD ? 'message-field' : '';
 
     return (
       <dd className={className} key={`${fieldName}dd`}>

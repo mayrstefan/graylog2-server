@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.events.contentpack.entities;
 
@@ -53,6 +53,7 @@ public abstract class EventDefinitionEntity implements NativeEntityConverter<Eve
     private static final String FIELD_NOTIFICATION_SETTINGS = "notification_settings";
     private static final String FIELD_NOTIFICATIONS = "notifications";
     private static final String FIELD_STORAGE = "storage";
+    private static final String FIELD_IS_SCHEDULED = "is_scheduled";
 
     @JsonProperty(FIELD_TITLE)
     public abstract ValueReference title();
@@ -84,6 +85,9 @@ public abstract class EventDefinitionEntity implements NativeEntityConverter<Eve
     @JsonProperty(FIELD_STORAGE)
     public abstract ImmutableList<EventStorageHandler.Config> storage();
 
+    @JsonProperty(FIELD_IS_SCHEDULED)
+    public abstract ValueReference isScheduled();
+
     public static Builder builder() {
         return Builder.create();
     }
@@ -94,7 +98,7 @@ public abstract class EventDefinitionEntity implements NativeEntityConverter<Eve
     public static abstract class Builder {
         @JsonCreator
         public static Builder create() {
-            return new AutoValue_EventDefinitionEntity.Builder();
+            return new AutoValue_EventDefinitionEntity.Builder().isScheduled(ValueReference.of(true));
         }
 
         @JsonProperty(FIELD_TITLE)
@@ -126,6 +130,9 @@ public abstract class EventDefinitionEntity implements NativeEntityConverter<Eve
 
         @JsonProperty(FIELD_STORAGE)
         public abstract Builder storage(ImmutableList<EventStorageHandler.Config> storage);
+
+        @JsonProperty(FIELD_IS_SCHEDULED)
+        public abstract Builder isScheduled(ValueReference isScheduled);
 
         public abstract EventDefinitionEntity build();
     }

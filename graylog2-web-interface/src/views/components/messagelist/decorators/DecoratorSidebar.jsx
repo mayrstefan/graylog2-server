@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -8,6 +24,7 @@ import { Spinner } from 'components/common';
 import AddDecoratorButton from './AddDecoratorButton';
 import DecoratorSummary from './DecoratorSummary';
 import DecoratorList from './DecoratorList';
+
 // eslint-disable-next-line import/no-webpack-loader-syntax
 import DecoratorStyles from '!style!css!./decoratorStyles.css';
 
@@ -29,6 +46,7 @@ class DecoratorSidebar extends React.Component {
     const typeDefinition = decoratorTypes[decorator.type] || { requested_configuration: {}, name: `Unknown type: ${decorator.type}` };
     const deleteDecorator = (decoratorId) => onChange(decorators.filter((_decorator) => _decorator.id !== decoratorId));
     const updateDecorator = (id, updatedDecorator) => onChange(decorators.map((_decorator) => (_decorator.id === id ? updatedDecorator : _decorator)));
+
     return ({
       id: decorator.id,
       title: <DecoratorSummary key={`decorator-${decorator.id}`}
@@ -42,8 +60,10 @@ class DecoratorSidebar extends React.Component {
 
   _updateOrder = (orderedDecorators) => {
     const { decorators, onChange } = this.props;
+
     orderedDecorators.forEach((item, idx) => {
       const decorator = decorators.find((i) => i.id === item.id);
+
       decorator.order = idx;
     });
 
@@ -52,9 +72,11 @@ class DecoratorSidebar extends React.Component {
 
   render() {
     const { decoratorTypes, onChange, decorators } = this.props;
+
     if (!decoratorTypes) {
       return <Spinner />;
     }
+
     const sortedDecorators = decorators
       .sort((d1, d2) => d1.order - d2.order);
     const nextDecoratorOrder = sortedDecorators.length > 0 ? sortedDecorators[sortedDecorators.length - 1].order + 1 : 0;

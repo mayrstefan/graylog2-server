@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.indexer;
 
@@ -21,10 +21,10 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.assistedinject.Assisted;
-import io.searchbox.cluster.Health;
 import org.graylog2.audit.AuditActor;
 import org.graylog2.audit.AuditEventSender;
 import org.graylog2.indexer.indexset.IndexSetConfig;
+import org.graylog2.indexer.indices.HealthStatus;
 import org.graylog2.indexer.indices.Indices;
 import org.graylog2.indexer.indices.TooManyAliasesException;
 import org.graylog2.indexer.indices.jobs.SetIndexReadOnlyAndCalculateRangeJob;
@@ -54,6 +54,7 @@ import java.util.stream.Collectors;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Objects.requireNonNull;
 import static org.graylog2.audit.AuditEventTypes.ES_WRITE_INDEX_UPDATE;
+import static org.graylog2.indexer.indices.Indices.checkIfHealthy;
 
 public class MongoIndexSet implements IndexSet {
     private static final Logger LOG = LoggerFactory.getLogger(MongoIndexSet.class);
@@ -101,15 +102,12 @@ public class MongoIndexSet implements IndexSet {
         this.activityWriter = requireNonNull(activityWriter);
 
         // Part of the pattern can be configured in IndexSetConfig. If set we use the indexMatchPattern from the config.
-        if (isNullOrEmpty(config.indexMatchPattern())) {
-            // This pattern requires that we check that each index prefix is unique and unambiguous to avoid false matches.
-            this.indexPattern = Pattern.compile("^" + config.indexPrefix() + SEPARATOR + "\\d+(?:" + RESTORED_ARCHIVE_SUFFIX + ")?");
-            this.deflectorIndexPattern = Pattern.compile("^" + config.indexPrefix() + SEPARATOR + "\\d+");
-        } else {
-            // This pattern requires that we check that each index prefix is unique and unambiguous to avoid false matches.
-            this.indexPattern = Pattern.compile("^" + config.indexMatchPattern() + SEPARATOR + "\\d+(?:" + RESTORED_ARCHIVE_SUFFIX + ")?");
-            this.deflectorIndexPattern = Pattern.compile("^" + config.indexMatchPattern() + SEPARATOR + "\\d+");
-        }
+        final String indexPattern = isNullOrEmpty(config.indexMatchPattern())
+                ? Pattern.quote(config.indexPrefix())
+                : config.indexMatchPattern();
+
+        this.indexPattern = Pattern.compile("^" + indexPattern + SEPARATOR + "\\d+(?:" + RESTORED_ARCHIVE_SUFFIX + ")?");
+        this.deflectorIndexPattern = Pattern.compile("^" + indexPattern + SEPARATOR + "\\d+");
 
         // The index wildcard can be configured in IndexSetConfig. If not set we use a default one based on the index
         // prefix.
@@ -295,7 +293,8 @@ public class MongoIndexSet implements IndexSet {
         }
 
         LOG.info("Waiting for allocation of index <{}>.", newTarget);
-        Health.Status healthStatus = indices.waitForRecovery(newTarget);
+        final HealthStatus healthStatus = indices.waitForRecovery(newTarget);
+        checkIfHealthy(healthStatus, (status) -> new RuntimeException("New target index did not become healthy (target index: <" + newTarget + ">)"));
         LOG.debug("Health status of index <{}>: {}", newTarget, healthStatus);
 
         addDeflectorIndexRange(newTarget);

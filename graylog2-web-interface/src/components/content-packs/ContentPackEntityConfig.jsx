@@ -1,9 +1,25 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
+import naturalSort from 'javascript-natural-sort';
 
 import DataTable from 'components/common/DataTable';
 import ValueReferenceData from 'util/ValueReferenceData';
-import naturalSort from 'javascript-natural-sort';
 
 class ContentPackEntityConfig extends React.Component {
   static propTypes = {
@@ -19,11 +35,14 @@ class ContentPackEntityConfig extends React.Component {
 
   _getParameterForConfigKey = (configKey) => {
     const paramMapIndex = this.props.appliedParameter.findIndex((paramMap) => paramMap.configKey === configKey);
+
     if (paramMapIndex < 0) {
       return undefined;
     }
+
     const paramMap = this.props.appliedParameter[paramMapIndex];
     const paramIndex = this.props.parameters.findIndex((parameter) => parameter.name === paramMap.paramName);
+
     return this.props.parameters[paramIndex];
   };
 
@@ -33,6 +52,7 @@ class ContentPackEntityConfig extends React.Component {
       const parameter = this._getParameterForConfigKey(configKey);
       const type = parameter ? (<b>{`parameter (${parameter.type})`}</b>) : path.getValueType();
       const value = parameter ? (<b>{parameter.name}</b>) : path.getValue();
+
       return (
         <tr key={configKey}>
           <td>{configKey}</td>

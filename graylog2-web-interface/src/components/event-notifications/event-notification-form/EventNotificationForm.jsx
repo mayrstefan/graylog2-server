@@ -1,13 +1,28 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
-
 import { PluginStore } from 'graylog-web-plugin/plugin';
+
 import { Alert, Button, ButtonToolbar, Col, ControlLabel, FormControl, FormGroup, HelpBlock, Row } from 'components/graylog';
 import { Select, Spinner } from 'components/common';
 import { Input } from 'components/bootstrap';
-
-import FormsUtils from 'util/FormsUtils';
+import { getValueFromInput } from 'util/FormsUtils';
 
 class EventNotificationForm extends React.Component {
   static propTypes = {
@@ -34,6 +49,7 @@ class EventNotificationForm extends React.Component {
 
   handleSubmit = (event) => {
     const { notification, onSubmit } = this.props;
+
     event.preventDefault();
 
     onSubmit(notification);
@@ -42,11 +58,13 @@ class EventNotificationForm extends React.Component {
   handleChange = (event) => {
     const { name } = event.target;
     const { onChange } = this.props;
-    onChange(name, FormsUtils.getValueFromInput(event.target));
+
+    onChange(name, getValueFromInput(event.target));
   };
 
   handleConfigChange = (nextConfig) => {
     const { onChange } = this.props;
+
     onChange('config', nextConfig);
   };
 
@@ -54,17 +72,20 @@ class EventNotificationForm extends React.Component {
     if (type === undefined) {
       return {};
     }
+
     return PluginStore.exports('eventNotificationTypes').find((n) => n.type === type) || {};
   };
 
   handleTypeChange = (nextType) => {
     const notificationPlugin = this.getNotificationPlugin(nextType);
     const defaultConfig = notificationPlugin.defaultConfig || {};
+
     this.handleConfigChange({ ...defaultConfig, type: nextType });
   };
 
   handleTestTrigger = () => {
     const { notification, onTest } = this.props;
+
     onTest(notification);
   };
 
@@ -125,23 +146,28 @@ class EventNotificationForm extends React.Component {
 
             {notificationFormComponent}
 
-            <FormGroup>
-              <ControlLabel>Test Notification <small className="text-muted">(Optional)</small></ControlLabel>
-              <FormControl.Static>
-                <Button bsStyle="info" bsSize="small" disabled={testResult.isLoading} onClick={this.handleTestTrigger}>
-                  {testButtonText}
-                </Button>
-              </FormControl.Static>
-              {testResult.message && (
-                <Alert bsStyle={testResult.error ? 'danger' : 'success'}>
-                  <b>{testResult.error ? 'Error: ' : 'Success: '}</b>
-                  {testResult.message}
-                </Alert>
-              )}
-              <HelpBlock>
-                Execute this Notification with a test Alert.
-              </HelpBlock>
-            </FormGroup>
+            {notificationFormComponent && (
+              <FormGroup>
+                <ControlLabel>Test Notification <small className="text-muted">(Optional)</small></ControlLabel>
+                <FormControl.Static>
+                  <Button bsStyle="info"
+                          bsSize="small"
+                          disabled={testResult.isLoading}
+                          onClick={this.handleTestTrigger}>
+                    {testButtonText}
+                  </Button>
+                </FormControl.Static>
+                {testResult.message && (
+                  <Alert bsStyle={testResult.error ? 'danger' : 'success'}>
+                    <b>{testResult.error ? 'Error: ' : 'Success: '}</b>
+                    {testResult.message}
+                  </Alert>
+                )}
+                <HelpBlock>
+                  Execute this Notification with a test Alert.
+                </HelpBlock>
+              </FormGroup>
+            )}
 
             {!embedded && (
               <ButtonToolbar>

@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.plugins.views.search.searchtypes.pivot.buckets;
 
@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.auto.value.AutoValue;
-import org.elasticsearch.search.aggregations.bucket.histogram.DateHistogramInterval;
 import org.graylog2.plugin.indexer.searches.timeranges.TimeRange;
 
 import java.util.regex.Matcher;
@@ -43,11 +42,11 @@ public abstract class TimeUnitInterval implements Interval {
     public abstract String timeunit();
 
     @Override
-    public DateHistogramInterval toDateHistogramInterval(TimeRange timerange) {
-        return new DateHistogramInterval(adjustUnitsLongerThanDays(timeunit()));
+    public DateInterval toDateInterval(TimeRange timerange) {
+        return adjustUnitsLongerThanDays(timeunit());
     }
 
-    private String adjustUnitsLongerThanDays(String timeunit) {
+    private DateInterval adjustUnitsLongerThanDays(String timeunit) {
         final Matcher matcher = TIMEUNIT_PATTERN.matcher(timeunit());
         checkArgument(matcher.matches(),
                 "Time unit must be {quantity}{unit}, where quantity is a positive number and unit [smhdwM].");
@@ -58,9 +57,9 @@ public abstract class TimeUnitInterval implements Interval {
             case "s":
             case "m":
             case "h":
-            case "d": return timeunit;
-            case "w": return quantity == 1 ? timeunit : (7 * quantity) + "d";
-            case "M": return quantity == 1 ? timeunit : (30 * quantity) + "d";
+            case "d": return new DateInterval(quantity, unit);
+            case "w": return quantity == 1 ? new DateInterval(quantity, unit) : DateInterval.days(7 * quantity);
+            case "M": return quantity == 1 ? new DateInterval(quantity, unit) : DateInterval.days(30 * quantity);
             default: throw new RuntimeException("Invalid time unit: " + timeunit);
         }
     }

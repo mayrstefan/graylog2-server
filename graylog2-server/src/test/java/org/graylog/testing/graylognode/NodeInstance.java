@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.testing.graylognode;
 
@@ -22,8 +22,12 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
+
+import static org.graylog.testing.graylognode.NodeContainerConfig.API_PORT;
 
 public class NodeInstance {
 
@@ -31,9 +35,10 @@ public class NodeInstance {
 
     private final GenericContainer<?> container;
 
-    public static NodeInstance createStarted(Network network, String mongoDbUri, String elasticsearchUri) {
-        NodeContainerConfig config = NodeContainerConfig.create(network, mongoDbUri, elasticsearchUri);
-        GenericContainer<?> container = NodeContainerFactory.buildContainer(config);
+    public static NodeInstance createStarted(Network network, String mongoDbUri, String elasticsearchUri, String elasticsearchVersion, int[] extraPorts,
+            List<Path> pluginJars, Path mavenProjectDir) {
+        NodeContainerConfig config = NodeContainerConfig.create(network, mongoDbUri, elasticsearchUri, elasticsearchVersion, extraPorts);
+        GenericContainer<?> container = NodeContainerFactory.buildContainer(config, pluginJars, mavenProjectDir);
         return new NodeInstance(container);
     }
 
@@ -49,12 +54,16 @@ public class NodeInstance {
         LOG.info("Restarted node container in " + sw.elapsed(TimeUnit.SECONDS));
     }
 
-    public String getUri() {
+    public String uri() {
         return String.format(Locale.US, "http://%s", container.getContainerIpAddress());
     }
 
-    public int getApiPort() {
-        return container.getFirstMappedPort();
+    public int apiPort() {
+        return mappedPortFor(API_PORT);
+    }
+
+    public int mappedPortFor(int originalPort) {
+        return container.getMappedPort(originalPort);
     }
 
     public void printLog() {

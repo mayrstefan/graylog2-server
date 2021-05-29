@@ -1,19 +1,33 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import Reflux from 'reflux';
 import createReactClass from 'create-react-class';
 
+import { LinkContainer } from 'components/graylog/router';
 import Routes from 'routing/Routes';
 import { Button } from 'components/graylog';
-import { LinkContainer } from 'react-router-bootstrap';
 import history from 'util/History';
-
 import UserNotification from 'util/UserNotification';
 import { DocumentTitle, PageHeader } from 'components/common';
 import CombinedProvider from 'injection/CombinedProvider';
 import ContentPackEdit from 'components/content-packs/ContentPackEdit';
 import ContentPack from 'logic/content-packs/ContentPack';
 import Entity from 'logic/content-packs/Entity';
-
 
 const { ContentPacksActions } = CombinedProvider.get('ContentPacks');
 const { CatalogActions, CatalogStore } = CombinedProvider.get('Catalog');
@@ -59,9 +73,11 @@ const CreateContentPackPage = createReactClass({
             + 'Graylog logs for more information.';
           const title = 'Could not import content pack';
           let smallMessage = '';
+
           if (response.additional && response.additional.body && response.additional.body.message) {
             smallMessage = `<br /><small>${response.additional.body.message}</small>`;
           }
+
           UserNotification.error(message + smallMessage, title);
         },
       );
@@ -76,6 +92,7 @@ const CreateContentPackPage = createReactClass({
         .entities(result.entities.map((e) => Entity.fromJSON(e, true, contentPack.parameters)))
         .build();
       const fetchedEntities = result.entities.map((e) => Entity.fromJSON(e, false, contentPack.parameters));
+
       this.setState({ contentPack: newContentPack, fetchedEntities });
     });
   },

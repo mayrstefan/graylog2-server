@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.jersey;
 
@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap;
 import org.glassfish.jersey.server.model.ModelProcessor;
 import org.glassfish.jersey.server.model.Resource;
 import org.glassfish.jersey.server.model.ResourceModel;
+import org.graylog2.shared.rest.HideOnCloud;
 
 import javax.ws.rs.core.Configuration;
 import javax.ws.rs.ext.Provider;
@@ -29,9 +30,11 @@ import java.util.Optional;
 @Provider
 public class PrefixAddingModelProcessor implements ModelProcessor {
     private final Map<String, String> packagePrefixes;
+    private final org.graylog2.Configuration configuration;
 
-    public PrefixAddingModelProcessor(Map<String, String> packagePrefixes) {
+    public PrefixAddingModelProcessor(Map<String, String> packagePrefixes, org.graylog2.Configuration configuration) {
         this.packagePrefixes = ImmutableMap.copyOf(packagePrefixes);
+        this.configuration = configuration;
     }
 
     @Override
@@ -39,7 +42,11 @@ public class PrefixAddingModelProcessor implements ModelProcessor {
         // Create new resource model.
         final ResourceModel.Builder resourceModelBuilder = new ResourceModel.Builder(false);
         for (final Resource resource : model.getResources()) {
-            for (Class handlerClass : resource.getHandlerClasses()) {
+            for (Class<?> handlerClass : resource.getHandlerClasses()) {
+                final HideOnCloud hideOnCloud = handlerClass.getAnnotation(HideOnCloud.class);
+                if (hideOnCloud != null && configuration.isCloud()) {
+                    break;
+                }
                 final String packageName = handlerClass.getPackage().getName();
 
                 final Optional<String> packagePrefix = packagePrefixes.entrySet().stream()

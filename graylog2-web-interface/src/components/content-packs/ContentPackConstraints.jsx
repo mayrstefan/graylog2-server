@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Set } from 'immutable';
@@ -7,7 +23,7 @@ import { DataTable, Icon } from 'components/common';
 import { Badge } from 'components/graylog';
 
 const StyledBadge = styled(({ isFulfilled, theme, ...rest }) => <Badge {...rest} />)`
-  background-color: ${({ isFulfilled, theme }) => (isFulfilled ? theme.color.variant.success : theme.color.variant.danger)};
+  background-color: ${({ isFulfilled, theme }) => (isFulfilled ? theme.colors.variant.success : theme.colors.variant.danger)};
 `;
 
 class ContentPackConstraints extends React.Component {
@@ -27,6 +43,7 @@ class ContentPackConstraints extends React.Component {
   _rowFormatter = (item) => {
     const { isFulfilled } = this.props;
     const constraint = item.constraint || item;
+
     constraint.fulfilled = isFulfilled || constraint.fulfilled;
     const name = constraint.type === 'server-version' ? 'Graylog' : constraint.plugin;
 
@@ -49,7 +66,9 @@ class ContentPackConstraints extends React.Component {
     const headers = ['Name', 'Type', 'Version', 'Fulfilled'];
     let constraints = unfilteredConstraints.map((constraint) => {
       const newConstraint = constraint.constraint || constraint;
+
       newConstraint.fulfilled = constraint.fulfilled;
+
       return newConstraint;
     });
 

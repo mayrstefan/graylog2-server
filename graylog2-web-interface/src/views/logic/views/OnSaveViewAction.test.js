@@ -1,9 +1,25 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import View from './View';
 
 jest.mock('routing/Routes', () => ({ VIEWS: { VIEWID: (viewId) => `/views/${viewId}` } }));
 
 // eslint-disable-next-line global-require
-const loadSUT = () => require('./OnSaveViewAction');
+const loadSUT = () => require('./OnSaveViewAction').default;
 
 const mockBaseView = { id: 'deadbeef', title: 'View title' };
 
@@ -15,6 +31,7 @@ const mockActions = () => {
   const ViewManagementActions = {
     update: jest.fn(() => Promise.resolve(mockBaseView)).mockName('update'),
   };
+
   jest.doMock('views/stores/ViewManagementStore', () => ({ ViewManagementActions }));
   jest.doMock('views/stores/ViewStore', () => ({ ViewActions }));
 
@@ -25,6 +42,7 @@ describe('OnSaveViewAction', () => {
   afterEach(() => {
     jest.resetModules();
   });
+
   it('saves a given view', () => {
     const { ViewManagementActions, ViewActions } = mockActions();
     const onSaveView = loadSUT();
@@ -65,6 +83,7 @@ describe('OnSaveViewAction', () => {
   it('shows notification upon success', () => {
     mockActions();
     const UserNotification = { success: jest.fn().mockName('success') };
+
     jest.doMock('util/UserNotification', () => UserNotification);
     const onSaveView = loadSUT();
     const view = View.create();
@@ -79,11 +98,13 @@ describe('OnSaveViewAction', () => {
 
   it('does not do anything if saving fails', () => {
     const { ViewManagementActions } = mockActions();
+
     ViewManagementActions.update = jest.fn(() => Promise.reject(new Error('Something bad happened!')));
     const UserNotification = {
       success: jest.fn().mockName('success'),
       error: jest.fn().mockName('error'),
     };
+
     jest.doMock('util/UserNotification', () => UserNotification);
 
     const onSaveView = loadSUT();

@@ -1,31 +1,65 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import Qs from 'qs';
 import styled, { css } from 'styled-components';
 
-import { Grid, Row, Col, Button } from 'components/graylog';
+import { Grid, Col, Button } from 'components/graylog';
 import { ContentHeadRow, Spinner, Icon } from 'components/common';
 import ActionsProvider from 'injection/ActionsProvider';
 
 const GettingStartedActions = ActionsProvider.getActions('GettingStarted');
 
-const FullHeightContainer = styled.div`
-  height: calc(100vh - 100px);
-  margin-left: -15px;
-  margin-right: -15px;
+const Container = styled.div`
+  height: 100%;
+  display: grid;
+  display: -ms-grid;
+  grid-template-rows: max-content 1fr;
+  -ms-grid-rows: max-content 1fr;
+  grid-template-columns: 1fr;
+  -ms-grid-columns: 1fr;
 `;
 
-const GettingStartedIframe = styled.iframe(({ hidden }) => css`
-  width: 100%;
-  display: ${hidden ? 'none' : 'block'};
-  min-height: calc(100vh - 100px);
-`);
+const DismissButtonSection = styled.div`
+  grid-column: 1;
+  -ms-grid-column: 1;
+  grid-row: 1;
+  -ms-grid-row: 1;
+`;
 
 const DismissButton = styled(Button)`
   margin-right: 5px;
   top: -4px;
   position: relative;
 `;
+
+const ContentSection = styled.div`
+  grid-row: 2;
+  -ms-grid-row: 2;
+  grid-column: 1;
+  -ms-grid-column: 1;
+`;
+
+const GettingStartedIframe = styled.iframe(({ hidden }) => css`
+  display: ${hidden ? 'none' : 'block'};
+  width: 100%;
+  height: 100%;
+`);
 
 class GettingStarted extends React.Component {
   timeoutId = null;
@@ -44,16 +78,21 @@ class GettingStarted extends React.Component {
     onDismiss: () => {},
   }
 
-  state = {
-    guideLoaded: false,
-    guideUrl: '',
-    showStaticContent: false,
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      guideLoaded: false,
+      guideUrl: '',
+      showStaticContent: false,
+    };
+  }
 
   componentDidMount() {
     if (window.addEventListener) {
       window.addEventListener('message', this._onMessage);
     }
+
     this.timeoutId = window.setTimeout(this._displayFallbackContent, 3000);
   }
 
@@ -61,6 +100,7 @@ class GettingStarted extends React.Component {
     if (window.removeEventListener) {
       window.removeEventListener('message', this._onMessage);
     }
+
     if (this.timeoutId !== null) {
       window.clearTimeout(Number(this.timeoutId));
       this.timeoutId = null;
@@ -69,12 +109,14 @@ class GettingStarted extends React.Component {
 
   _onMessage = (messageEvent) => {
     const { gettingStartedUrl } = this.props;
+
     // make sure we only process messages from the getting started url, otherwise this can interfere with other messages being posted
     if (gettingStartedUrl.indexOf(messageEvent.origin) === 0) {
       if (this.timeoutId !== null) {
         window.clearTimeout(Number(this.timeoutId));
         this.timeoutId = null;
       }
+
       this.setState({
         guideLoaded: messageEvent.data.guideLoaded,
         guideUrl: messageEvent.data.guideUrl,
@@ -88,6 +130,7 @@ class GettingStarted extends React.Component {
 
   _dismissGuide = () => {
     const { onDismiss } = this.props;
+
     GettingStartedActions.dismiss.triggerPromise().then(() => {
       if (onDismiss) {
         onDismiss();
@@ -100,6 +143,7 @@ class GettingStarted extends React.Component {
     const { showStaticContent, guideLoaded, guideUrl } = this.state;
 
     let dismissButton = null;
+
     if (!noDismissButton) {
       dismissButton = (
         <DismissButton bsStyle="default" bsSize="small" onClick={this._dismissGuide}>
@@ -107,7 +151,9 @@ class GettingStarted extends React.Component {
         </DismissButton>
       );
     }
+
     let gettingStartedContent = null;
+
     if (showStaticContent) {
       gettingStartedContent = (
         <Grid>
@@ -132,6 +178,7 @@ class GettingStarted extends React.Component {
 
       const url = guideUrl === '' ? (`${gettingStartedUrl}?${query}`) : guideUrl;
       let spinner = null;
+
       if (!guideLoaded) {
         spinner = (
           <Grid>
@@ -158,11 +205,16 @@ class GettingStarted extends React.Component {
         </>
       );
     }
+
     return (
-      <FullHeightContainer>
-        <div className="pull-right">{dismissButton}</div>
-        {gettingStartedContent}
-      </FullHeightContainer>
+      <Container>
+        <DismissButtonSection>
+          <div className="pull-right">{dismissButton}</div>
+        </DismissButtonSection>
+        <ContentSection>
+          {gettingStartedContent}
+        </ContentSection>
+      </Container>
     );
   }
 }

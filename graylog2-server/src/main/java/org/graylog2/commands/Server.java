@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.commands;
 
@@ -25,16 +25,19 @@ import com.google.inject.Module;
 import com.google.inject.spi.Message;
 import com.mongodb.MongoException;
 import org.graylog.events.EventsModule;
+import org.graylog.freeenterprise.FreeEnterpriseConfiguration;
+import org.graylog.freeenterprise.FreeEnterpriseModule;
+import org.graylog.grn.GRNTypesModule;
 import org.graylog.plugins.cef.CEFInputModule;
 import org.graylog.plugins.map.MapWidgetModule;
 import org.graylog.plugins.netflow.NetFlowPluginModule;
 import org.graylog.plugins.pipelineprocessor.PipelineConfig;
 import org.graylog.plugins.sidecar.SidecarModule;
-import org.graylog.plugins.views.ESBackendModule;
 import org.graylog.plugins.views.ViewsBindings;
 import org.graylog.plugins.views.ViewsConfig;
 import org.graylog.scheduler.JobSchedulerConfiguration;
 import org.graylog.scheduler.JobSchedulerModule;
+import org.graylog.security.SecurityModule;
 import org.graylog2.Configuration;
 import org.graylog2.alerts.AlertConditionBindings;
 import org.graylog2.audit.AuditActor;
@@ -50,7 +53,6 @@ import org.graylog2.bindings.PasswordAlgorithmBindings;
 import org.graylog2.bindings.PeriodicalBindings;
 import org.graylog2.bindings.PersistenceServicesBindings;
 import org.graylog2.bindings.ServerBindings;
-import org.graylog2.bindings.WidgetStrategyBindings;
 import org.graylog2.bootstrap.Main;
 import org.graylog2.bootstrap.ServerBootstrap;
 import org.graylog2.cluster.NodeService;
@@ -61,7 +63,6 @@ import org.graylog2.configuration.HttpConfiguration;
 import org.graylog2.configuration.MongoDbConfiguration;
 import org.graylog2.configuration.VersionCheckConfiguration;
 import org.graylog2.contentpacks.ContentPacksModule;
-import org.graylog2.dashboards.DashboardBindings;
 import org.graylog2.decorators.DecoratorBindings;
 import org.graylog2.indexer.IndexerBindings;
 import org.graylog2.indexer.retention.RetentionStrategyBindings;
@@ -81,6 +82,7 @@ import org.graylog2.shared.bindings.ObjectMapperModule;
 import org.graylog2.shared.bindings.RestApiBindings;
 import org.graylog2.shared.system.activities.Activity;
 import org.graylog2.shared.system.activities.ActivityWriter;
+import org.graylog2.storage.VersionAwareStorageModule;
 import org.graylog2.system.processing.ProcessingStatusConfig;
 import org.graylog2.system.shutdown.GracefulShutdown;
 import org.slf4j.Logger;
@@ -113,6 +115,7 @@ public class Server extends ServerBootstrap {
     private final ViewsConfig viewsConfiguration = new ViewsConfig();
     private final ProcessingStatusConfig processingStatusConfig = new ProcessingStatusConfig();
     private final JobSchedulerConfiguration jobSchedulerConfiguration = new JobSchedulerConfiguration();
+    private final FreeEnterpriseConfiguration freeEnterpriseConfiguration = new FreeEnterpriseConfiguration();
 
     public Server() {
         super("server", configuration);
@@ -129,38 +132,39 @@ public class Server extends ServerBootstrap {
     protected List<Module> getCommandBindings() {
         final ImmutableList.Builder<Module> modules = ImmutableList.builder();
         modules.add(
-            new ConfigurationModule(configuration),
-            new ServerBindings(configuration),
-            new ElasticsearchModule(),
-            new PersistenceServicesBindings(),
-            new MessageFilterBindings(),
-            new MessageProcessorModule(),
-            new AlarmCallbackBindings(),
-            new InitializerBindings(),
-            new MessageInputBindings(),
-            new MessageOutputBindings(configuration, chainingClassLoader),
-            new RotationStrategyBindings(),
-            new RetentionStrategyBindings(),
-            new PeriodicalBindings(),
-            new ObjectMapperModule(chainingClassLoader),
-            new RestApiBindings(),
-            new PasswordAlgorithmBindings(),
-            new WidgetStrategyBindings(),
-            new DashboardBindings(),
-            new DecoratorBindings(),
-            new AuditBindings(),
-            new AlertConditionBindings(),
-            new IndexerBindings(),
-            new MigrationsModule(),
-            new NetFlowPluginModule(),
-            new CEFInputModule(),
-            new MapWidgetModule(),
-            new SidecarModule(),
-            new ContentPacksModule(),
-            new ViewsBindings(),
-            new ESBackendModule(),
-            new JobSchedulerModule(),
-            new EventsModule()
+                new VersionAwareStorageModule(),
+                new ConfigurationModule(configuration),
+                new ServerBindings(configuration),
+                new ElasticsearchModule(),
+                new PersistenceServicesBindings(),
+                new MessageFilterBindings(),
+                new MessageProcessorModule(),
+                new AlarmCallbackBindings(),
+                new InitializerBindings(),
+                new MessageInputBindings(),
+                new MessageOutputBindings(configuration, chainingClassLoader),
+                new RotationStrategyBindings(),
+                new RetentionStrategyBindings(),
+                new PeriodicalBindings(),
+                new ObjectMapperModule(chainingClassLoader),
+                new RestApiBindings(),
+                new PasswordAlgorithmBindings(),
+                new DecoratorBindings(),
+                new AuditBindings(),
+                new AlertConditionBindings(),
+                new IndexerBindings(),
+                new MigrationsModule(),
+                new NetFlowPluginModule(),
+                new CEFInputModule(),
+                new MapWidgetModule(),
+                new SidecarModule(),
+                new ContentPacksModule(),
+                new ViewsBindings(),
+                new JobSchedulerModule(),
+                new EventsModule(),
+                new FreeEnterpriseModule(),
+                new GRNTypesModule(),
+                new SecurityModule()
         );
 
         return modules.build();
@@ -180,7 +184,8 @@ public class Server extends ServerBootstrap {
                 pipelineConfiguration,
                 viewsConfiguration,
                 processingStatusConfig,
-                jobSchedulerConfiguration);
+                jobSchedulerConfiguration,
+                freeEnterpriseConfiguration);
     }
 
     @Override

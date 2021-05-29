@@ -1,10 +1,25 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { LinkContainer } from 'react-router-bootstrap';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
+import { LinkContainer } from 'components/graylog/router';
 import Routes from 'routing/Routes';
-
 import { Button, Col, Panel, Row } from 'components/graylog';
 import { Icon } from 'components/common';
 import LoaderTabs from 'components/messageloaders/LoaderTabs';
@@ -12,7 +27,6 @@ import MatchingTypeSwitcher from 'components/streams/MatchingTypeSwitcher';
 import StreamRuleList from 'components/streamrules/StreamRuleList';
 import StreamRuleForm from 'components/streamrules/StreamRuleForm';
 import Spinner from 'components/common/Spinner';
-
 import StoreProvider from 'injection/StoreProvider';
 
 const StreamsStore = StoreProvider.getStore('Streams');
@@ -22,13 +36,15 @@ const StreamAlertHeader = styled(Panel.Heading)`
   font-weight: bold;
 `;
 
-const matchColor = (matches) => (matches ? '#00AE42' : '#AD0707');
-
 const MatchIcon = styled(({ empty, matches, ...props }) => <Icon {...props} />)(
-  ({ empty, matches }) => ({
-    color: empty ? '#0063BE' : matchColor(matches),
-    marginRight: '3px',
-  }),
+  ({ empty, matches, theme }) => {
+    const matchColor = matches ? theme.colors.variant.success : theme.colors.variant.danger;
+
+    return css`
+      color: ${empty ? theme.colors.variant.info : matchColor};
+      margin-right: 3px;
+    `;
+  },
 );
 
 const StyledSpinner = styled(Spinner)`
@@ -48,7 +64,13 @@ class StreamRulesEditor extends React.Component {
     index: '',
   }
 
-  state = {};
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      showStreamRuleForm: false,
+    };
+  }
 
   componentDidMount() {
     this.loadData();
@@ -63,6 +85,7 @@ class StreamRulesEditor extends React.Component {
 
   onMessageLoaded = (message) => {
     this.setState({ message: message });
+
     if (message !== undefined) {
       const { streamId } = this.props;
 
@@ -93,12 +116,13 @@ class StreamRulesEditor extends React.Component {
 
   _onStreamRuleFormSubmit = (streamRuleId, data) => {
     const { streamId } = this.props;
+
     StreamRulesStore.create(streamId, data, () => {});
   };
 
   _onAddStreamRule = (event) => {
     event.preventDefault();
-    this.newStreamRuleForm.open();
+    this.setState({ showStreamRuleForm: true });
   };
 
   _getListClassName = (matchData) => {
@@ -116,9 +140,10 @@ class StreamRulesEditor extends React.Component {
           </>
         );
       }
+
       return (
         <>
-          <MatchIcon name="remove" /> This message would not be routed to this stream.
+          <MatchIcon name="times" /> This message would not be routed to this stream.
         </>
       );
     }
@@ -131,7 +156,7 @@ class StreamRulesEditor extends React.Component {
   };
 
   render() {
-    const { matchData, stream, streamRuleTypes } = this.state;
+    const { matchData, stream, streamRuleTypes, showStreamRuleForm } = this.state;
     const { currentUser, messageId, index } = this.props;
     const styles = (matchData ? this._getListClassName(matchData) : 'info');
 
@@ -155,10 +180,12 @@ class StreamRulesEditor extends React.Component {
                       onClick={this._onAddStreamRule}>
                 Add stream rule
               </Button>
-              <StreamRuleForm ref={(newStreamRuleForm) => { this.newStreamRuleForm = newStreamRuleForm; }}
-                              title="New Stream Rule"
-                              streamRuleTypes={streamRuleTypes}
-                              onSubmit={this._onStreamRuleFormSubmit} />
+              { showStreamRuleForm && (
+                <StreamRuleForm title="New Stream Rule"
+                                onClose={() => this.setState({ showStreamRuleForm: false })}
+                                streamRuleTypes={streamRuleTypes}
+                                onSubmit={this._onStreamRuleFormSubmit} />
+              ) }
             </div>
 
             <h2>2. Manage stream rules</h2>

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -9,7 +25,6 @@ import { Select, SourceCodeEditor } from 'components/common';
 import { Input } from 'components/bootstrap';
 import history from 'util/History';
 import Routes from 'routing/Routes';
-
 import CombinedProvider from 'injection/CombinedProvider';
 
 const { CollectorsStore, CollectorsActions } = CombinedProvider.get('Collectors');
@@ -53,7 +68,7 @@ const CollectorForm = createReactClass({
     };
   },
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this._debouncedValidateFormData = lodash.debounce(this._validateFormData, 200);
   },
 
@@ -87,6 +102,7 @@ const CollectorForm = createReactClass({
 
     return (nextValue) => {
       const nextFormData = lodash.cloneDeep(formData);
+
       nextFormData[key] = nextValue;
       this._debouncedValidateFormData(nextFormData);
       this.setState({ formData: nextFormData });
@@ -103,6 +119,7 @@ const CollectorForm = createReactClass({
 
   _onNameChange(event) {
     const nextName = event.target.value;
+
     this._formDataUpdate('name')(nextName);
   },
 
@@ -123,6 +140,7 @@ const CollectorForm = createReactClass({
 
   _formatServiceTypes() {
     const options = [];
+
     options.push({ value: 'exec', label: 'Foreground execution' });
     options.push({ value: 'svc', label: 'Windows service' });
 
@@ -131,6 +149,7 @@ const CollectorForm = createReactClass({
 
   _formatOperatingSystems() {
     const options = [];
+
     options.push({ value: 'linux', label: 'Linux' });
     options.push({ value: 'windows', label: 'Windows' });
 
@@ -163,9 +182,11 @@ const CollectorForm = createReactClass({
 
     let validationParameters = '';
     let executeParameters = '';
+
     if (formData.validation_parameters) {
       validationParameters = formData.validation_parameters;
     }
+
     if (formData.execute_parameters) {
       executeParameters = formData.execute_parameters;
     }
@@ -234,7 +255,7 @@ const CollectorForm = createReactClass({
             <FormGroup controlId="defaultTemplate">
               <ControlLabel><span>Default Template <small className="text-muted">(Optional)</small></span></ControlLabel>
               <SourceCodeEditor id="template"
-                                value={formData.default_template}
+                                value={formData.default_template || ''}
                                 onChange={this._formDataUpdate('default_template')} />
               <HelpBlock>The default Collector configuration.</HelpBlock>
             </FormGroup>

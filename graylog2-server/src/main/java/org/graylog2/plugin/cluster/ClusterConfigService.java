@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.plugin.cluster;
 
@@ -51,6 +51,14 @@ public interface ClusterConfigService {
      * @return An instance of the requested type.
      */
     <T> T getOrDefault(Class<T> type, T defaultValue);
+
+    /**
+     * Write a configuration bean to the cluster configuration with the specified key.
+     * @param key     The key that is used to write the cluster config object to the database.
+     * @param payload The object to write to the cluster configuration. Must be serializable by Jackson!
+     * @param <T>     The type of the Java configuration bean.
+     */
+    <T> void write(String key, T payload);
 
     /**
      * Write a configuration bean to the cluster configuration.

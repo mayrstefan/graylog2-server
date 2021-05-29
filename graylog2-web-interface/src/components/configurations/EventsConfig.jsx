@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -40,12 +56,13 @@ const EventsConfig = createReactClass({
 
   getInitialState() {
     const { config } = this.props;
+
     return {
       config: config,
     };
   },
 
-  componentWillReceiveProps(newProps) {
+  UNSAFE_componentWillReceiveProps(newProps) {
     this.setState({ config: newProps.config });
   },
 
@@ -65,6 +82,7 @@ const EventsConfig = createReactClass({
   _saveConfig() {
     const { updateConfig } = this.props;
     const { config } = this.state;
+
     updateConfig(config).then(() => {
       this._closeModal();
     });
@@ -73,12 +91,14 @@ const EventsConfig = createReactClass({
   _propagateChanges(key, value) {
     const { config } = this.state;
     const nextConfig = lodash.cloneDeep(config);
+
     nextConfig[key] = value;
     this.setState({ config: nextConfig });
   },
 
   _onSearchTimeoutUpdate(nextValue, nextUnit, enabled) {
     const durationInMs = enabled ? moment.duration(nextValue, nextUnit).asMilliseconds() : 0;
+
     if (this._searchTimeoutValidator(durationInMs)) {
       this._propagateChanges('events_search_timeout', durationInMs);
     }
@@ -86,6 +106,7 @@ const EventsConfig = createReactClass({
 
   _onRetryPeriodUpdate(nextValue, nextUnit, enabled) {
     const durationInMs = enabled ? moment.duration(nextValue, nextUnit).asMilliseconds() : 0;
+
     if (this._notificationsRetryValidator(durationInMs)) {
       this._propagateChanges('events_notification_retry_period', durationInMs);
     }
@@ -101,16 +122,21 @@ const EventsConfig = createReactClass({
 
   _onBacklogUpdate(event) {
     const value = FormUtils.getValueFromInput(event.target);
+
     this._propagateChanges('events_notification_default_backlog', value);
   },
 
   _onCatchUpWindowUpdate(nextValue, nextUnit, nextEnabled) {
     const { config } = this.state;
+
     if (config.events_catchup_window === 0 && nextEnabled) {
       this._propagateChanges('events_catchup_window', DEFAULT_CATCH_UP_WINDOW);
+
       return;
     }
+
     const catchupWindowinMs = nextEnabled ? moment.duration(nextValue, nextUnit).asMilliseconds() : 0;
+
     this._propagateChanges('events_catchup_window', catchupWindowinMs);
   },
 
@@ -124,6 +150,7 @@ const EventsConfig = createReactClass({
     const eventsNotificationRetryPeriod = extractDurationAndUnit(config.events_notification_retry_period, TIME_UNITS);
     const eventsCatchupWindow = extractDurationAndUnit(config.events_catchup_window, TIME_UNITS);
     const eventsNotificationDefaultBacklog = config.events_notification_default_backlog;
+
     return (
       <div>
         <h2>Events System</h2>

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -45,6 +61,7 @@ class GrokExtractorConfiguration extends React.Component {
     this.loadPromise = GrokPatternsStore.loadPatterns((patterns) => {
       if (!this.loadPromise.isCancelled()) {
         this.loadPromise = undefined;
+
         this.setState({
           patterns: patterns,
         });
@@ -54,9 +71,11 @@ class GrokExtractorConfiguration extends React.Component {
 
   _onChange = (key) => {
     const { onChange, onExtractorPreviewLoad, configuration } = this.props;
+
     return (event) => {
       onExtractorPreviewLoad(undefined);
       const newConfig = configuration;
+
       newConfig[key] = FormUtils.getValueFromInput(event.target);
       onChange(newConfig);
     };
@@ -64,35 +83,43 @@ class GrokExtractorConfiguration extends React.Component {
 
   _onPatternChange = (newPattern) => {
     const { onChange, onExtractorPreviewLoad, configuration } = this.props;
+
     onExtractorPreviewLoad(undefined);
     const newConfig = configuration;
+
     newConfig.grok_pattern = newPattern;
     onChange(newConfig);
   };
 
   _onTryClick = () => {
     const { exampleMessage, configuration, onExtractorPreviewLoad } = this.props;
+
     this.setState({ trying: true });
 
     const promise = ToolsStore.testGrok(configuration.grok_pattern, configuration.named_captures_only, exampleMessage);
+
     promise.then((result) => {
       if (result.error_message != null) {
         UserNotification.error(`We were not able to run the grok extraction because of the following error: ${result.error_message}`);
+
         return;
       }
 
       if (!result.matched) {
         UserNotification.warning('We were not able to run the grok extraction. Please check your parameters.');
+
         return;
       }
 
       const matches = [];
+
       result.matches.forEach((match) => {
         matches.push(<dt key={`${match.name}-name`}>{match.name}</dt>);
         matches.push(<dd key={`${match.name}-value`}><samp>{match.match}</samp></dd>);
       });
 
       const preview = (matches.length === 0 ? '' : <dl>{matches}</dl>);
+
       onExtractorPreviewLoad(preview);
     });
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -5,8 +21,9 @@ import { DropdownButton, MenuItem } from 'components/graylog';
 import { ConfigurationForm, ConfigurationWell } from 'components/configurationforms';
 
 // eslint-disable-next-line import/no-webpack-loader-syntax
-import DecoratorStyles from '!style!css!./decoratorStyles.css';
 import InlineForm from './InlineForm';
+
+import DecoratorStyles from '!style!css!./decoratorStyles.css';
 
 class DecoratorSummary extends React.Component {
   static propTypes = {
@@ -24,6 +41,7 @@ class DecoratorSummary extends React.Component {
 
   constructor(props) {
     super(props);
+
     this.state = {
       editing: false,
     };
@@ -31,6 +49,7 @@ class DecoratorSummary extends React.Component {
 
   _handleDeleteClick = () => {
     const { onDelete, decorator } = this.props;
+
     // eslint-disable-next-line no-alert
     if (window.confirm('Do you really want to delete this decorator?')) {
       onDelete(decorator.id);
@@ -49,6 +68,7 @@ class DecoratorSummary extends React.Component {
     const { decorator } = this.props;
     const { stream, id, order } = decorator;
     const { onUpdate } = this.props;
+
     onUpdate(id, {
       id,
       type: data.type,
@@ -56,6 +76,7 @@ class DecoratorSummary extends React.Component {
       order: order,
       stream: stream,
     });
+
     this._closeEditForm();
   };
 
@@ -76,6 +97,7 @@ class DecoratorSummary extends React.Component {
     configKeys.forEach((key) => {
       const configValues = (typeConfig[key] ? typeConfig[key].additional_info.values : undefined);
       const originalValue = config[key];
+
       if (configValues) {
         if (configValues[originalValue]) {
           resolvedConfig[key] = configValues[originalValue];
@@ -88,6 +110,7 @@ class DecoratorSummary extends React.Component {
 
   _formatActionsMenu = () => {
     const { decorator } = this.props;
+
     return (
       <DropdownButton id={`decorator-${decorator.id}-actions`} bsStyle="default" bsSize="xsmall" title="Actions" pullRight>
         <MenuItem onSelect={this._handleEditClick}>Edit</MenuItem>

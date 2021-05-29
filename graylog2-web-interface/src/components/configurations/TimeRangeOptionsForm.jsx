@@ -1,10 +1,25 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
 import { Row, Col, Button } from 'components/graylog';
 import { Icon } from 'components/common';
 import ISODurationUtils from 'util/ISODurationUtils';
-
 import ObjectUtils from 'util/ObjectUtils';
 
 /**
@@ -60,6 +75,7 @@ class TimeRangeOptionsForm extends React.Component {
 
           if (field === 'period') {
             value = value.toUpperCase();
+
             if (!value.startsWith('P')) {
               value = `P${value}`;
             }
@@ -98,7 +114,7 @@ class TimeRangeOptionsForm extends React.Component {
                        value={description}
                        onChange={this._onChange(idx, 'description')} />
                 <span className="input-group-addon">
-                  <Icon name="trash" style={{ cursor: 'pointer' }} onClick={this._onRemove(idx)} />
+                  <Icon name="trash-alt" style={{ cursor: 'pointer' }} onClick={this._onRemove(idx)} />
                 </span>
               </div>
             </Col>

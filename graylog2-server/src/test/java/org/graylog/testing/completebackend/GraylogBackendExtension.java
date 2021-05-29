@@ -1,23 +1,24 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.testing.completebackend;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.io.Resources;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.specification.RequestSpecification;
@@ -30,7 +31,14 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.extension.ExtensionContext.Namespace;
@@ -49,11 +57,13 @@ public class GraylogBackendExtension implements AfterEachCallback, BeforeAllCall
 
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 
+        ApiIntegrationTest annotation = annotationFrom(context);
+
+        lifecycle = annotation.serverLifecycle();
+
         Stopwatch sw = Stopwatch.createStarted();
 
-        lifecycle = Lifecycle.from(context);
-
-        backend = GraylogBackend.createStarted();
+        backend = constructBackendFrom(annotation, getMongoDBFixtures(context));
 
         context.getStore(NAMESPACE).put(context.getRequiredTestClass().getName(), backend);
 
@@ -62,12 +72,53 @@ public class GraylogBackendExtension implements AfterEachCallback, BeforeAllCall
         LOG.info("Backend started after " + sw.elapsed(TimeUnit.SECONDS) + " seconds");
     }
 
+    private GraylogBackend constructBackendFrom(ApiIntegrationTest annotation, List<URL> mongoDBFixtures) {
+        final ElasticsearchInstanceFactory esInstanceFactory = instantiateFactory(annotation.elasticsearchFactory());
+        final List<Path> pluginJars = instantiateFactory(annotation.pluginJarsProvider()).getJars();
+        final Path mavenProjectDir = instantiateFactory(annotation.mavenProjectDirProvider()).getProjectDir();
+        return GraylogBackend.createStarted(annotation.extraPorts(), esInstanceFactory, pluginJars, mavenProjectDir,
+                mongoDBFixtures);
+    }
+
+    private static List<URL> getMongoDBFixtures(ExtensionContext context) {
+        final Class<?> testClass = context.getTestClass()
+                .orElseThrow(() -> new IllegalStateException("Unable to get test class from extension context"));
+
+        final String[] fixtures = testClass.getAnnotation(ApiIntegrationTest.class).mongoDBFixtures();
+        return Arrays.stream(fixtures).map(resourceName -> {
+            if (! Paths.get(resourceName).isAbsolute()) {
+                try {
+                    return Resources.getResource(testClass, resourceName);
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+            return Resources.getResource(resourceName);
+        }).collect(Collectors.toList());
+    }
+
+    private <T> T instantiateFactory(Class<? extends T> providerClass) {
+        try {
+            return providerClass.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException("Unable to construct instance of " + providerClass.getSimpleName() + ": ", e);
+        }
+    }
+
+    private static ApiIntegrationTest annotationFrom(ExtensionContext context) {
+        Optional<Class<?>> testClass = context.getTestClass();
+
+        if (!testClass.isPresent())
+            throw new RuntimeException("Error determining test class from ExtensionContext");
+
+        return testClass.get().getAnnotation(ApiIntegrationTest.class);
+    }
+
     @Override
     public void afterEach(ExtensionContext context) {
         if (context.getExecutionException().isPresent()) {
             backend.printServerLog();
         }
-        lifecycle.afterEach(backend);
+        lifecycle.afterEach(backend, getMongoDBFixtures(context));
     }
 
     @Override
@@ -91,8 +142,8 @@ public class GraylogBackendExtension implements AfterEachCallback, BeforeAllCall
 
     private RequestSpecification requestSpec() {
         return new RequestSpecBuilder().build()
-                .baseUri(backend.getUri())
-                .port(backend.getApiPort())
+                .baseUri(backend.uri())
+                .port(backend.apiPort())
                 .basePath("/api")
                 .accept(JSON)
                 .contentType(JSON)

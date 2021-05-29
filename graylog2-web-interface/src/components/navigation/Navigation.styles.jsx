@@ -1,8 +1,24 @@
-import styled from 'styled-components';
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
+import styled, { css } from 'styled-components';
 
 import { Navbar } from 'components/graylog';
 
-const StyledNavbar = styled(Navbar)(({ theme }) => `
+const StyledNavbar = styled(Navbar)(({ theme }) => css`
   .dev-badge-wrap > a {
     padding: 0 !important;
     cursor: default;
@@ -19,7 +35,7 @@ const StyledNavbar = styled(Navbar)(({ theme }) => `
     }
 
     .header-meta-nav {
-      border-top: 1px solid ${theme.color.gray[50]};
+      border-top: 1px solid ${theme.colors.gray[50]};
       padding-top: 7.5px;
 
       #scratchpad-toggle {
@@ -36,8 +52,8 @@ const StyledNavbar = styled(Navbar)(({ theme }) => `
 
       #scratchpad-toggle,
       .dropdown-toggle {
-        font-size: 12px;
-        font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: ${theme.fonts.size.body};
+        font-family: ${theme.fonts.family.body};
 
         &::before {
           content: attr(aria-label);
@@ -100,7 +116,7 @@ const StyledNavbar = styled(Navbar)(({ theme }) => `
 
       #scratchpad-toggle,
       .dropdown-toggle {
-        padding: 12px 10px !important;
+        padding: 15px 12px !important;
       }
     }
 

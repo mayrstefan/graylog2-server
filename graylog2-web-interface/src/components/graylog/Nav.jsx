@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 // eslint-disable-next-line no-restricted-imports
 import { Nav as BootstrapNav } from 'react-bootstrap';
 import styled, { css } from 'styled-components';
@@ -8,18 +24,20 @@ const Nav = styled(BootstrapNav)(({ theme }) => css`
   &.nav {
     > li {
       > a {
+        transition: background-color 150ms ease-in-out;
+
         &:hover,
         &:focus {
-          background-color: ${theme.color.gray[90]};
+          background-color: ${theme.colors.variant.lightest.default};
         }
       }
 
       &.disabled > a {
-        color: ${theme.color.gray[60]};
+        color: ${theme.colors.variant.light.default};
 
         &:hover,
         &:focus {
-          color: ${theme.color.gray[60]};
+          color: ${theme.colors.variant.light.default};
         }
       }
     }
@@ -28,8 +46,8 @@ const Nav = styled(BootstrapNav)(({ theme }) => css`
       &,
       &:hover,
       &:focus {
-        background-color: ${theme.color.gray[90]};
-        border-color: ${theme.color.variant.primary};
+        background-color: ${theme.colors.variant.lightest.default};
+        border-color: ${theme.colors.variant.primary};
       }
     }
 
@@ -39,14 +57,14 @@ const Nav = styled(BootstrapNav)(({ theme }) => css`
           &,
           &:hover,
           &:focus {
-            color: ${theme.color.global.textAlt};
-            background-color: ${theme.color.variant.primary};
+            color: ${theme.utils.contrastingColor(theme.colors.global.link)};
+            background-color: ${theme.colors.global.link};
           }
         }
       }
     }
 
-    ${navTabsStyles};
+    &${navTabsStyles} /* This is a known non-issue that stylelint won't ignore but will hopefully be patched soon https://github.com/stylelint/stylelint/issues/4574 */
   }
 `);
 

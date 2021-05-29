@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -6,7 +22,6 @@ import { Col, Row, Button } from 'components/graylog';
 import { Icon } from 'components/common';
 import { Input } from 'components/bootstrap';
 import StoreProvider from 'injection/StoreProvider';
-
 import ExtractorUtils from 'util/ExtractorUtils';
 import FormUtils from 'util/FormsUtils';
 
@@ -33,7 +48,7 @@ const JSONExtractorConfiguration = createReactClass({
     this.props.onChange(this.state.configuration);
   },
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState({ configuration: this._getEffectiveConfiguration(nextProps.configuration) });
   },
 
@@ -54,6 +69,7 @@ const JSONExtractorConfiguration = createReactClass({
     return (event) => {
       this.props.onExtractorPreviewLoad(undefined);
       const newConfig = this.state.configuration;
+
       newConfig[key] = FormUtils.getValueFromInput(event.target);
       this.props.onChange(newConfig);
     };
@@ -69,6 +85,7 @@ const JSONExtractorConfiguration = createReactClass({
 
     promise.then((result) => {
       const matches = [];
+
       for (const match in result.matches) {
         if (result.matches.hasOwnProperty(match)) {
           matches.push(<dt key={`${match}-name`}>{match}</dt>);
@@ -77,6 +94,7 @@ const JSONExtractorConfiguration = createReactClass({
       }
 
       const preview = (matches.length === 0 ? '' : <dl>{matches}</dl>);
+
       this.props.onExtractorPreviewLoad(preview);
     });
 

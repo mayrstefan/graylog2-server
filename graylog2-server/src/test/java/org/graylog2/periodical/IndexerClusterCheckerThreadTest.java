@@ -1,25 +1,29 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.periodical;
 
-import org.elasticsearch.common.unit.ByteSizeUnit;
-import org.elasticsearch.common.unit.ByteSizeValue;
 import org.graylog2.indexer.cluster.Cluster;
-import org.graylog2.indexer.cluster.health.*;
+import org.graylog2.indexer.cluster.health.AbsoluteValueWatermarkSettings;
+import org.graylog2.indexer.cluster.health.ByteSize;
+import org.graylog2.indexer.cluster.health.ClusterAllocationDiskSettings;
+import org.graylog2.indexer.cluster.health.NodeDiskUsageStats;
+import org.graylog2.indexer.cluster.health.PercentageWatermarkSettings;
+import org.graylog2.indexer.cluster.health.SIUnitParser;
+import org.graylog2.indexer.cluster.health.WatermarkSettings;
 import org.graylog2.notifications.Notification;
 import org.graylog2.notifications.NotificationImpl;
 import org.graylog2.notifications.NotificationService;
@@ -171,9 +175,9 @@ public class IndexerClusterCheckerThreadTest {
         NodeDiskUsageStats nodeDiskUsageStats = mock(NodeDiskUsageStats.class);
 
         when(nodeDiskUsageStats.ip()).thenReturn("0.0.0.0");
-        when(nodeDiskUsageStats.diskTotal()).thenReturn(new ByteSizeValue(100L, ByteSizeUnit.GB));
-        when(nodeDiskUsageStats.diskUsed()).thenReturn(new ByteSizeValue(70L, ByteSizeUnit.GB));
-        when(nodeDiskUsageStats.diskAvailable()).thenReturn(new ByteSizeValue(30L, ByteSizeUnit.GB));
+        when(nodeDiskUsageStats.diskTotal()).thenReturn(SIUnitParser.parseBytesSizeValue("100GB"));
+        when(nodeDiskUsageStats.diskUsed()).thenReturn(SIUnitParser.parseBytesSizeValue("70GB"));
+        when(nodeDiskUsageStats.diskAvailable()).thenReturn(SIUnitParser.parseBytesSizeValue("30GB"));
         when(nodeDiskUsageStats.diskUsedPercent()).thenReturn(70D);
 
         nodesDiskUsageStats.add(nodeDiskUsageStats);
@@ -183,9 +187,9 @@ public class IndexerClusterCheckerThreadTest {
     private ClusterAllocationDiskSettings buildThresholdNotTriggeredClusterAllocationDiskSettings(WatermarkSettings.SettingsType type) {
         if (type == WatermarkSettings.SettingsType.ABSOLUTE) {
             AbsoluteValueWatermarkSettings absoluteValueWatermarkSettings = new AbsoluteValueWatermarkSettings.Builder()
-                    .low(new ByteSizeValue(15, ByteSizeUnit.GB))
-                    .high(new ByteSizeValue(10, ByteSizeUnit.GB))
-                    .floodStage(new ByteSizeValue(5, ByteSizeUnit.GB))
+                    .low(SIUnitParser.parseBytesSizeValue("15GB"))
+                    .high(SIUnitParser.parseBytesSizeValue("10GB"))
+                    .floodStage(SIUnitParser.parseBytesSizeValue("5GB"))
                     .build();
             return ClusterAllocationDiskSettings.create(true, absoluteValueWatermarkSettings);
         } else {
@@ -207,21 +211,21 @@ public class IndexerClusterCheckerThreadTest {
     }
 
     private ClusterAllocationDiskSettings buildThresholdTriggeredClusterAllocationDiskSettingsAbsolute(Notification.Type expectedNotificationType) {
-        ByteSizeValue low;
-        ByteSizeValue high;
-        ByteSizeValue floodStage;
+        ByteSize low;
+        ByteSize high;
+        ByteSize floodStage;
         if (expectedNotificationType == Notification.Type.ES_NODE_DISK_WATERMARK_LOW) {
-            low = new ByteSizeValue(35, ByteSizeUnit.GB);
-            high = new ByteSizeValue(10, ByteSizeUnit.GB);
-            floodStage = new ByteSizeValue(5, ByteSizeUnit.GB);
+            low = SIUnitParser.parseBytesSizeValue("35GB");
+            high = SIUnitParser.parseBytesSizeValue("10GB");
+            floodStage = SIUnitParser.parseBytesSizeValue("5GB");
         } else if (expectedNotificationType == Notification.Type.ES_NODE_DISK_WATERMARK_HIGH) {
-            low = new ByteSizeValue(45, ByteSizeUnit.GB);
-            high = new ByteSizeValue(35, ByteSizeUnit.GB);
-            floodStage = new ByteSizeValue(5, ByteSizeUnit.GB);
+            low = SIUnitParser.parseBytesSizeValue("45GB");
+            high = SIUnitParser.parseBytesSizeValue("35GB");
+            floodStage = SIUnitParser.parseBytesSizeValue("5GB");
         } else {
-            low = new ByteSizeValue(55, ByteSizeUnit.GB);
-            high = new ByteSizeValue(45, ByteSizeUnit.GB);
-            floodStage = new ByteSizeValue(35, ByteSizeUnit.GB);
+            low = SIUnitParser.parseBytesSizeValue("55GB");
+            high = SIUnitParser.parseBytesSizeValue("45GB");
+            floodStage = SIUnitParser.parseBytesSizeValue("35GB");
         }
         return ClusterAllocationDiskSettings.create(true, new AbsoluteValueWatermarkSettings.Builder()
                 .low(low)

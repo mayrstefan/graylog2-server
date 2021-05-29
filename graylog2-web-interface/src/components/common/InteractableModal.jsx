@@ -1,8 +1,24 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Rnd } from 'react-rnd';
 import styled, { css } from 'styled-components';
-import { debounce } from 'lodash';
+import debounce from 'lodash/debounce';
 
 import { Button } from 'components/graylog';
 import Icon from 'components/common/Icon';
@@ -27,10 +43,11 @@ const InteractableModalWrapper = styled.div`
 `;
 
 const StyledRnd = styled(Rnd)(({ theme }) => css`
-  box-shadow: 0 0 9px rgba(31, 31, 31, 0.25),
-    0 0 6px rgba(31, 31, 31, 0.25),
-    0 0 3px rgba(31, 31, 31, 0.25);
-  background-color: ${theme.color.gray[20]};
+  box-shadow: 0 0 9px ${theme.colors.global.navigationBoxShadow},
+    0 0 6px ${theme.colors.global.navigationBoxShadow},
+    0 0 3px ${theme.colors.global.navigationBoxShadow};
+  background-color: ${theme.colors.global.contentBackground};
+  border: 1px solid ${theme.colors.variant.lightest.default};
   border-radius: 3px;
   flex-direction: column;
   display: flex !important;
@@ -46,21 +63,31 @@ const Header = styled.header(({ theme }) => css`
   padding: 6px 12px 9px;
   display: flex;
   align-items: center;
-  background-color: ${theme.color.gray[30]};
-  border-bottom: 1px solid ${theme.color.gray[10]};
+  background-color: ${theme.colors.variant.lightest.default};
+  border-bottom: 1px solid ${theme.colors.variant.lighter.default};
   border-top-left-radius: 3px;
   border-top-right-radius: 3px;
   cursor: move;
 `);
 
 const Title = styled.h3(({ theme }) => css`
-  color: ${theme.color.global.textAlt};
+  color: ${theme.colors.global.textDefault};
   flex: 1;
 `);
 
 const DragBars = styled(Icon)(({ theme }) => css`
-  color: ${theme.color.gray[70]};
+  color: ${theme.colors.variant.darker.default};
   margin-right: 9px;
+`);
+
+const CloseButton = styled(Button)(({ theme }) => css`
+  && {
+    color: ${theme.colors.variant.light.default};
+    
+    :hover {
+      color: ${theme.colors.variant.default};
+    }
+  }
 `);
 
 /**
@@ -107,6 +134,7 @@ const InteractableModal = ({
           x: dragPosition.x - (parseFloat(ref.style.width) - parseFloat(resizeSize.width)),
           y: dragPosition.y - (parseFloat(ref.style.height) - parseFloat(resizeSize.height)),
         };
+
         break;
 
       case 'bottomLeft':
@@ -114,6 +142,7 @@ const InteractableModal = ({
           x: dragPosition.x - (parseFloat(ref.style.width) - parseFloat(resizeSize.width)),
           y: dragPosition.y,
         };
+
         break;
 
       case 'topRight':
@@ -121,6 +150,7 @@ const InteractableModal = ({
           x: dragPosition.x,
           y: dragPosition.y - (parseFloat(ref.style.height) - parseFloat(resizeSize.height)),
         };
+
         break;
 
       default:
@@ -145,11 +175,10 @@ const InteractableModal = ({
     };
 
     const newCoords = {};
-
     const modalXWithNewWidth = innerWidth - boundingBox.right;
-    newCoords.x = Math.max(Math.min(modalXWithNewWidth, currentX), boundingBox.left);
-
     const modalYWithNewHeight = innerHeight - boundingBox.bottom;
+
+    newCoords.x = Math.max(Math.min(modalXWithNewWidth, currentX), boundingBox.left);
     newCoords.y = Math.max(Math.min(modalYWithNewHeight, currentY), boundingBox.top);
 
     handleDragStop(null, newCoords);
@@ -165,10 +194,10 @@ const InteractableModal = ({
     return () => {
       window.removeEventListener('resize', handleBrowserResize);
     };
-  }, [dragPosition]);
+  }, [dragPosition, handleBrowserResize]);
 
   return (
-    <InteractableModalWrapper className={wrapperClassName}>
+    <InteractableModalWrapper className={wrapperClassName} role="dialog">
       <StyledRnd default={{ ...position, ...size }}
                  minHeight={minHeight}
                  minWidth={minWidth}
@@ -184,9 +213,9 @@ const InteractableModal = ({
         <Header ref={dragHandleRef}>
           <Title><DragBars name="bars" />{title}</Title>
 
-          <Button bsStyle="default" onClick={onClose} bsSize="sm">
+          <CloseButton bsStyle="link" onClick={onClose} bsSize="small" title="Close">
             <Icon name="times" size="lg" />
-          </Button>
+          </CloseButton>
         </Header>
 
         <Content>

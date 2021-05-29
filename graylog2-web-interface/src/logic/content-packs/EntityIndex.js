@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import Immutable from 'immutable';
 
 export default class EntityIndex {
@@ -19,6 +35,7 @@ export default class EntityIndex {
 
   toBuilder() {
     const { id, title, type } = this._value;
+
     // eslint-disable-next-line no-use-before-define
     return new Builder(Immutable.Map({ id, title, type }));
   }
@@ -46,11 +63,13 @@ export default class EntityIndex {
     if (obj.isEntityIndex) {
       return true;
     }
+
     return false;
   }
 
   static fromJSON(value) {
     const { id, title, type } = value;
+
     return EntityIndex.create(id, title, type);
   }
 }
@@ -74,6 +93,7 @@ class Builder {
 
   build() {
     const { id, title, type } = this.value.toObject();
+
     return new EntityIndex(id, title, type);
   }
 }

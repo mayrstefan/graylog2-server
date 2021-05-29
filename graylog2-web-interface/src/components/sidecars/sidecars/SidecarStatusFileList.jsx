@@ -1,8 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
 import { DataTable, Timestamp, Icon } from 'components/common';
-
 
 class SidecarStatusFileList extends React.Component {
   static propTypes = {
@@ -16,9 +31,11 @@ class SidecarStatusFileList extends React.Component {
   _activityFormatter = (time) => {
     const now = new Date().getTime();
     const modDate = new Date(time).getTime();
+
     if (modDate > (now - 60000)) {
       return ('info');
     }
+
     return ('');
   };
 
@@ -26,7 +43,8 @@ class SidecarStatusFileList extends React.Component {
     if (file.is_dir) {
       return (<span><Icon name="folder-open" />&nbsp;&nbsp;{file.path}</span>);
     }
-    return (<span><Icon name="file-o" />&nbsp;&nbsp;{file.path}</span>);
+
+    return (<span><Icon name="file" type="regular" />&nbsp;&nbsp;{file.path}</span>);
   };
 
   _fileListFormatter = (file) => {

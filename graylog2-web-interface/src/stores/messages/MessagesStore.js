@@ -1,12 +1,27 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import Reflux from 'reflux';
 
 import fetch from 'logic/rest/FetchProvider';
 import MessageFormatter from 'logic/message/MessageFormatter';
 import ApiRoutes from 'routing/ApiRoutes';
-import URLUtils from 'util/URLUtils';
+import * as URLUtils from 'util/URLUtils';
 import UserNotification from 'util/UserNotification';
 import StringUtils from 'util/StringUtils';
-
 import ActionsProvider from 'injection/ActionsProvider';
 
 const MessagesActions = ActionsProvider.getActions('Messages');
@@ -63,8 +78,10 @@ const MessagesStore = Reflux.createStore({
           if (error.additional && error.additional.status === 400) {
             UserNotification.error('Please ensure the selected codec and its configuration are right. '
               + 'Check your server logs for more information.', 'Could not load raw message');
+
             return;
           }
+
           UserNotification.error(`Loading raw message failed with status: ${error}`,
             'Could not load raw message');
         },

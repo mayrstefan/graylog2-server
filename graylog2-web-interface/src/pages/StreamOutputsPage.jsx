@@ -1,17 +1,32 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Col, Row } from 'components/graylog';
-import { Link } from 'react-router';
 import Reflux from 'reflux';
-
-import { ContentHeadRow, DocumentTitle, Spinner } from 'components/common';
-
-import OutputsComponent from 'components/outputs/OutputsComponent';
-import SupportLink from 'components/support/SupportLink';
 import createReactClass from 'create-react-class';
 
+import { Link } from 'components/graylog/router';
+import { Col } from 'components/graylog';
+import { ContentHeadRow, DocumentTitle, Spinner } from 'components/common';
+import OutputsComponent from 'components/outputs/OutputsComponent';
+import SupportLink from 'components/support/SupportLink';
 import StoreProvider from 'injection/StoreProvider';
 import Routes from 'routing/Routes';
+import withParams from 'routing/withParams';
 
 const CurrentUserStore = StoreProvider.getStore('CurrentUser');
 const StreamsStore = StoreProvider.getStore('Streams');
@@ -32,6 +47,7 @@ const StreamOutputsPage = createReactClass({
 
   componentDidMount() {
     const { params } = this.props;
+
     StreamsStore.get(params.streamId, (stream) => {
       this.setState({ stream: stream });
     });
@@ -39,9 +55,11 @@ const StreamOutputsPage = createReactClass({
 
   render() {
     const { stream, currentUser } = this.state;
+
     if (!stream) {
       return <Spinner />;
     }
+
     return (
       <DocumentTitle title={`Outputs for Stream ${stream.title}`}>
         <div>
@@ -73,4 +91,4 @@ const StreamOutputsPage = createReactClass({
   },
 });
 
-export default StreamOutputsPage;
+export default withParams(StreamOutputsPage);

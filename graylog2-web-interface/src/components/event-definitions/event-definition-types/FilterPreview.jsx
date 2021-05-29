@@ -1,7 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Panel, Table } from 'components/graylog';
 
+import { Panel, Table } from 'components/graylog';
 import { Spinner } from 'components/common';
 import HelpPanel from 'components/event-definitions/common/HelpPanel';
 
@@ -33,13 +49,13 @@ class FilterPreview extends React.Component {
     });
   };
 
-  renderSearchResult = (searchResult) => {
-    if (searchResult.messages.length === 0) {
+  renderSearchResult = (searchResult = {}) => {
+    if (!searchResult.messages || searchResult.messages.length === 0) {
       return <p>Could not find any messages with the current search criteria.</p>;
     }
 
     return (
-      <Table striped hover condensed>
+      <Table striped condensed bordered>
         <thead>
           <tr>
             <th>Timestamp</th>
@@ -55,6 +71,8 @@ class FilterPreview extends React.Component {
 
   render() {
     const { isFetchingData, searchResult, errors, displayPreview } = this.props;
+
+    const renderedResults = isFetchingData ? <Spinner text="Loading filter preview..." /> : this.renderSearchResult(searchResult);
 
     return (
       <>
@@ -79,12 +97,13 @@ class FilterPreview extends React.Component {
         </HelpPanel>
 
         {displayPreview && (
-          <Panel className={styles.filterPreview} header={<h3>Filter Preview</h3>}>
-            {errors.length > 0 ? (
-              <p className="text-danger">{errors[0].description}</p>
-            ) : (
-              isFetchingData ? <Spinner text="Loading filter preview..." /> : this.renderSearchResult(searchResult)
-            )}
+          <Panel className={styles.filterPreview} bsStyle="default">
+            <Panel.Heading>
+              <Panel.Title>Filter Preview</Panel.Title>
+            </Panel.Heading>
+            <Panel.Body>
+              {errors.length > 0 ? <p className="text-danger">{errors[0].description}</p> : renderedResults}
+            </Panel.Body>
           </Panel>
         )}
       </>

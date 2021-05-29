@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.resources.system.indexer;
 
@@ -26,15 +26,16 @@ import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.graylog2.indexer.IndexSet;
 import org.graylog2.indexer.IndexSetRegistry;
 import org.graylog2.indexer.cluster.Cluster;
+import org.graylog2.indexer.counts.Counts;
 import org.graylog2.indexer.indices.Indices;
 import org.graylog2.indexer.indices.TooManyAliasesException;
+import org.graylog2.rest.models.count.responses.MessageCountResponse;
 import org.graylog2.rest.models.system.deflector.responses.DeflectorSummary;
 import org.graylog2.rest.models.system.indexer.responses.IndexRangeSummary;
 import org.graylog2.rest.models.system.indexer.responses.IndexSizeSummary;
 import org.graylog2.rest.models.system.indexer.responses.IndexSummary;
 import org.graylog2.rest.models.system.indexer.responses.IndexerClusterOverview;
 import org.graylog2.rest.models.system.indexer.responses.IndexerOverview;
-import org.graylog2.rest.resources.count.CountResource;
 import org.graylog2.rest.resources.system.DeflectorResource;
 import org.graylog2.rest.resources.system.IndexRangesResource;
 import org.graylog2.shared.rest.resources.RestResource;
@@ -60,7 +61,7 @@ public class IndexerOverviewResource extends RestResource {
     private final DeflectorResource deflectorResource;
     private final IndexerClusterResource indexerClusterResource;
     private final IndexRangesResource indexRangesResource;
-    private final CountResource countResource;
+    private final Counts counts;
     private final IndexSetRegistry indexSetRegistry;
     private final Indices indices;
     private final Cluster cluster;
@@ -69,14 +70,14 @@ public class IndexerOverviewResource extends RestResource {
     public IndexerOverviewResource(DeflectorResource deflectorResource,
                                    IndexerClusterResource indexerClusterResource,
                                    IndexRangesResource indexRangesResource,
-                                   CountResource countResource,
+                                   Counts counts,
                                    IndexSetRegistry indexSetRegistry,
                                    Indices indices,
                                    Cluster cluster) {
         this.deflectorResource = deflectorResource;
         this.indexerClusterResource = indexerClusterResource;
         this.indexRangesResource = indexRangesResource;
-        this.countResource = countResource;
+        this.counts = counts;
         this.indexSetRegistry = indexSetRegistry;
         this.indices = indices;
         this.cluster = cluster;
@@ -127,7 +128,8 @@ public class IndexerOverviewResource extends RestResource {
 
         return IndexerOverview.create(deflectorSummary,
                 IndexerClusterOverview.create(indexerClusterResource.clusterHealth(), indexerClusterResource.clusterName().name()),
-                countResource.total(indexSetId), indicesSummaries);
+                MessageCountResponse.create(counts.total(indexSet)),
+                indicesSummaries);
     }
 
     private Map<String, IndexSummary> buildIndexSummaries(DeflectorSummary deflectorSummary, IndexSet indexSet, List<IndexRangeSummary> indexRanges, JsonNode indexStats, Map<String, Boolean> areReopened) {

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import { mount } from 'wrappedEnzyme';
 import 'helpers/mocking/react-dom_mock';
@@ -12,7 +28,8 @@ describe('<ContentPackParameterList />', () => {
   it('should render with empty parameters with readOnly', () => {
     const contentPack = ContentPack.builder().build();
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack} readOnly />);
-    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper).toExist();
   });
 
   it('should render with parameters with readOnly', () => {
@@ -27,13 +44,15 @@ describe('<ContentPackParameterList />', () => {
       .parameters(parameters)
       .build();
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack} readOnly />);
-    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper).toExist();
   });
 
   it('should render with empty parameters without readOnly', () => {
     const contentPack = ContentPack.builder().build();
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack} />);
-    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper).toExist();
   });
 
   it('should render with parameters without readOnly', () => {
@@ -48,7 +67,8 @@ describe('<ContentPackParameterList />', () => {
       .parameters(parameters)
       .build();
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack} />);
-    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper).toExist();
   });
 
   it('should delete a parameter', () => {
@@ -68,7 +88,9 @@ describe('<ContentPackParameterList />', () => {
 
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack}
                                                     onDeleteParameter={deleteFn} />);
+
     wrapper.find('button[children="Delete"]').simulate('click');
+
     expect(deleteFn.mock.calls.length).toBe(1);
   });
 
@@ -100,7 +122,9 @@ describe('<ContentPackParameterList />', () => {
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack}
                                                     onDeleteParameter={deleteFn}
                                                     appliedParameter={appliedParameter} />);
+
     wrapper.find('button[children="Delete"]').simulate('click');
+
     expect(deleteFn.mock.calls.length).toBe(0);
   });
 
@@ -122,11 +146,16 @@ describe('<ContentPackParameterList />', () => {
       .parameters(parameters)
       .build();
     const wrapper = mount(<ContentPackParameterList contentPack={contentPack} />);
+
     expect(wrapper.find("td[children='PARAM']").exists()).toBe(true);
+
     wrapper.find('input').simulate('change', { target: { value: 'Bad' } });
     wrapper.find('form').simulate('submit');
+
     expect(wrapper.find("td[children='PARAM']").exists()).toBe(false);
+
     wrapper.find("button[children='Reset']").simulate('click');
+
     expect(wrapper.find("td[children='PARAM']").exists()).toBe(true);
   });
 });

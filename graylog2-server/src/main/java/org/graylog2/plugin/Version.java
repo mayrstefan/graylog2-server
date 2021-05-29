@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.plugin;
 
@@ -161,6 +161,21 @@ public class Version implements Comparable<Version> {
      */
     public static Version fromPluginProperties(Class<?> pluginClass, String path, String propertyName, Version defaultVersion) {
         return fromClasspathProperties(pluginClass, path, propertyName, null, null, defaultVersion);
+    }
+
+    /**
+     * Try to read the version from the {@literal graylog-plugin.properties} file included in a plugin
+     * and {@literal git.properties} ({@code git.commit.id} property) from the classpath..
+     *
+     * @param pluginClass     Class where the class loader should be obtained from.
+     * @param path            Path of the properties file on the classpath which contains the version information.
+     * @param propertyName    The name of the property to read as project version ("major.minor.patch-preReleaseVersion").
+     * @param gitPath         Path of the properties file on the classpath which contains the SCM information.
+     * @param gitPropertyName The name of the property to read as git commit SHA.
+     * @param defaultVersion  The {@link Version} to return if reading the information from the properties files failed.
+     */
+    public static Version fromPluginProperties(Class<?> pluginClass, String path, String propertyName, String gitPath, String gitPropertyName, Version defaultVersion) {
+        return fromClasspathProperties(pluginClass, path, propertyName, gitPath, gitPropertyName, defaultVersion);
     }
 
     /**

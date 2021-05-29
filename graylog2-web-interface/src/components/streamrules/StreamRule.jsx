@@ -1,31 +1,53 @@
-import React, { useRef } from 'react';
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { isEmpty } from 'lodash';
 import styled from 'styled-components';
 
+import { useStore } from 'stores/connect';
+import CombinedProvider from 'injection/CombinedProvider';
 import { Icon } from 'components/common';
 import { Button, ListGroupItem } from 'components/graylog';
-import PermissionsMixin from 'util/PermissionsMixin';
+import { isPermitted } from 'util/PermissionsMixin';
 import StreamRuleForm from 'components/streamrules/StreamRuleForm';
 import HumanReadableStreamRule from 'components/streamrules/HumanReadableStreamRule';
-
 import StoreProvider from 'injection/StoreProvider';
-
 import UserNotification from 'util/UserNotification';
 
+const { InputsStore, InputsActions } = CombinedProvider.get('Inputs');
+
 const StreamRulesStore = StoreProvider.getStore('StreamRules');
-const { isPermitted } = PermissionsMixin;
 
 const ActionButtonsWrap = styled.span`
   margin-right: 6px;
 `;
 
 const StreamRule = ({ matchData, permissions, stream, streamRule, streamRuleTypes, onSubmit, onDelete }) => {
-  const streamRuleFormRef = useRef();
+  const [showStreamRuleForm, setShowStreamRuleForm] = useState(false);
+  const { inputs } = useStore(InputsStore);
+
+  useEffect(() => {
+    InputsActions.list();
+  }, []);
 
   const _onEdit = (event) => {
     event.preventDefault();
-    streamRuleFormRef.current.open();
+    setShowStreamRuleForm(true);
   };
 
   const _onDelete = (event) => {
@@ -38,6 +60,7 @@ const StreamRule = ({ matchData, permissions, stream, streamRule, streamRuleType
         if (onDelete) {
           onDelete(streamRule.id);
         }
+
         UserNotification.success('Stream rule has been successfully deleted.', 'Success');
       });
     }
@@ -48,6 +71,7 @@ const StreamRule = ({ matchData, permissions, stream, streamRule, streamRuleType
       if (onSubmit) {
         onSubmit(streamRuleId, data);
       }
+
       UserNotification.success('Stream rule has been successfully updated.', 'Success');
     });
   };
@@ -58,7 +82,7 @@ const StreamRule = ({ matchData, permissions, stream, streamRule, streamRuleType
         <Button bsStyle="link"
                 bsSize="xsmall"
                 onClick={_onDelete}>
-          <Icon name="trash-o" />
+          <Icon name="trash-alt" type="regular" />
         </Button>
         <Button bsStyle="link"
                 bsSize="xsmall"
@@ -77,12 +101,14 @@ const StreamRule = ({ matchData, permissions, stream, streamRule, streamRuleType
   return (
     <ListGroupItem bsStyle={listGroupStyle}>
       {actionItems}
-      <HumanReadableStreamRule streamRule={streamRule} streamRuleTypes={streamRuleTypes} />
-      <StreamRuleForm ref={streamRuleFormRef}
-                      streamRule={streamRule}
-                      streamRuleTypes={streamRuleTypes}
-                      title="Edit Stream Rule"
-                      onSubmit={_onSubmit} />
+      <HumanReadableStreamRule streamRule={streamRule} streamRuleTypes={streamRuleTypes} inputs={inputs} />
+      { showStreamRuleForm && (
+        <StreamRuleForm streamRule={streamRule}
+                        onClose={() => setShowStreamRuleForm(false)}
+                        streamRuleTypes={streamRuleTypes}
+                        title="Edit Stream Rule"
+                        onSubmit={_onSubmit} />
+      ) }
       {description}
     </ListGroupItem>
   );

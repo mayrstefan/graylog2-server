@@ -1,7 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { LinkContainer } from 'react-router-bootstrap';
 
+import { LinkContainer } from 'components/graylog/router';
 import Routes from 'routing/Routes';
 import { DataTable } from 'components/common';
 import { Button, DropdownButton, ButtonToolbar, MenuItem, Modal } from 'components/graylog';
@@ -28,6 +44,7 @@ class ContentPackVersions extends React.Component {
   constructor(props) {
     super(props);
     const { contentPackRevisions } = this.props;
+
     this.state = { selectedVersion: contentPackRevisions.latestRevision };
 
     this.onChange = this.onChange.bind(this);
@@ -41,6 +58,7 @@ class ContentPackVersions extends React.Component {
     this.setState({
       selectedVersion: event.target.value,
     });
+
     onChange(event.target.value);
   }
 
@@ -48,9 +66,9 @@ class ContentPackVersions extends React.Component {
     if (header === 'Action') {
       return (<th className="text-right">{header}</th>);
     }
+
     return (<th>{header}</th>);
   };
-
 
   rowFormatter(pack) {
     const { onDeletePack } = this.props;
@@ -63,6 +81,7 @@ class ContentPackVersions extends React.Component {
                                   contentPackId={pack.id}
                                   revision={pack.rev} />
     );
+
     return (
       <tr key={pack.id + pack.rev}>
         <td>
@@ -137,6 +156,7 @@ class ContentPackVersions extends React.Component {
   render() {
     const { contentPackRevisions: { contentPacks } } = this.props;
     const headers = ['Select', 'Revision', 'Action'];
+
     return (
       <DataTable id="content-packs-versions"
                  headers={headers}

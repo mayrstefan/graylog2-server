@@ -1,33 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  ~ Copyright 2012-2015 TORCH GmbH, 2015-2016 Graylog, Inc.
-  ~
-  ~ This file is part of Graylog.
-  ~
-  ~ Graylog is free software: you can redistribute it and/or modify
-  ~ it under the terms of the GNU General Public License as published by
-  ~ the Free Software Foundation, either version 3 of the License, or
-  ~ (at your option) any later version.
-  ~
-  ~ Graylog is distributed in the hope that it will be useful,
-  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~ GNU General Public License for more details.
-  ~
-  ~ You should have received a copy of the GNU General Public License
-  ~ along with Graylog.  If not, see <http://www.gnu.org/licenses />.
-  -->
+
+    Copyright (C) 2020 Graylog, Inc.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the Server Side Public License, version 1,
+    as published by MongoDB, Inc.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    Server Side Public License for more details.
+
+    You should have received a copy of the Server Side Public License
+    along with this program. If not, see
+    <http://www.mongodb.com/licensing/server-side-public-license>.
+
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <modules>
         <module>graylog-project-parent</module>
         <module>graylog-plugin-parent</module>
         <module>graylog-plugin-archetype</module>
+        <module>graylog-storage-elasticsearch6</module>
+        <module>graylog-storage-elasticsearch7</module>
+        <module>distribution</module>
     </modules>
 
     <groupId>org.graylog</groupId>
     <artifactId>graylog-parent</artifactId>
-    <version>3.3.0-beta.2-SNAPSHOT</version>
+    <version>4.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Graylog Parent POM</name>
@@ -36,8 +39,8 @@
 
     <licenses>
         <license>
-            <name>GNU General Public License (GPL) version 3.0</name>
-            <url>https://www.gnu.org/licenses/gpl-3.0.html</url>
+            <name>Server Side Public License (SSPL) version 1</name>
+            <url>https://www.mongodb.com/licensing/server-side-public-license</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
@@ -85,29 +88,30 @@
         <!-- Dependencies -->
         <airline.version>2.7.2</airline.version>
         <amqp-client.version>5.8.0</amqp-client.version>
-        <antlr.version>4.7.1</antlr.version>
+        <antlr.version>4.8-1</antlr.version>
         <apache-directory-version>1.0.3</apache-directory-version>
-        <auto-value.version>1.7</auto-value.version>
+        <apache-httpclient.version>4.5.13</apache-httpclient.version>
+        <auto-value.version>1.7.4</auto-value.version>
         <auto-value-javabean.version>2.5.2</auto-value-javabean.version>
         <bouncycastle.version>1.64</bouncycastle.version>
         <caffeine.version>2.8.1</caffeine.version>
         <cef-parser.version>0.0.1.10</cef-parser.version>
         <commons-codec.version>1.14</commons-codec.version>
         <commons-email.version>1.5</commons-email.version>
+        <commons-validator.version>1.6</commons-validator.version>
         <commons-io.version>2.6</commons-io.version>
         <disruptor.version>3.4.2</disruptor.version>
-        <elasticsearch.version>5.6.12</elasticsearch.version>
         <freemarker.version>2.3.29</freemarker.version>
-        <jest.version>2.4.15+jackson</jest.version>
         <gelfclient.version>1.5.0</gelfclient.version>
         <geoip2.version>2.12.0</geoip2.version>
         <grok.version>0.1.9-graylog-2</grok.version>
+        <grpc.version>1.29.0</grpc.version>
         <guava-retrying.version>2.0.0</guava-retrying.version>
         <guava.version>28.2-jre</guava.version>
-        <guice.version>4.2.2</guice.version>
+        <guice.version>5.0.1</guice.version>
         <HdrHistogram.version>2.1.12</HdrHistogram.version>
         <hibernate-validator.version>6.1.2.Final</hibernate-validator.version>
-        <hk2.version>2.5.0-b32</hk2.version> <!-- The HK2 version should match the version being used by Jersey -->
+        <hk2.version>2.6.1</hk2.version> <!-- The HK2 version should match the version being used by Jersey -->
         <jackson.version>2.9.10.20200411</jackson.version>
         <jadconfig.version>0.13.0</jadconfig.version>
         <java-semver.version>0.9.0</java-semver.version>
@@ -120,36 +124,39 @@
         <jbcrypt.version>0.4</jbcrypt.version>
         <jcip-annotations.version>1.0</jcip-annotations.version>
         <jdot.version>1.0</jdot.version>
-        <jersey.version>2.25.1</jersey.version>
+        <jersey.version>2.32</jersey.version>
         <jmte.version>5.0.0</jmte.version>
-        <joda-time.version>2.10.5</joda-time.version>
+        <joda-time.version>2.10.6</joda-time.version>
         <jool.version>0.9.14</jool.version>
         <json-path.version>2.4.0</json-path.version>
-        <kafka.version>0.9.0.1</kafka.version>
-        <log4j.version>2.13.0</log4j.version>
-        <metrics.version>4.0.3</metrics.version>
+        <kafka.version>2.7.0</kafka.version>
+        <kafka09.version>0.9.0.1-6</kafka09.version>
+        <log4j.version>2.13.3</log4j.version>
+        <metrics.version>4.1.9</metrics.version>
         <mongodb-driver.version>3.12.1</mongodb-driver.version>
         <mongojack.version>2.10.1</mongojack.version>
         <natty.version>0.13</natty.version>
-        <netty.version>4.1.49.Final</netty.version>
-        <netty-tcnative-boringssl-static.version>2.0.30.Final</netty-tcnative-boringssl-static.version>
+        <netty.version>4.1.60.Final</netty.version>
+        <netty-tcnative-boringssl-static.version>2.0.36.Final</netty-tcnative-boringssl-static.version>
         <okhttp.version>3.14.6</okhttp.version>
+        <okta-sdk.version>3.0.1</okta-sdk.version>
         <opencsv.version>2.3</opencsv.version>
         <os-platform-finder.version>1.2.3</os-platform-finder.version>
         <pkts.version>3.0.5</pkts.version>
-        <protobuf.version>3.6.1</protobuf.version>
+        <protobuf.version>3.11.4</protobuf.version>
         <reflections.version>0.9.12</reflections.version>
-        <retrofit.version>2.8.1</retrofit.version>
-        <scala.version>2.11.8</scala.version>
+        <retrofit.version>2.9.0</retrofit.version>
+        <scala.version>2.13.4</scala.version>
         <semver4j.version>2.2.0-graylog.1</semver4j.version>
         <shiro.version>1.5.2</shiro.version>
-        <sigar.version>1.6.4</sigar.version>
-        <siv-mode.version>1.3.2</siv-mode.version>
+        <oshi.version>5.3.7</oshi.version>
+        <siv-mode.version>1.4.1</siv-mode.version>
         <slf4j.version>1.7.30</slf4j.version>
         <streamex.version>0.7.2</streamex.version>
         <swagger.version>1.5.13</swagger.version>
         <syslog4j.version>0.9.60</syslog4j.version>
         <ulid.version>8.2.0</ulid.version>
+        <unboundid-ldap.version>5.1.1</unboundid-ldap.version>
         <uuid.version>3.2.1</uuid.version>
         <validation-api.version>2.0.1.Final</validation-api.version>
         <zkclient.version>0.11</zkclient.version>
@@ -161,22 +168,22 @@
         <assertj-joda-time.version>2.2.0</assertj-joda-time.version>
         <assertj-json.version>1.2.0</assertj-json.version>
         <awaitility.version>3.1.3</awaitility.version>
-        <equalsverifier.version>3.0</equalsverifier.version>
+        <equalsverifier.version>3.4.1</equalsverifier.version>
         <jukito.version>1.5</jukito.version>
-        <junit.version>4.13</junit.version>
-        <junit-jupiter.version>5.6.0</junit-jupiter.version>
-        <mockito.version>2.23.4</mockito.version>
+        <junit.version>4.13.1</junit.version>
+        <junit-jupiter.version>5.7.0</junit-jupiter.version>
+        <mockito.version>3.4.4</mockito.version>
         <nosqlunit.version>1.0.0-rc.5</nosqlunit.version>
-        <restassured.version>4.2.0</restassured.version>
+        <restassured.version>4.3.1</restassured.version>
         <system-rules.version>1.19.0</system-rules.version>
-        <testcontainers.version>1.12.5</testcontainers.version>
+        <testcontainers.version>1.15.2</testcontainers.version>
 
         <!-- Nodejs dependencies -->
-        <nodejs.version>v12.13.1</nodejs.version>
-        <yarn.version>v1.19.2</yarn.version>
+        <nodejs.version>v14.15.4</nodejs.version>
+        <yarn.version>v1.22.5</yarn.version>
 
         <!-- Plugin versions -->
-        <license-maven.version>2.11</license-maven.version>
+        <license-maven.version>4.0.rc2</license-maven.version>
         <!-- Downgraded to 1.3.0 because of this issue: https://github.com/maven-download-plugin/maven-download-plugin/issues/80 -->
         <download-maven-plugin.version>1.3.0</download-maven-plugin.version>
     </properties>
@@ -238,7 +245,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.0.1</version>
+                    <version>3.2.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -253,7 +260,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>3.2.4</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -268,7 +275,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-pmd-plugin</artifactId>
-                    <version>3.10.0</version>
+                    <version>3.13.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
@@ -308,7 +315,7 @@
                 <plugin>
                     <groupId>com.github.alexcojocaru</groupId>
                     <artifactId>elasticsearch-maven-plugin</artifactId>
-                    <version>6.14</version>
+                    <version>6.17</version>
                     <configuration>
                         <skip>true</skip>
                     </configuration>
@@ -380,6 +387,66 @@
             <plugin>
                 <groupId>com.mycila</groupId>
                 <artifactId>license-maven-plugin</artifactId>
+                <configuration>
+                    <aggregate>false</aggregate>
+                    <mapping>
+                        <java>SLASHSTAR_STYLE</java>
+                        <jsx>SLASHSTAR_STYLE</jsx>
+                        <ts>SLASHSTAR_STYLE</ts>
+                        <tsx>SLASHSTAR_STYLE</tsx>
+                    </mapping>
+                    <licenseSets>
+                        <licenseSet>
+                            <header>com/mycila/maven/plugin/license/templates/SSPL-1.txt</header>
+                            <properties>
+                                <project.inceptionYear>2020</project.inceptionYear>
+                                <owner>Graylog, Inc.</owner>
+                            </properties>
+                            <keywords>
+                                <keyword>Server Side Public License for more details</keyword>
+                            </keywords>
+                            <includes>
+                                <include>**/src/main/java/**</include>
+                                <include>**/src/test/java/**</include>
+                                <include>**/pom.xml</include>
+
+                                <include>*.js</include>
+                                <include>src/web/**/*.js</include>
+                                <include>src/web/**/*.jsx</include>
+                                <include>src/web/**/*.ts</include>
+                                <include>src/web/**/*.tsx</include>
+                                <include>graylog2-web-interface/*.js</include>
+                                <include>graylog2-web-interface/*.ts</include>
+                                <include>graylog2-web-interface/config/**/*.js</include>
+                                <include>graylog2-web-interface/config/**/*.ts</include>
+                                <include>graylog2-web-interface/packages/**/*.js</include>
+                                <include>graylog2-web-interface/packages/**/*.jsx</include>
+                                <include>graylog2-web-interface/packages/**/*.ts</include>
+                                <include>graylog2-web-interface/packages/**/*.tsx</include>
+                                <include>graylog2-web-interface/src/**/*.js</include>
+                                <include>graylog2-web-interface/src/**/*.jsx</include>
+                                <include>graylog2-web-interface/src/**/*.ts</include>
+                                <include>graylog2-web-interface/src/**/*.tsx</include>
+                                <include>graylog2-web-interface/test/**/*.js</include>
+                                <include>graylog2-web-interface/test/**/*.jsx</include>
+                                <include>graylog2-web-interface/test/**/*.ts</include>
+                                <include>graylog2-web-interface/test/**/*.tsx</include>
+                                <include>graylog2-web-interface/webpack/**/*.js</include>
+                                <include>graylog2-web-interface/webpack/**/*.ts</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/resources/swagger/**</exclude>
+                            </excludes>
+                        </licenseSet>
+                    </licenseSets>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -411,6 +478,13 @@
                         <configuration>
                             <goals>deploy</goals>
                         </configuration>
+                    </plugin>
+                    <plugin>
+                      <groupId>org.apache.maven.plugins</groupId>
+                      <artifactId>maven-deploy-plugin</artifactId>
+                      <configuration>
+                        <retryFailedDeploymentCount>5</retryFailedDeploymentCount>
+                      </configuration>
                     </plugin>
                 </plugins>
             </build>

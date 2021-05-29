@@ -1,12 +1,28 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { ControlLabel, FormControl, FormGroup, HelpBlock, InputGroup } from 'components/graylog';
 import lodash from 'lodash';
 import moment from 'moment';
 
+import { ControlLabel, FormControl, FormGroup, HelpBlock, InputGroup } from 'components/graylog';
 import { TimeUnitInput } from 'components/common';
 import { extractDurationAndUnit } from 'components/common/TimeUnitInput';
-import FormsUtils from 'util/FormsUtils';
+import * as FormsUtils from 'util/FormsUtils';
 
 import commonStyles from '../common/commonStyles.css';
 
@@ -39,12 +55,14 @@ class NotificationSettingsForm extends React.Component {
   propagateChanges = (key, value) => {
     const { eventDefinition, onSettingsChange } = this.props;
     const nextNotificationSettings = lodash.cloneDeep(eventDefinition.notification_settings);
+
     nextNotificationSettings[key] = value;
     onSettingsChange('notification_settings', nextNotificationSettings);
   };
 
   handleGracePeriodChange = (nextValue, nextUnit, enabled) => {
     const durationInMs = enabled ? moment.duration(lodash.max([nextValue, 0]), nextUnit).asMilliseconds() : 0;
+
     this.propagateChanges('grace_period_ms', durationInMs);
     this.setState({ gracePeriodDuration: nextValue, gracePeriodUnit: nextUnit });
   };
@@ -52,12 +70,14 @@ class NotificationSettingsForm extends React.Component {
   handleBacklogSizeChange = (event) => {
     const { name } = event.target;
     const value = event.target.value === '' ? '' : FormsUtils.getValueFromInput(event.target);
+
     this.setState({ [lodash.camelCase(name)]: value });
     this.propagateChanges(name, lodash.max([Number(value), 0]));
   };
 
   toggleBacklogSize = () => {
     const { isBacklogSizeEnabled, backlogSize } = this.state;
+
     this.setState({ isBacklogSizeEnabled: !isBacklogSizeEnabled });
     this.propagateChanges('backlog_size', (isBacklogSizeEnabled ? 0 : backlogSize));
   };

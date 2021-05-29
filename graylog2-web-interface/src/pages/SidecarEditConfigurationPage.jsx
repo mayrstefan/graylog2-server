@@ -1,16 +1,32 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
-import { LinkContainer } from 'react-router-bootstrap';
 
+import { LinkContainer } from 'components/graylog/router';
 import { ButtonToolbar, Col, Row, Button } from 'components/graylog';
 import { DocumentTitle, PageHeader, Spinner } from 'components/common';
 import Routes from 'routing/Routes';
 import CombinedProvider from 'injection/CombinedProvider';
-
 import ConfigurationForm from 'components/sidecars/configuration-forms/ConfigurationForm';
 import ConfigurationHelper from 'components/sidecars/configuration-forms/ConfigurationHelper';
 import history from 'util/History';
+import withParams from 'routing/withParams';
 
 const { CollectorConfigurationsActions } = CombinedProvider.get('CollectorConfigurations');
 
@@ -37,6 +53,7 @@ const SidecarEditConfigurationPage = createReactClass({
     CollectorConfigurationsActions.getConfiguration(configurationId).then(
       (configuration) => {
         this.setState({ configuration: configuration });
+
         CollectorConfigurationsActions.getConfigurationSidecars(configurationId)
           .then((configurationSidecars) => this.setState({ configurationSidecars: configurationSidecars }));
       },
@@ -102,4 +119,4 @@ const SidecarEditConfigurationPage = createReactClass({
   },
 });
 
-export default SidecarEditConfigurationPage;
+export default withParams(SidecarEditConfigurationPage);

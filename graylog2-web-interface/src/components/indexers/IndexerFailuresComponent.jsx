@@ -1,14 +1,29 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
-import { LinkContainer } from 'react-router-bootstrap';
 import numeral from 'numeral';
 import moment from 'moment';
 
+import { LinkContainer } from 'components/graylog/router';
 import { Alert, Col, Row, Button } from 'components/graylog';
 import { Icon, Spinner } from 'components/common';
 import StoreProvider from 'injection/StoreProvider';
 import DocsHelper from 'util/DocsHelper';
 import Routes from 'routing/Routes';
-
 import { SmallSupportLink, DocumentationLink } from 'components/support';
 
 const IndexerFailuresStore = StoreProvider.getStore('IndexerFailures');
@@ -42,6 +57,7 @@ class IndexerFailuresComponent extends React.Component {
     if (count === 0) {
       return 'No failed indexing attempts in the last 24 hours.';
     }
+
     return <strong>There were {numeral(count).format('0,0')} failed indexing attempts in the last 24 hours.</strong>;
   };
 
@@ -49,11 +65,13 @@ class IndexerFailuresComponent extends React.Component {
     if (count === 0) {
       return 'check-circle';
     }
+
     return 'ambulance';
   };
 
   render() {
     let content;
+
     if (this.state.total === undefined) {
       content = <Spinner />;
     } else {

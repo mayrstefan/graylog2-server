@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
@@ -7,19 +23,12 @@ import Query from 'views/logic/queries/Query';
 import Search from 'views/logic/search/Search';
 import CombinedProvider from 'injection/CombinedProvider';
 import connect from 'stores/connect';
-
 import PermissionsMixin from 'util/PermissionsMixin';
 
 import FilterPreview from './FilterPreview';
 
 const { FilterPreviewStore, FilterPreviewActions } = CombinedProvider.get('FilterPreview');
 const { CurrentUserStore } = CombinedProvider.get('CurrentUser');
-
-const PREVIEW_PERMISSIONS = [
-  'streams:read',
-  'extendedsearch:create',
-  'extendedsearch:use',
-];
 
 class FilterPreviewContainer extends React.Component {
   state = {
@@ -29,7 +38,8 @@ class FilterPreviewContainer extends React.Component {
 
   fetchSearch = lodash.debounce((config) => {
     const { currentUser } = this.props;
-    if (!PermissionsMixin.isPermitted(currentUser.permissions, PREVIEW_PERMISSIONS)) {
+
+    if (!this.isPermittedToSeePreview(currentUser, config)) {
       return;
     }
 
@@ -67,6 +77,7 @@ class FilterPreviewContainer extends React.Component {
 
   componentDidMount() {
     const { eventDefinition } = this.props;
+
     this.fetchSearch(eventDefinition.config);
   }
 
@@ -81,6 +92,14 @@ class FilterPreviewContainer extends React.Component {
     }
   }
 
+  isPermittedToSeePreview = (currentUser, config) => {
+    const missingPermissions = config.streams.some((stream) => {
+      return !PermissionsMixin.isPermitted(currentUser.permissions, `streams:read:${stream}`);
+    });
+
+    return !missingPermissions;
+  };
+
   render() {
     const { eventDefinition, filterPreview, currentUser } = this.props;
     const { queryId, searchTypeId } = this.state;
@@ -94,12 +113,10 @@ class FilterPreviewContainer extends React.Component {
       errors = filterPreview.result.errors; // result may not always be set, so I can't use destructuring
     }
 
-    const isPermittedToSeePreview = PermissionsMixin.isPermitted(currentUser.permissions, PREVIEW_PERMISSIONS);
-
     return (
       <FilterPreview eventDefinition={eventDefinition}
                      isFetchingData={isLoading}
-                     displayPreview={isPermittedToSeePreview}
+                     displayPreview={this.isPermittedToSeePreview(currentUser, eventDefinition.config)}
                      searchResult={searchResult}
                      errors={errors} />
     );

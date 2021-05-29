@@ -1,7 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Link } from 'react-router';
 
+import { Link } from 'components/graylog/router';
 import { Row, Col, Button } from 'components/graylog';
 import { Input } from 'components/bootstrap';
 import { Select, Spinner, Icon } from 'components/common';
@@ -41,6 +57,7 @@ class LookupTableExtractorConfiguration extends React.Component {
   _updateConfigValue = (key, value) => {
     this.props.onExtractorPreviewLoad(undefined);
     const newConfig = this.props.configuration;
+
     newConfig[key] = value;
     this.props.onChange(newConfig);
   };
@@ -57,9 +74,11 @@ class LookupTableExtractorConfiguration extends React.Component {
     this.setState({ trying: true });
 
     const promise = ToolsStore.testLookupTable(this.props.configuration.lookup_table_name, this.props.exampleMessage);
+
     promise.then((result) => {
       if (result.error) {
         UserNotification.warning(`We were not able to run the lookup: ${result.error_message}`);
+
         return;
       }
 

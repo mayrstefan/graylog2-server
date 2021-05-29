@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import CombinedProvider from './CombinedProvider';
 
 /* eslint-disable global-require */
@@ -18,8 +34,10 @@ const actions = {
   Configurations: () => require('actions/configurations/ConfigurationActions'),
   ConfigurationVariable: () => require('actions/sidecars/ConfigurationVariableActions'),
   ContentPacks: () => require('actions/content-packs/ContentPacksActions'),
+  Customizations: () => require('actions/customizations/CustomizationActions'),
   Decorators: () => require('actions/decorators/DecoratorsActions'),
   Deflector: () => require('actions/indices/DeflectorActions'),
+  Enterprise: () => require('actions/enterprise/EnterpriseActions'),
   EventDefinitions: () => require('actions/event-definitions/EventDefinitionsActions'),
   EventNotifications: () => require('actions/event-notifications/EventNotificationsActions'),
   Events: () => require('actions/events/EventsActions'),
@@ -33,8 +51,6 @@ const actions = {
   IndicesConfiguration: () => require('actions/indices/IndicesConfigurationActions'),
   Inputs: () => require('actions/inputs/InputsActions'),
   InputTypes: () => require('actions/inputs/InputTypesActions'),
-  Ldap: () => require('actions/ldap/LdapActions'),
-  LdapGroups: () => require('actions/ldap/LdapGroupsActions'),
   Loggers: () => require('actions/system/LoggersActions'),
   LookupTableCaches: () => require('actions/lookup-tables/LookupTableCachesActions'),
   LookupTableDataAdapters: () => require('actions/lookup-tables/LookupTableDataAdaptersActions'),
@@ -75,9 +91,11 @@ const stores = {
   ContentPacks: () => require('stores/content-packs/ContentPacksStore'),
   Configuration: () => require('stores/configurations/ConfigurationsStore'),
   Configurations: () => require('stores/configurations/ConfigurationsStore'),
+  Customizations: () => require('stores/customizations/CustomizationsStore'),
   CurrentUser: () => require('stores/users/CurrentUserStore'),
   Decorators: () => require('stores/decorators/DecoratorsStore'),
   Deflector: () => require('stores/indices/DeflectorStore'),
+  Enterprise: () => require('stores/enterprise/EnterpriseStore'),
   EventDefinitions: () => require('stores/event-definitions/EventDefinitionsStore'),
   EventNotifications: () => require('stores/event-notifications/EventNotificationsStore'),
   Events: () => require('stores/events/EventsStore'),
@@ -97,8 +115,6 @@ const stores = {
   InputStaticFields: () => require('stores/inputs/InputStaticFieldsStore'),
   InputTypes: () => require('stores/inputs/InputTypesStore'),
   Journal: () => require('stores/journal/JournalStore'),
-  LdapGroups: () => require('stores/ldap/LdapGroupsStore'),
-  Ldap: () => require('stores/ldap/LdapStore'),
   Loggers: () => require('stores/system/LoggersStore'),
   LookupTables: () => require('stores/lookup-tables/LookupTablesStore'),
   LookupTableCaches: () => require('stores/lookup-tables/LookupTableCachesStore'),

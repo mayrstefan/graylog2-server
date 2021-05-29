@@ -1,10 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
-import React from 'react';
-import { MenuItem } from 'components/graylog';
+import React, { createRef } from 'react';
 
-import { BootstrapModalForm, Input } from 'components/bootstrap';
-
-import style from './CopyModal.css';
+import CloneMenuItem from '../common/CloneMenuItem';
 
 class CopyConfigurationModal extends React.Component {
   static propTypes = {
@@ -13,28 +26,30 @@ class CopyConfigurationModal extends React.Component {
     validateConfiguration: PropTypes.func.isRequired,
   };
 
-  static defaultProps = {
-    id: '',
-    name: '',
-  };
+  constructor(props) {
+    super(props);
 
-  state = {
-    id: this.props.configuration.id,
-    name: '',
-    error: false,
-    error_message: '',
-  };
+    this.modalRef = createRef();
+
+    this.state = {
+      id: props.configuration.id,
+      name: '',
+      errorMessage: undefined,
+    };
+  }
 
   openModal = () => {
-    this.refs.modal.open();
+    this.modalRef.current.open();
   };
 
   _getId = (prefixIdName) => {
-    return `${prefixIdName}-${this.state.id}`;
+    const { id } = this.state;
+
+    return `${prefixIdName}-${id}`;
   };
 
   _closeModal = () => {
-    this.refs.modal.close();
+    this.modalRef.current.close();
   };
 
   _saved = () => {
@@ -43,47 +58,38 @@ class CopyConfigurationModal extends React.Component {
   };
 
   _save = () => {
-    const configuration = this.state;
+    const { copyConfiguration } = this.props;
+    const { errorMessage, id, name } = this.state;
 
-    if (!configuration.error) {
-      this.props.copyConfiguration(this.state.id, this.state.name, this._saved);
+    if (!errorMessage) {
+      copyConfiguration(id, name, this._saved);
     }
   };
 
   _changeName = (event) => {
-    const nextName = event.target.value;
-    this.setState({ name: nextName });
-    this.props.validateConfiguration({ name: nextName }).then((validation) => {
-      let errorMessage = '';
+    const { validateConfiguration } = this.props;
+    const name = event.target.value;
+
+    this.setState({ name, errorMessage: undefined });
+
+    validateConfiguration({ name }).then((validation) => {
       if (validation.errors.name) {
-        errorMessage = validation.errors.name[0];
+        this.setState({ errorMessage: validation.errors.name[0] });
       }
-      this.setState({ error: validation.failed, error_message: errorMessage });
     });
   };
 
   render() {
+    const { errorMessage, name } = this.state;
+
     return (
-      <span>
-        <MenuItem className={style.menuItem} onSelect={this.openModal}>Clone</MenuItem>
-        <BootstrapModalForm ref="modal"
-                            title="Clone"
-                            onSubmitForm={this._save}
-                            submitButtonDisabled={this.state.error}
-                            submitButtonText="Done">
-          <fieldset>
-            <Input type="text"
-                   id={this._getId('configuration-name')}
-                   label="Name"
-                   defaultValue={this.state.name}
-                   onChange={this._changeName}
-                   bsStyle={this.state.error ? 'error' : null}
-                   help={this.state.error ? this.state.error_message : 'Type a name for the new configuration'}
-                   autoFocus
-                   required />
-          </fieldset>
-        </BootstrapModalForm>
-      </span>
+      <CloneMenuItem onSelect={this.openModal}
+                     onSave={this._save}
+                     id={this._getId('configuration-name')}
+                     onChange={this._changeName}
+                     error={errorMessage}
+                     name={name}
+                     modalRef={this.modalRef} />
     );
   }
 }

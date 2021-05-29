@@ -1,25 +1,23 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.indexer.counts;
 
 import com.google.common.collect.ImmutableMap;
-import io.searchbox.core.Bulk;
-import io.searchbox.core.BulkResult;
-import io.searchbox.core.Index;
+import org.graylog.testing.elasticsearch.BulkIndexRequest;
 import org.graylog.testing.elasticsearch.ElasticsearchBaseTest;
 import org.graylog2.indexer.IndexNotFoundException;
 import org.graylog2.indexer.IndexSet;
@@ -46,7 +44,7 @@ import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class CountsIT extends ElasticsearchBaseTest {
+public abstract class CountsIT extends ElasticsearchBaseTest {
     private static final String INDEX_NAME_1 = "index_set_1_counts_test_0";
     private static final String INDEX_NAME_2 = "index_set_2_counts_test_0";
     @Rule
@@ -60,13 +58,15 @@ public class CountsIT extends ElasticsearchBaseTest {
     private IndexSet indexSet2;
     private Counts counts;
 
+    protected abstract CountsAdapter countsAdapter();
+
     @Before
     public void setUp() throws Exception {
         client().createIndex(INDEX_NAME_1, 1, 0);
         client().createIndex(INDEX_NAME_2, 1, 0);
         client().waitForGreenStatus(INDEX_NAME_1, INDEX_NAME_2);
 
-        counts = new Counts(jestClient(), indexSetRegistry);
+        counts = new Counts(indexSetRegistry, countsAdapter());
 
         final IndexSetConfig indexSetConfig1 = IndexSetConfig.builder()
                 .id("id-1")
@@ -118,21 +118,15 @@ public class CountsIT extends ElasticsearchBaseTest {
 
     @Test
     public void totalReturnsZeroWithNoIndices() throws Exception {
-        final Bulk.Builder bulkBuilder = new Bulk.Builder().refresh(true);
+        final BulkIndexRequest bulkIndexRequest = new BulkIndexRequest();
         for (int i = 0; i < 10; i++) {
             final Map<String, Object> source = ImmutableMap.of(
                     "foo", "bar",
                     "counter", i);
-            final Index indexRequest = new Index.Builder(source)
-                    .index(INDEX_NAME_1)
-                    .type("test")
-                    .refresh(true)
-                    .build();
-            bulkBuilder.addAction(indexRequest);
+            bulkIndexRequest.addRequest(INDEX_NAME_1, source);
         }
-        final BulkResult bulkResult = client().executeWithExpectedSuccess(bulkBuilder.build(), "failed to execute bulk request");
 
-        assertThat(bulkResult.getFailedItems()).isEmpty();
+        client().bulkIndex(bulkIndexRequest);
 
         // Simulate no indices for the second index set.
         when(indexSet2.getManagedIndices()).thenReturn(new String[0]);
@@ -148,19 +142,14 @@ public class CountsIT extends ElasticsearchBaseTest {
 
     @Test
     public void totalReturnsNumberOfMessages() {
-        final Bulk.Builder bulkBuilder = new Bulk.Builder().refresh(true);
+        final BulkIndexRequest bulkIndexRequest = new BulkIndexRequest();
 
         final int count1 = 10;
         for (int i = 0; i < count1; i++) {
             final Map<String, Object> source = ImmutableMap.of(
                     "foo", "bar",
                     "counter", i);
-            final Index indexRequest = new Index.Builder(source)
-                    .index(INDEX_NAME_1)
-                    .type("test")
-                    .refresh(true)
-                    .build();
-            bulkBuilder.addAction(indexRequest);
+            bulkIndexRequest.addRequest(INDEX_NAME_1, source);
         }
 
         final int count2 = 5;
@@ -168,17 +157,10 @@ public class CountsIT extends ElasticsearchBaseTest {
             final Map<String, Object> source = ImmutableMap.of(
                     "foo", "bar",
                     "counter", i);
-            final Index indexRequest = new Index.Builder(source)
-                    .index(INDEX_NAME_2)
-                    .type("test")
-                    .refresh(true)
-                    .build();
-            bulkBuilder.addAction(indexRequest);
+            bulkIndexRequest.addRequest(INDEX_NAME_2, source);
         }
 
-        final BulkResult bulkResult = client().executeWithExpectedSuccess(bulkBuilder.build(), "failed to execute bulk request");
-
-        assertThat(bulkResult.getFailedItems()).isEmpty();
+        client().bulkIndex(bulkIndexRequest);
 
         assertThat(counts.total()).isEqualTo(count1 + count2);
         assertThat(counts.total(indexSet1)).isEqualTo(count1);

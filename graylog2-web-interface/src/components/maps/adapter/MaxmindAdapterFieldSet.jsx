@@ -1,7 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import ObjectUtils from 'util/ObjectUtils';
 
+import ObjectUtils from 'util/ObjectUtils';
 import { Input } from 'components/bootstrap';
 import { Select, TimeUnitInput } from 'components/common';
 
@@ -16,6 +32,7 @@ class MaxmindAdapterFieldSet extends React.Component {
 
   _update = (value, unit, enabled, name) => {
     const config = ObjectUtils.clone(this.props.config);
+
     config[name] = enabled ? value : 0;
     config[`${name}_unit`] = unit;
     this.props.updateConfig(config);
@@ -27,6 +44,7 @@ class MaxmindAdapterFieldSet extends React.Component {
 
   _onDbTypeSelect = (id) => {
     const config = ObjectUtils.clone(this.props.config);
+
     config.database_type = id;
     this.props.updateConfig(config);
   };
@@ -37,7 +55,10 @@ class MaxmindAdapterFieldSet extends React.Component {
       { label: 'ASN database', value: 'MAXMIND_ASN' },
       { label: 'City database', value: 'MAXMIND_CITY' },
       { label: 'Country database', value: 'MAXMIND_COUNTRY' },
+      { label: 'IPinfo location database', value: 'IPINFO_STANDARD_LOCATION' },
+      { label: 'IPinfo ASN database', value: 'IPINFO_ASN' },
     ];
+
     return (
       <fieldset>
         <Input type="text"

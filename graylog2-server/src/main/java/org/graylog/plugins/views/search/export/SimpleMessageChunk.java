@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.plugins.views.search.export;
 
@@ -24,6 +24,11 @@ import static org.graylog.plugins.views.search.export.LinkedHashSetUtil.linkedHa
 
 @AutoValue
 public abstract class SimpleMessageChunk {
+    public enum ChunkOrder {
+        FIRST,
+        INTERMEDIATE,
+        LAST;
+    }
     public static SimpleMessageChunk from(LinkedHashSet<String> fieldsInOrder, LinkedHashSet<SimpleMessage> messages) {
         return builder().fieldsInOrder(fieldsInOrder).messages(messages).build();
     }
@@ -36,14 +41,22 @@ public abstract class SimpleMessageChunk {
 
     public abstract LinkedHashSet<SimpleMessage> messages();
 
-    public abstract boolean isFirstChunk();
+    public boolean isFirstChunk() {
+        return chunkOrder().equals(ChunkOrder.FIRST);
+    }
+
+    public boolean isLastChunk() {
+        return chunkOrder().equals(ChunkOrder.LAST);
+    }
+
+    public abstract ChunkOrder chunkOrder();
 
     public int size() {
         return messages().size();
     }
 
     public static Builder builder() {
-        return Builder.create().isFirstChunk(false);
+        return Builder.create().chunkOrder(ChunkOrder.INTERMEDIATE);
     }
 
     public abstract Builder toBuilder();
@@ -64,7 +77,7 @@ public abstract class SimpleMessageChunk {
 
         public abstract Builder messages(LinkedHashSet<SimpleMessage> messages);
 
-        public abstract Builder isFirstChunk(boolean isFirstChunk);
+        public abstract Builder chunkOrder(ChunkOrder chunkOrder);
 
         public static Builder create() {
             return new AutoValue_SimpleMessageChunk.Builder();

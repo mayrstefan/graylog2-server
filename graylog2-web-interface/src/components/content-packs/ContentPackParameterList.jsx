@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import { findIndex } from 'lodash';
@@ -6,7 +22,6 @@ import { Button, Modal, ButtonToolbar, Badge } from 'components/graylog';
 import { DataTable, SearchForm, Icon } from 'components/common';
 import BootstrapModalWrapper from 'components/bootstrap/BootstrapModalWrapper';
 import ContentPackEditParameter from 'components/content-packs/ContentPackEditParameter';
-
 import ObjectUtils from 'util/ObjectUtils';
 
 import ContentPackParameterListStyle from './ContentPackParameterList.css';
@@ -37,7 +52,7 @@ class ContentPackParameterList extends React.Component {
     };
   }
 
-  componentWillReceiveProps(newProps) {
+  UNSAFE_componentWillReceiveProps(newProps) {
     const { filter } = this.state;
 
     this._filterParameters(filter, newProps.contentPack.parameters);
@@ -47,13 +62,16 @@ class ContentPackParameterList extends React.Component {
     const { appliedParameter } = this.props;
 
     const entityIds = Object.keys(appliedParameter);
+
     /* eslint-disable-next-line no-restricted-syntax, guard-for-in */
     for (const i in entityIds) {
       const params = appliedParameter[entityIds[i]];
+
       if (findIndex(params, { paramName: paramName }) >= 0) {
         return true;
       }
     }
+
     return false;
   };
 
@@ -93,10 +111,13 @@ class ContentPackParameterList extends React.Component {
   _filterParameters = (filter, parametersArg) => {
     const { contentPack } = this.props;
     const parameters = ObjectUtils.clone(parametersArg || contentPack.parameters);
+
     if (!filter || filter.length <= 0) {
       this.setState({ filteredParameters: parameters, filter: undefined });
+
       return;
     }
+
     const regexp = RegExp(filter, 'i');
     const filteredParameters = parameters.filter((parameter) => {
       return regexp.test(parameter.title) || regexp.test(parameter.description) || regexp.test(parameter.name);
@@ -171,6 +192,7 @@ class ContentPackParameterList extends React.Component {
     const headers = readOnly
       ? ['Title', 'Name', 'Description', 'Value Type', 'Default Value', 'Used']
       : ['Title', 'Name', 'Description', 'Value Type', 'Default Value', 'Used', 'Action'];
+
     return (
       <div>
         <h2>Parameters list</h2>

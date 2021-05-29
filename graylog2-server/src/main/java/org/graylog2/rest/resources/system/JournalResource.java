@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.resources.system;
 
@@ -20,16 +20,16 @@ import com.codahale.metrics.annotation.Timed;
 import com.github.joschi.jadconfig.util.Size;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import kafka.log.LogSegment;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.graylog.shaded.kafka09.log.LogSegment;
 import org.graylog2.Configuration;
 import org.graylog2.plugin.KafkaJournalConfiguration;
 import org.graylog2.plugin.ThrottleState;
 import org.graylog2.rest.resources.system.responses.JournalSummaryResponse;
 import org.graylog2.rest.resources.system.responses.KafkaJournalConfigurationSummary;
 import org.graylog2.shared.journal.Journal;
-import org.graylog2.shared.journal.KafkaJournal;
+import org.graylog2.shared.journal.LocalKafkaJournal;
 import org.graylog2.shared.rest.resources.RestResource;
 import org.graylog2.shared.security.RestPermissions;
 import org.joda.time.DateTime;
@@ -69,8 +69,8 @@ public class JournalResource extends RestResource {
             return JournalSummaryResponse.createDisabled();
         }
 
-        if (journal instanceof KafkaJournal) {
-            final KafkaJournal kafkaJournal = (KafkaJournal) journal;
+        if (journal instanceof LocalKafkaJournal) {
+            final LocalKafkaJournal kafkaJournal = (LocalKafkaJournal) journal;
             final ThrottleState throttleState = kafkaJournal.getThrottleState();
 
             long oldestSegment = Long.MAX_VALUE;
@@ -79,8 +79,8 @@ public class JournalResource extends RestResource {
             }
 
             return JournalSummaryResponse.createEnabled(throttleState.appendEventsPerSec,
-                                                        throttleState.readEventsPerSec,
-                                                        throttleState.uncommittedJournalEntries,
+                    throttleState.readEventsPerSec,
+                    throttleState.uncommittedJournalEntries,
                                                         Size.bytes(throttleState.journalSize),
                                                         Size.bytes(throttleState.journalSizeLimit),
                                                         kafkaJournal.numberOfSegments(),

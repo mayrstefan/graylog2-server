@@ -1,31 +1,31 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.periodical;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.graylog2.Configuration;
 import org.graylog2.contentpacks.ContentPackInstallationPersistenceService;
 import org.graylog2.contentpacks.ContentPackPersistenceService;
 import org.graylog2.contentpacks.ContentPackService;
 import org.graylog2.contentpacks.model.ContentPack;
 import org.graylog2.contentpacks.model.ContentPackV1;
 import org.graylog2.plugin.periodical.Periodical;
-import org.graylog2.shared.users.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,6 +50,7 @@ public class ContentPackLoaderPeriodical extends Periodical {
     private final ContentPackService contentPackService;
     private final ContentPackPersistenceService contentPackPersistenceService;
     private final ContentPackInstallationPersistenceService contentPackInstallationPersistenceService;
+    private final Configuration configuration;
     private final boolean contentPacksLoaderEnabled;
     private final Path contentPacksDir;
     private final Set<String> contentPacksAutoInstall;
@@ -59,6 +60,7 @@ public class ContentPackLoaderPeriodical extends Periodical {
                                        ContentPackService contentPackService,
                                        ContentPackPersistenceService contentPackPersistenceService,
                                        ContentPackInstallationPersistenceService contentPackInstallationPersistenceService,
+                                       Configuration configuration,
                                        @Named("content_packs_loader_enabled") boolean contentPacksLoaderEnabled,
                                        @Named("content_packs_dir") Path contentPacksDir,
                                        @Named("content_packs_auto_install") Set<String> contentPacksAutoInstall) {
@@ -66,6 +68,7 @@ public class ContentPackLoaderPeriodical extends Periodical {
         this.contentPackInstallationPersistenceService = contentPackInstallationPersistenceService;
         this.contentPackService = contentPackService;
         this.contentPackPersistenceService = contentPackPersistenceService;
+        this.configuration = configuration;
         this.contentPacksLoaderEnabled = contentPacksLoaderEnabled;
         this.contentPacksDir = contentPacksDir;
         this.contentPacksAutoInstall = ImmutableSet.copyOf(contentPacksAutoInstall);
@@ -180,7 +183,7 @@ public class ContentPackLoaderPeriodical extends Periodical {
                 }
 
                 contentPackService.installContentPack(contentPack, Collections.emptyMap(),
-                        "Installed by auto loader", "local:admin");
+                        "Installed by auto loader", configuration.getRootUsername());
             }
 
         }

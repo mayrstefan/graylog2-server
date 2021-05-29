@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import styled, { css } from 'styled-components';
@@ -5,18 +21,15 @@ import styled, { css } from 'styled-components';
 const WidgetWrap = styled.div(({ theme }) => css`
   height: inherit;
   margin: 0;
-  padding: 20px;
-  display: grid;
-  display: -ms-grid;
-  grid-template-rows: auto minmax(10px, 1fr);
-  -ms-grid-rows: auto minmax(10px, 1fr);
-  -ms-grid-columns: 1fr;
+  padding: 7px 9px 6px 9px;
+  display: flex;
+  flex-direction: column;
 
   .widget-top {
     position: relative;
     margin-bottom: -15px;
     top: -5px;
-    font-size: 11px;
+    font-size: ${theme.fonts.size.small};
     line-height: 11px;
   }
 
@@ -33,16 +46,16 @@ const WidgetWrap = styled.div(({ theme }) => css`
   .reloading {
     margin-right: 2px;
     font-weight: bold;
-    color: ${theme.color.variant.dark.info};
+    color: ${theme.colors.variant.dark.info};
     display: none;
   }
 
   .loading-failed {
-    color: ${theme.color.variant.danger} !important;
+    color: ${theme.colors.variant.danger} !important;
   }
 
   .widget-title {
-    font-size: 18px;
+    font-size: ${theme.fonts.size.large};
     height: 25px;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -50,14 +63,14 @@ const WidgetWrap = styled.div(({ theme }) => css`
   }
 
   .load-error {
-    color: ${theme.color.variant.danger};
+    color: ${theme.colors.variant.danger};
     margin-right: 5px;
   }
 
   .widget-update-info {
     text-align: left;
     float: left;
-    font-size: 11px;
+    font-size: ${theme.fonts.size.small};
     position: absolute;
     bottom: 10px;
     width: 130px;
@@ -95,7 +108,7 @@ const WidgetWrap = styled.div(({ theme }) => css`
   }
 
   .not-available {
-    font-size: 70px;
+    font-size: ${theme.fonts.size.huge};
   }
 
   .loading,
@@ -143,6 +156,7 @@ export default class extends React.Component {
     // subtracting header, footer and padding from height & width.
     const height = widgetNode.clientHeight - (this.WIDGET_HEADER_HEIGHT + this.WIDGET_FOOTER_HEIGHT);
     const width = widgetNode.clientWidth - 20;
+
     return { height: height, width: width };
   };
 
@@ -150,6 +164,7 @@ export default class extends React.Component {
     const { onSizeChange, widgetId } = this.props;
     const { width: currentWidth, height: currentHeight } = this.state;
     const { height, width } = this._calculateWidgetSize();
+
     if (height !== currentHeight || width !== currentWidth) {
       this.setState({ height: height, width: width });
       onSizeChange(widgetId, { height: height, width: width });
@@ -158,6 +173,7 @@ export default class extends React.Component {
 
   render() {
     const { children, widgetId } = this.props;
+
     return (
       <WidgetWrap ref={(elem) => { this._widgetNode = elem; }}
                   style={{ overflow: 'hidden' }}

@@ -1,5 +1,22 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
+// eslint-disable-next-line no-restricted-imports
 import createReactClass from 'create-react-class';
 import naturalSort from 'javascript-natural-sort';
 
@@ -12,7 +29,7 @@ const MessageProcessorsConfig = createReactClass({
   displayName: 'MessageProcessorsConfig',
 
   propTypes: {
-    config: PropTypes.object.isRequired,
+    config: PropTypes.object,
     updateConfig: PropTypes.func.isRequired,
   },
 
@@ -26,10 +43,12 @@ const MessageProcessorsConfig = createReactClass({
   },
 
   getInitialState() {
+    const { config } = this.props;
+
     return {
       config: {
-        disabled_processors: this.props.config.disabled_processors,
-        processor_order: this.props.config.processor_order,
+        disabled_processors: config.disabled_processors,
+        processor_order: config.processor_order,
       },
     };
   },
@@ -45,8 +64,11 @@ const MessageProcessorsConfig = createReactClass({
   },
 
   _saveConfig() {
+    const { updateConfig } = this.props;
+    const { config } = this.state;
+
     if (!this._hasNoActiveProcessor()) {
-      this.props.updateConfig(this.state.config).then(() => {
+      updateConfig(config).then(() => {
         this._closeModal();
       });
     }
@@ -58,7 +80,8 @@ const MessageProcessorsConfig = createReactClass({
   },
 
   _updateSorting(newSorting) {
-    const update = ObjectUtils.clone(this.state.config);
+    const { config } = this.state;
+    const update = ObjectUtils.clone(config);
 
     update.processor_order = newSorting.map((item) => {
       return { class_name: item.id, name: item.title };
@@ -69,8 +92,9 @@ const MessageProcessorsConfig = createReactClass({
 
   _toggleStatus(className) {
     return () => {
-      const disabledProcessors = this.state.config.disabled_processors;
-      const update = ObjectUtils.clone(this.state.config);
+      const { config } = this.state;
+      const disabledProcessors = config.disabled_processors;
+      const update = ObjectUtils.clone(config);
       const { checked } = this.inputs[className];
 
       if (checked) {
@@ -84,7 +108,9 @@ const MessageProcessorsConfig = createReactClass({
   },
 
   _hasNoActiveProcessor() {
-    return this.state.config.disabled_processors.length >= this.state.config.processor_order.length;
+    const { config } = this.state;
+
+    return config.disabled_processors.length >= config.processor_order.length;
   },
 
   _noActiveProcessorWarning() {
@@ -95,12 +121,18 @@ const MessageProcessorsConfig = createReactClass({
         </Alert>
       );
     }
+
+    return null;
   },
 
   _summary() {
-    return this.state.config.processor_order.map((processor, idx) => {
-      const status = this.state.config.disabled_processors.filter((p) => p === processor.class_name).length > 0 ? 'disabled' : 'active';
+    const { config } = this.state;
+
+    return config.processor_order.map((processor, idx) => {
+      const status = config.disabled_processors.filter((p) => p === processor.class_name).length > 0 ? 'disabled' : 'active';
+
       return (
+        // eslint-disable-next-line react/no-array-index-key
         <tr key={idx}>
           <td>{idx + 1}</td>
           <td>{processor.name}</td>
@@ -111,16 +143,21 @@ const MessageProcessorsConfig = createReactClass({
   },
 
   _sortableItems() {
-    return this.state.config.processor_order.map((processor) => {
+    const { config } = this.state;
+
+    return config.processor_order.map((processor) => {
       return { id: processor.class_name, title: processor.name };
     });
   },
 
   _statusForm() {
-    return ObjectUtils.clone(this.state.config.processor_order).sort((a, b) => naturalSort(a.name, b.name)).map((processor, idx) => {
-      const enabled = this.state.config.disabled_processors.filter((p) => p === processor.class_name).length < 1;
+    const { config } = this.state;
+
+    return ObjectUtils.clone(config.processor_order).sort((a, b) => naturalSort(a.name, b.name)).map((processor, idx) => {
+      const enabled = config.disabled_processors.filter((p) => p === processor.class_name).length < 1;
 
       return (
+        // eslint-disable-next-line react/no-array-index-key
         <tr key={idx}>
           <td>{processor.name}</td>
           <td>
@@ -164,7 +201,7 @@ const MessageProcessorsConfig = createReactClass({
                             submitButtonText="Save">
           <h3>Order</h3>
           <p>Use drag and drop to change the execution order of the message processors.</p>
-          <SortableList items={this._sortableItems()} onMoveItem={this._updateSorting} />
+          <SortableList items={this._sortableItems()} onMoveItem={this._updateSorting} displayOverlayInPortal />
 
           <h3>Status</h3>
           <p>Change the checkboxes to change the status of a message processor.</p>

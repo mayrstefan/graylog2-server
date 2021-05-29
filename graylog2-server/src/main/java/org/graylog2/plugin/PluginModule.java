@@ -1,22 +1,23 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.plugin;
 
 import com.google.common.util.concurrent.Service;
+import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
@@ -28,10 +29,15 @@ import org.graylog.events.processor.EventProcessor;
 import org.graylog.events.processor.EventProcessorConfig;
 import org.graylog.events.processor.EventProcessorParameters;
 import org.graylog.events.processor.storage.EventStorageHandler;
+import org.graylog.grn.GRNDescriptorProvider;
+import org.graylog.grn.GRNType;
+import org.graylog.plugins.views.search.export.ExportFormat;
 import org.graylog.scheduler.Job;
 import org.graylog.scheduler.JobDefinitionConfig;
 import org.graylog.scheduler.JobSchedule;
 import org.graylog.scheduler.JobTriggerData;
+import org.graylog.security.authservice.AuthServiceBackend;
+import org.graylog.security.authservice.AuthServiceBackendConfig;
 import org.graylog2.audit.AuditEventType;
 import org.graylog2.audit.PluginAuditEventTypes;
 import org.graylog2.audit.formatter.AuditEventFormatter;
@@ -41,7 +47,6 @@ import org.graylog2.contentpacks.model.ModelType;
 import org.graylog2.migrations.Migration;
 import org.graylog2.plugin.alarms.AlertCondition;
 import org.graylog2.plugin.alarms.callbacks.AlarmCallback;
-import org.graylog2.plugin.dashboards.widgets.WidgetStrategy;
 import org.graylog2.plugin.filters.MessageFilter;
 import org.graylog2.plugin.indexer.retention.RetentionStrategy;
 import org.graylog2.plugin.indexer.rotation.RotationStrategy;
@@ -55,10 +60,15 @@ import org.graylog2.plugin.periodical.Periodical;
 import org.graylog2.plugin.rest.PluginRestResource;
 import org.graylog2.plugin.security.PasswordAlgorithm;
 import org.graylog2.plugin.security.PluginPermissions;
+import org.graylog2.shared.messageq.MessageQueueAcknowledger;
+import org.graylog2.shared.messageq.MessageQueueReader;
+import org.graylog2.shared.messageq.MessageQueueWriter;
+import org.graylog2.web.PluginUISettingsProvider;
 
 import javax.ws.rs.ext.ExceptionMapper;
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public abstract class PluginModule extends Graylog2Module {
     public Set<? extends PluginConfigBean> getConfigBeans() {
@@ -185,10 +195,6 @@ public abstract class PluginModule extends Graylog2Module {
         processorDescriptorBinder().addBinding().to(descriptorClass);
     }
 
-    protected <T extends WidgetStrategy> void addWidgetStrategy(Class<T> widgetStrategyClass, Class<? extends WidgetStrategy.Factory<T>> factory) {
-        installWidgetStrategy(widgetStrategyBinder(), widgetStrategyClass, factory);
-    }
-
     protected void addPermissions(Class<? extends PluginPermissions> permissionsClass) {
         installPermissions(permissionsBinder(), permissionsClass);
     }
@@ -301,5 +307,80 @@ public abstract class PluginModule extends Graylog2Module {
         install(new FactoryModuleBuilder().implement(EventNotification.class, handlerClass).build(factoryClass));
         eventNotificationBinder().addBinding(name).to(factoryClass);
         registerJacksonSubtype(notificationClass, name);
+    }
+
+    protected void addGRNType(GRNType type, Class<? extends GRNDescriptorProvider> descriptorProvider) {
+        final MapBinder<GRNType, GRNDescriptorProvider> mapBinder = MapBinder.newMapBinder(binder(), GRNType.class, GRNDescriptorProvider.class);
+        mapBinder.addBinding(type).to(descriptorProvider);
+    }
+
+    protected MapBinder<String, AuthServiceBackend.Factory<? extends AuthServiceBackend>> authServiceBackendBinder() {
+        return MapBinder.newMapBinder(
+                binder(),
+                TypeLiteral.get(String.class),
+                new TypeLiteral<AuthServiceBackend.Factory<? extends AuthServiceBackend>>() {}
+        );
+    }
+
+    protected void addAuthServiceBackend(String name,
+                                         Class<? extends AuthServiceBackend> backendClass,
+                                         Class<? extends AuthServiceBackend.Factory<? extends AuthServiceBackend>> factoryClass,
+                                         Class<? extends AuthServiceBackendConfig> configClass) {
+        install(new FactoryModuleBuilder().implement(AuthServiceBackend.class, backendClass).build(factoryClass));
+        authServiceBackendBinder().addBinding(name).to(factoryClass);
+        registerJacksonSubtype(configClass, name);
+    }
+
+    protected MapBinder<String, PluginUISettingsProvider> pluginUISettingsProviderBinder() {
+        return MapBinder.newMapBinder(binder(), String.class, PluginUISettingsProvider.class);
+    }
+
+    protected void addPluginUISettingsProvider(String providerKey,
+                                               Class<? extends PluginUISettingsProvider> uiSettingsProviderClass) {
+        pluginUISettingsProviderBinder().addBinding(providerKey).to(uiSettingsProviderClass);
+    }
+
+    private Multibinder<ExportFormat> exportFormatBinder() {
+        return Multibinder.newSetBinder(binder(), ExportFormat.class);
+    }
+
+    protected void addExportFormat(Class<? extends ExportFormat> exportFormat) {
+        exportFormatBinder().addBinding().to(exportFormat);
+    }
+
+    protected void addExportFormat(ExportFormat exportFormat) {
+        exportFormatBinder().addBinding().toInstance(exportFormat);
+    }
+
+    /**
+     * @return A boolean indicating if the plugin is being loaded on Graylog Cloud. The graylog.cloud system property is
+     * set in the startup sequence of the Graylog Cloud Plugin.
+     */
+    protected boolean isCloud() {
+        // TODO: check if we can get rid of this method, now that we have the ability to inject core config into plugins
+        return Boolean.parseBoolean(System.getProperty("graylog.cloud"));
+    }
+
+    /**
+     * Bind a message queue implementation. If any of the given classes implements the {@link Service} interface, it
+     * will also be registered with the {@link #serviceBinder()}.
+     *
+     * @param readerClass       Reader implementation
+     * @param writerClass       Writer implementation
+     * @param acknowledgerClass Acknowledger implementation
+     */
+    protected void bindMessageQueueImplementation(Class<? extends MessageQueueReader> readerClass,
+                                                  Class<? extends MessageQueueWriter> writerClass,
+                                                  Class<? extends MessageQueueAcknowledger> acknowledgerClass) {
+
+        bind(MessageQueueReader.class).to(readerClass).in(Scopes.SINGLETON);
+        bind(MessageQueueWriter.class).to(writerClass).in(Scopes.SINGLETON);
+        bind(MessageQueueAcknowledger.class).to(acknowledgerClass).in(Scopes.SINGLETON);
+
+        //noinspection unchecked
+        Stream.of(readerClass, writerClass, acknowledgerClass)
+                .filter(Service.class::isAssignableFrom)
+                .forEach(service ->
+                        serviceBinder().addBinding().to((Class<? extends Service>) service).in(Scopes.SINGLETON));
     }
 }

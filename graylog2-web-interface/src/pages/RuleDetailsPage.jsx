@@ -1,75 +1,103 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
+import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import React from 'react';
-import createReactClass from 'create-react-class';
-import Reflux from 'reflux';
 
+import connect from 'stores/connect';
 import { DocumentTitle, Spinner } from 'components/common';
-
 import Rule from 'components/rules/Rule';
 import CombinedProvider from 'injection/CombinedProvider';
+import { PipelineRulesProvider } from 'components/rules/RuleContext';
+import withParams from 'routing/withParams';
 
 const { RulesStore, RulesActions } = CombinedProvider.get('Rules');
 const { PipelinesStore, PipelinesActions } = CombinedProvider.get('Pipelines');
 
-function filterRules(state) {
-  return state.rules ? state.rules.filter((r) => r.id === this.props.params.ruleId)[0] : undefined;
+function filterRules(rule, ruleId) {
+  return rule?.rules?.filter((r) => r.id === ruleId)[0];
 }
 
-const RuleDetailsPage = createReactClass({
-  displayName: 'RuleDetailsPage',
+function filterPipelines(pipelines = [], title = '') {
+  return pipelines.filter((pipeline) => {
+    return pipeline.stages.some((stage) => stage.rules.indexOf(title) !== -1);
+  });
+}
 
-  propTypes: {
-    params: PropTypes.object.isRequired,
-  },
+const RuleDetailsPage = ({ params, rule, pipelines }) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [filteredRule, setFilteredRule] = useState(undefined);
 
-  mixins: [Reflux.connectFilter(RulesStore, 'rule', filterRules), Reflux.connect(PipelinesStore)],
+  const isNewRule = params.ruleId === 'new';
+  const title = filteredRule?.title || '';
+  const pageTitle = isNewRule ? 'New pipeline rule' : `Pipeline rule ${title}`;
 
-  componentDidMount() {
-    if (this.props.params.ruleId !== 'new') {
-      PipelinesActions.list();
-      RulesActions.get(this.props.params.ruleId);
-    }
-  },
+  const pipelinesUsingRule = isNewRule ? [] : filterPipelines(pipelines, title);
 
-  _save(rule, callback) {
-    let promise;
-    if (rule.id) {
-      promise = RulesActions.update.triggerPromise(rule);
+  useEffect(() => {
+    setFilteredRule(filterRules(rule, params.ruleId));
+  }, [params, rule]);
+
+  useEffect(() => {
+    if (isNewRule) {
+      setIsLoading(false);
     } else {
-      promise = RulesActions.save.triggerPromise(rule);
+      PipelinesActions.list();
+      RulesActions.get(params.ruleId);
+      setIsLoading(!(filteredRule && pipelines));
     }
-    promise.then(() => callback());
-  },
+  }, [filteredRule]);
 
-  _validateRule(rule, setErrorsCb) {
-    RulesActions.parse(rule, setErrorsCb);
-  },
+  if (isLoading) {
+    return <Spinner text="Loading Rule Details..." />;
+  }
 
-  _isLoading() {
-    return this.props.params.ruleId !== 'new' && !(this.state.rule && this.state.pipelines);
-  },
+  return (
+    <DocumentTitle title={pageTitle}>
+      <PipelineRulesProvider usedInPipelines={pipelinesUsingRule} rule={filteredRule}>
+        <Rule create={isNewRule} title={title} />
+      </PipelineRulesProvider>
+    </DocumentTitle>
+  );
+};
 
-  render() {
-    if (this._isLoading()) {
-      return <Spinner />;
-    }
+RuleDetailsPage.propTypes = {
+  params: PropTypes.shape({
+    ruleId: PropTypes.string,
+  }).isRequired,
+  rule: PropTypes.shape({
+    id: PropTypes.string,
+    title: PropTypes.string,
+    description: PropTypes.string,
+    source: PropTypes.string,
+    value: PropTypes.string,
+  }),
+  pipelines: PropTypes.any,
+};
 
-    const pipelinesUsingRule = this.props.params.ruleId === 'new' ? [] : this.state.pipelines.filter((pipeline) => {
-      return pipeline.stages.some((stage) => stage.rules.indexOf(this.state.rule.title) !== -1);
-    });
+RuleDetailsPage.defaultProps = {
+  rule: undefined,
+  pipelines: undefined,
+};
 
-    const pageTitle = (this.props.params.ruleId === 'new' ? 'New pipeline rule' : `Pipeline rule ${this.state.rule.title}`);
-
-    return (
-      <DocumentTitle title={pageTitle}>
-        <Rule rule={this.state.rule}
-              usedInPipelines={pipelinesUsingRule}
-              create={this.props.params.ruleId === 'new'}
-              onSave={this._save}
-              validateRule={this._validateRule} />
-      </DocumentTitle>
-    );
-  },
-});
-
-export default RuleDetailsPage;
+export default connect(withParams(RuleDetailsPage), {
+  rule: RulesStore,
+  pipelines: PipelinesStore,
+},
+({ pipelines, ...restProps }) => ({
+  pipelines: pipelines.pipelines || [],
+  ...restProps,
+}));

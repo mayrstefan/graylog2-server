@@ -1,8 +1,24 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Link } from 'react-router';
-import { LinkContainer } from 'react-router-bootstrap';
+import styled, { css } from 'styled-components';
 
+import { Link, LinkContainer } from 'components/graylog/router';
 import { Button, ButtonToolbar } from 'components/graylog';
 import Routes from 'routing/Routes';
 import { Timestamp } from 'components/common';
@@ -10,21 +26,37 @@ import OperatingSystemIcon from 'components/sidecars/common/OperatingSystemIcon'
 import StatusIndicator from 'components/sidecars/common/StatusIndicator';
 import SidecarStatusEnum from 'logic/sidecar/SidecarStatusEnum';
 
-import commonStyle from 'components/sidecars/common/CommonSidecarStyles.css';
 import style from './SidecarRow.css';
+
+const SidecarTR = styled.tr(({ inactive, theme }) => css`
+  color: ${inactive ? theme.utils.contrastingColor(theme.colors.table.background, 'AA') : 'currentColor'};
+  opacity: ${inactive ? 0.9 : 1};
+
+  &:nth-of-type(2n+1) {
+    color: ${inactive ? theme.utils.contrastingColor(theme.colors.table.backgroundAlt, 'AA') : 'currentColor'};
+  }
+
+  td:not(:last-child) {
+    font-style: ${inactive ? 'italic' : 'normal'};
+  }
+`);
 
 class SidecarRow extends React.Component {
   static propTypes = {
     sidecar: PropTypes.object.isRequired,
   };
 
-  state = {
-    showRelativeTime: true,
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      showRelativeTime: true,
+    };
+  }
 
   render() {
+    const { showRelativeTime } = this.state;
     const { sidecar } = this.props;
-    const sidecarClass = sidecar.active ? '' : commonStyle.greyedOut;
     const annotation = sidecar.active ? '' : ' (inactive)';
     let sidecarStatus = { status: null, message: null, id: null };
 
@@ -35,8 +67,9 @@ class SidecarRow extends React.Component {
         id: sidecar.node_id,
       };
     }
+
     return (
-      <tr className={sidecarClass}>
+      <SidecarTR inactive={!sidecar.active}>
         <td className={style.sidecarName}>
           {sidecar.active
             ? (
@@ -57,7 +90,7 @@ class SidecarRow extends React.Component {
           {sidecar.node_details.operating_system}
         </td>
         <td>
-          <Timestamp dateTime={sidecar.last_seen} relative={this.state.showRelativeTime} />
+          <Timestamp dateTime={sidecar.last_seen} relative={showRelativeTime} />
         </td>
         <td>
           {sidecar.node_id}
@@ -76,7 +109,7 @@ class SidecarRow extends React.Component {
             </LinkContainer>
           </ButtonToolbar>
         </td>
-      </tr>
+      </SidecarTR>
     );
   }
 }

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import lodash from 'lodash';
@@ -30,6 +46,7 @@ class ContentPackParameters extends React.Component {
 
   constructor(props) {
     super(props);
+
     this.state = {
       newParameter: ObjectUtils.clone(ContentPackParameters.emptyParameter),
       parameterToDelete: undefined,
@@ -41,6 +58,7 @@ class ContentPackParameters extends React.Component {
   _addNewParameter = (newParameter, oldParameter) => {
     let newContentPackBuilder = this.props.contentPack.toBuilder();
     const newAppliedParameter = ObjectUtils.clone(this.props.appliedParameter);
+
     if (oldParameter) {
       /* If the name of the parameter changed we need to update the reference in appliedParameter */
       Object.keys(newAppliedParameter).forEach((id) => {
@@ -48,12 +66,15 @@ class ContentPackParameters extends React.Component {
           if (paramMap.paramName === oldParameter.name) {
             return { configKey: paramMap.configKey, paramName: newParameter.name };
           }
+
           return paramMap;
         });
       });
+
       /* If we update a parameter we remove the old one first */
       newContentPackBuilder = newContentPackBuilder.removeParameter(oldParameter);
     }
+
     newContentPackBuilder.addParameter(newParameter);
     this.props.onStateChange({ contentPack: newContentPackBuilder.build(), appliedParameter: newAppliedParameter });
   };
@@ -61,6 +82,7 @@ class ContentPackParameters extends React.Component {
   _onParameterApply = (id, configKey, paramName) => {
     const paramMap = { configKey: configKey, paramName: paramName };
     const newAppliedParameter = ObjectUtils.clone(this.props.appliedParameter);
+
     newAppliedParameter[id] = newAppliedParameter[id] || [];
     newAppliedParameter[id].push(paramMap);
     this.props.onStateChange({ appliedParameter: newAppliedParameter });
@@ -68,6 +90,7 @@ class ContentPackParameters extends React.Component {
 
   _onParameterClear = (id, configKey) => {
     const newAppliedParameter = ObjectUtils.clone(this.props.appliedParameter);
+
     lodash.remove(newAppliedParameter[id], (paramMap) => { return paramMap.configKey === configKey; });
     this.props.onStateChange({ appliedParameter: newAppliedParameter });
   };
@@ -75,14 +98,18 @@ class ContentPackParameters extends React.Component {
   _deleteParameter = (parameter) => {
     const { contentPack } = this.props;
     const newAppliedParameter = ObjectUtils.clone(this.props.appliedParameter);
+
     /* If we delete a parameter we need to remove the reference from appliedParameter */
     Object.keys(newAppliedParameter).forEach((id) => {
       lodash.remove(newAppliedParameter[id], (paramMap) => { return paramMap.paramName === parameter.name; });
+
       if (newAppliedParameter[id].length <= 0) {
         delete newAppliedParameter[id];
       }
     });
+
     const newContentPack = contentPack.toBuilder().removeParameter(parameter).build();
+
     this.props.onStateChange({ contentPack: newContentPack, appliedParameter: newAppliedParameter });
     this._closeConfirmModal();
   };

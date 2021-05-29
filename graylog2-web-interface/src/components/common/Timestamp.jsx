@@ -1,7 +1,39 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
 import DateTime from 'logic/datetimes/DateTime';
+
+export const formatDateTime = (dateTime, format, tz, relative = false) => {
+  if (relative) {
+    return dateTime.toRelativeString();
+  }
+
+  switch (tz) {
+    case null:
+    case undefined:
+      return dateTime.toString(format);
+    case 'browser':
+      return dateTime.toBrowserLocalTime().toString(format);
+    default:
+      return dateTime.toTimeZone(tz).toString(format);
+  }
+};
 
 /**
  * Component that renders a `time` HTML element with a given date time. It is
@@ -38,6 +70,8 @@ class Timestamp extends React.Component {
      *  - ISO_8601: `YYYY-MM-DDTHH:mm:ss.SSSZ`
      */
     format: PropTypes.string,
+    /** Provides field prop for the render function.  */
+    field: PropTypes.string,
     /** Specifies if the component should display relative time or not. */
     relative: PropTypes.bool,
     /**
@@ -46,34 +80,33 @@ class Timestamp extends React.Component {
      * time zones supported by moment timezone.
      */
     tz: PropTypes.string,
+    /**
+     * Override render default function to add a decorator.
+     */
+    render: PropTypes.func,
   };
 
   static defaultProps = {
+    field: undefined,
     format: DateTime.Formats.TIMESTAMP,
     relative: false,
+    render: ({ value }) => value,
     tz: undefined,
   };
 
   _formatDateTime = () => {
-    const dateTime = new DateTime(this.props.dateTime);
-    if (this.props.relative) {
-      return dateTime.toRelativeString();
-    }
-    switch (this.props.tz) {
-      case null:
-      case undefined:
-        return dateTime.toString(this.props.format);
-      case 'browser':
-        return dateTime.toBrowserLocalTime().toString(this.props.format);
-      default:
-        return dateTime.toTimeZone(this.props.tz).toString(this.props.format);
-    }
+    const { relative, dateTime: dateTime1, tz, format } = this.props;
+    const dateTime = new DateTime(dateTime1);
+
+    return formatDateTime(dateTime, format, tz, relative);
   };
 
   render() {
+    const { render: Component, dateTime, field } = this.props;
+
     return (
-      <time key={`time-${this.props.dateTime}`} dateTime={this.props.dateTime} title={this.props.dateTime}>
-        {this._formatDateTime()}
+      <time key={`time-${dateTime}`} dateTime={dateTime} title={dateTime}>
+        <Component value={this._formatDateTime()} field={field} />
       </time>
     );
   }

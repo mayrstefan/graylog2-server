@@ -1,11 +1,28 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Row, Col } from 'components/graylog';
+
 import Icon from './Icon';
 
-const StyledListItem = styled.li(({ theme }) => `
+const StyledListItem = styled.li(({ theme }) => css`
   display: block;
   padding: 15px 0;
 
@@ -28,7 +45,7 @@ const StyledListItem = styled.li(({ theme }) => `
   }
 
   &:not(:last-child) {
-    border-bottom: 1px solid ${theme.color.variant.light.info};
+    border-bottom: 1px solid ${theme.colors.variant.light.info};
   }
 `);
 
@@ -36,58 +53,23 @@ const StyledListItem = styled.li(({ theme }) => `
  * Component that let you render an entity item using a similar look and feel as other entities in Graylog.
  * This component is meant to use alongside `EntityList`. Look there for an example of how to use this component.
  */
-class EntityListItem extends React.Component {
-  static propTypes = {
-    /** Entity's title. */
-    title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
-    /** Text to append to the title. Usually the type or a short description. */
-    titleSuffix: PropTypes.any,
-    /** Description of the element, which can accommodate more text than `titleSuffix`. */
-    description: PropTypes.any,
-    /** Action buttons or menus shown on the right side of the entity item container. */
-    actions: PropTypes.oneOfType([PropTypes.array, PropTypes.node]),
-    /** Flag that controls whether the content pack marker will be shown next to the description or not. */
-    createdFromContentPack: PropTypes.bool,
-    /**
-     * Add any content that is related to the entity and needs more space to be displayed. This is mostly use
-     * to show configuration options.
-     */
-    contentRow: PropTypes.node.isRequired,
-  };
+const EntityListItem = ({ actions, contentRow, createdFromContentPack, description, title, titleSuffix }) => {
+  const wrappedTitleSuffix = titleSuffix ? <small>{titleSuffix}</small> : null;
+  const actionsContainer = (
+    <div className="item-actions text-right">
+      {actions}
+    </div>
+  );
 
-  static defaultProps = {
-    actions: undefined,
-    createdFromContentPack: false,
-    description: undefined,
-    titleSuffix: undefined,
-  };
-
-  render() {
-    const {
-      actions,
-      contentRow,
-      createdFromContentPack,
-      description,
-      title,
-      titleSuffix,
-    } = this.props;
-    const wrappedTitleSuffix = titleSuffix ? <small>{titleSuffix}</small> : null;
-
-    const actionsContainer = (
-      <div className="item-actions text-right">
-        {actions}
-      </div>
-    );
-
-    return (
-      <StyledListItem>
-        <Row className="row-sm">
-          <Col md={12}>
-            <div className="pull-right hidden-xs">
-              {actionsContainer}
-            </div>
-            <h2>{title} {wrappedTitleSuffix}</h2>
-            {(createdFromContentPack || description)
+  return (
+    <StyledListItem>
+      <Row className="row-sm">
+        <Col md={12}>
+          <div className="pull-right hidden-xs">
+            {actionsContainer}
+          </div>
+          <h2>{title} {wrappedTitleSuffix}</h2>
+          {(createdFromContentPack || description)
               && (
               <div className="item-description">
                 {createdFromContentPack
@@ -95,19 +77,46 @@ class EntityListItem extends React.Component {
                 <span>{description}</span>
               </div>
               )}
-          </Col>
+        </Col>
 
-          <Col sm={12} lgHidden mdHidden smHidden>
-            {actionsContainer}
-          </Col>
-        </Row>
+        <Col sm={12} lgHidden mdHidden smHidden>
+          {actionsContainer}
+        </Col>
+      </Row>
 
-        <Row className="row-sm">
-          {contentRow}
-        </Row>
-      </StyledListItem>
-    );
-  }
-}
+      {contentRow && (
+      <Row className="row-sm">
+        {contentRow}
+      </Row>
+      )}
+    </StyledListItem>
+  );
+};
+
+EntityListItem.propTypes = {
+  /** Entity's title. */
+  title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
+  /** Text to append to the title. Usually the type or a short description. */
+  titleSuffix: PropTypes.any,
+  /** Description of the element, which can accommodate more text than `titleSuffix`. */
+  description: PropTypes.any,
+  /** Action buttons or menus shown on the right side of the entity item container. */
+  actions: PropTypes.oneOfType([PropTypes.array, PropTypes.node]),
+  /** Flag that controls whether the content pack marker will be shown next to the description or not. */
+  createdFromContentPack: PropTypes.bool,
+  /**
+   * Add any content that is related to the entity and needs more space to be displayed. This is mostly use
+   * to show configuration options.
+   */
+  contentRow: PropTypes.node,
+};
+
+EntityListItem.defaultProps = {
+  actions: undefined,
+  contentRow: undefined,
+  createdFromContentPack: false,
+  description: undefined,
+  titleSuffix: undefined,
+};
 
 export default EntityListItem;

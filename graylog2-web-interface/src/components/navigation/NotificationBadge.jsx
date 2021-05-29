@@ -1,12 +1,29 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Badge, Nav } from 'components/graylog';
-import { LinkContainer } from 'react-router-bootstrap';
 import styled from 'styled-components';
 
+import { LinkContainer } from 'components/graylog/router';
+import { Badge, Nav } from 'components/graylog';
 import CombinedProvider from 'injection/CombinedProvider';
 import connect from 'stores/connect';
 import Routes from 'routing/Routes';
+
 import InactiveNavItem from './InactiveNavItem';
 
 const { NotificationsActions, NotificationsStore } = CombinedProvider.get('Notifications');
@@ -40,9 +57,11 @@ class NotificationBadge extends React.PureComponent {
 
   render() {
     const { total } = this.props;
+
     if (!total) {
       return null;
     }
+
     return (
       <Nav navbar>
         <LinkContainer to={Routes.SYSTEM.OVERVIEW}>

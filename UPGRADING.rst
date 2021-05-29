@@ -1,40 +1,42 @@
 **************************
-Upgrading to Graylog 3.3.x
+Upgrading to Graylog 4.1.x
 **************************
 
-.. _upgrade-from-32-to-33:
+.. _upgrade-from-40-to-41:
 
-API Access Token Encryption
-===========================
+.. contents:: Overview
+   :depth: 3
+   :backlinks: top
 
-For improved security, all API access tokens will now be stored encrypted in the database. Existing API tokens will automatically be encrypted by a database migration on Graylog server startup.
+.. warning:: Please make sure to create a MongoDB database backup before starting the upgrade to Graylog 4.1!
 
-.. warning:: The token encryption is using the ``password_secret`` value from ``graylog.conf`` (or ``/etc/graylog/server/server.conf``) as encryption key. All Graylog nodes in the cluster need to have the same value configured for that option to make sure encryption/decryption works correctly. (if the values differ across your nodes, use the one from the master node for all other nodes)
+Breaking Changes
+================
 
-Dashboards API
-==============
+Configuration file changes
+--------------------------
 
-Since 3.2.0, the legacy dashboards API was still accessible and functional under `/dashboards`, you could create, manipulate and delete legacy dashboards, but this had no effect in the frontend.
-Starting with 3.3.0, the legacy dashboards API will be moved to `/legacy/dashboards`. The current dashboards will be accessible through `/dashboards` again. The pre-3.2.0 route for the current dashboards (`/views/dashboards`) will redirect there as well.
-Please note that the format has changed. You can see the new format for dashboards in the API browser.
+The system stats collector has been reimplemented using OSHI instead of SIGAR.
+The configuration option `disable_sigar` has been renamed to `disable_native_system_stats_collector`.
 
-We are planning to remove the legacy dashboards API and the `/views/dashboards` redirect in the next major upgrade of Graylog.
 
-Saved Searches API
-==================
+Change of API endpoint for user retrieval and modification
+----------------------------------------------------------
 
-Since 3.2.0, the legacy saved searches API was still accessible and functional under `/search/saved`, you could create, manipulate and delete legacy saved searches, but this had no effect in the frontend.
-Starting with 3.3.0, the legacy saved searches API will be moved to `/legacy/search/saved`. The current saved searches will be accessible through `/search/saved` again. The pre-3.2.0 route for the current saved searches (`/views/savedSearches`) will redirect there as well.
-Please note that the format has changed. You can see the new format for saved searches in the API browser.
++-----------------------------------------------+-----------------------------+
+| Endpoint                                      | Description                 |
++===============================================+=============================+
+| ``PUT /example/placeholder``                  | TODO placeholder comment    |
++-----------------------------------------------+-----------------------------+
 
-We are planning to remove the legacy saved searches API and the `/views/savedSearches` redirect in the next major upgrade of Graylog.
 
-Notes for plugin authors
-========================
+API Endpoint Deprecations
+=========================
 
-Prior to 3.2.0, it was possible to consume a special `OkHttpClient` instance which bypassed the configured proxy. It was consumed by injecting it using the ``@Named("systemHttpClient")`` annotation. Since the ``http_non_proxy_hosts`` configuration directive exists, which allows configuring hosts which bypass the proxy, it is not required anymore and not used internally either. Therefore it is removed. We advise any plugin author aware of the usage of this functionality in the plugin to remove the ``@Named`` annotation so the generic client is used instead.
+The following API endpoints are deprecated beginning with 4.1.
 
-Known Bugs and Limitations
-==========================
+API Endpoint Removals
+=====================
 
-* tbd
+The following API endpoints have been removed in 4.1.
+

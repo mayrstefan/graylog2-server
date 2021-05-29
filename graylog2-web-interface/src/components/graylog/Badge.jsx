@@ -1,23 +1,37 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 // eslint-disable-next-line no-restricted-imports
 import { Badge as BootstrapBadge } from 'react-bootstrap';
 
-import { util } from 'theme';
-import bsStyleThemeVariant from './variants/bsStyle';
+const StyledBadge = styled(BootstrapBadge)(({ bsStyle, theme }) => {
+  if (!bsStyle) {
+    return undefined;
+  }
 
-const cssBuilder = (backgroundColor) => {
-  const textColor = util.readableColor(backgroundColor);
+  const backgroundColor = theme.colors.variant[bsStyle];
+  const textColor = theme.utils.readableColor(backgroundColor);
 
   return css`
     background-color: ${backgroundColor};
     color: ${textColor};
   `;
-};
-
-const StyledBadge = styled(BootstrapBadge)`
-  ${bsStyleThemeVariant(cssBuilder)}
-`;
+});
 
 const Badge = forwardRef(({ ...props }, ref) => {
   return (
@@ -26,3 +40,4 @@ const Badge = forwardRef(({ ...props }, ref) => {
 });
 
 export default Badge;
+export { StyledBadge };

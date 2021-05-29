@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 
@@ -5,10 +21,8 @@ import loadAsync from 'routing/loadAsync';
 import ServerUnavailablePage from 'pages/ServerUnavailablePage';
 import StoreProvider from 'injection/StoreProvider';
 import connect from 'stores/connect';
-import GlobalThemeStyles from 'theme/GlobalThemeStyles';
 
 import 'bootstrap/less/bootstrap.less';
-import 'stylesheets/bootstrap-submenus.less';
 import 'toastr/toastr.less';
 
 const SessionStore = StoreProvider.getStore('Session');
@@ -21,9 +35,7 @@ const LoggedInPage = loadAsync(() => import(/* webpackChunkName: "LoggedInPage" 
 
 const SERVER_PING_TIMEOUT = 20000;
 
-export const AppFacade = ({ currentUser, server, sessionId }) => {
-  let Page;
-
+const AppFacade = ({ currentUser, server, sessionId }) => {
   useEffect(() => {
     const interval = setInterval(ServerAvailabilityStore.ping, SERVER_PING_TIMEOUT);
 
@@ -31,21 +43,18 @@ export const AppFacade = ({ currentUser, server, sessionId }) => {
   }, []);
 
   if (!server.up) {
-    Page = <ServerUnavailablePage server={server} />;
-  } else if (!sessionId) {
-    Page = <LoginPage />;
-  } else if (!currentUser) {
-    Page = <LoadingPage text="We are preparing Graylog for you..." />;
-  } else {
-    Page = <LoggedInPage />;
+    return <ServerUnavailablePage server={server} />;
   }
 
-  return (
-    <>
-      <GlobalThemeStyles />
-      {Page}
-    </>
-  );
+  if (!sessionId) {
+    return <LoginPage />;
+  }
+
+  if (!currentUser) {
+    return <LoadingPage text="We are preparing Graylog for you..." />;
+  }
+
+  return <LoggedInPage />;
 };
 
 AppFacade.propTypes = {

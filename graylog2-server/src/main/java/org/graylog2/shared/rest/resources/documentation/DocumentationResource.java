@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.shared.rest.resources.documentation;
 
@@ -23,10 +23,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.graylog2.configuration.HttpConfiguration;
-import org.graylog2.plugin.inject.RestControllerPackage;
 import org.graylog2.plugin.rest.PluginRestResource;
 import org.graylog2.rest.RestTools;
-import org.graylog2.shared.plugins.PluginRestResourceClasses;
+import org.graylog2.shared.plugins.DocumentationRestResourceClasses;
+import org.graylog2.shared.rest.HideOnCloud;
 import org.graylog2.shared.rest.documentation.generator.Generator;
 import org.graylog2.shared.rest.resources.RestResource;
 
@@ -43,13 +43,13 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 import static org.graylog2.shared.initializers.JerseyService.PLUGIN_PREFIX;
 
 @Api(value = "Documentation", description = "Documentation of this API in JSON format.")
 @Path("/api-docs")
+@HideOnCloud
 public class DocumentationResource extends RestResource {
 
     private final Generator generator;
@@ -57,29 +57,26 @@ public class DocumentationResource extends RestResource {
 
     @Inject
     public DocumentationResource(HttpConfiguration httpConfiguration,
-                                 Set<RestControllerPackage> restControllerPackages,
                                  ObjectMapper objectMapper,
-                                 PluginRestResourceClasses pluginRestResourceClasses) {
+                                 DocumentationRestResourceClasses documentationRestResourceClasses) {
 
         this.httpConfiguration = requireNonNull(httpConfiguration, "httpConfiguration");
 
-        final ImmutableSet.Builder<String> packageNames = ImmutableSet.<String>builder()
-                .addAll(restControllerPackages.stream()
-                        .map(RestControllerPackage::name)
-                        .collect(Collectors.toList()));
+        final ImmutableSet.Builder<Class<?>> resourceClasses = ImmutableSet.<Class<?>>builder()
+                .addAll(documentationRestResourceClasses.getSystemResources());
 
         // All plugin resources get the plugin prefix + the plugin package.
         final Map<Class<?>, String> pluginRestControllerMapping = new HashMap<>();
-        for (Map.Entry<String, Set<Class<? extends PluginRestResource>>> entry : pluginRestResourceClasses.getMap().entrySet()) {
+        for (Map.Entry<String, Set<Class<? extends PluginRestResource>>> entry : documentationRestResourceClasses.getPluginResourcesMap().entrySet()) {
             final String pluginPackage = entry.getKey();
-            packageNames.add(pluginPackage);
+            resourceClasses.addAll(entry.getValue());
 
             for (Class<? extends PluginRestResource> pluginRestResource : entry.getValue()) {
                 pluginRestControllerMapping.put(pluginRestResource, pluginPackage);
             }
         }
 
-        this.generator = new Generator(packageNames.build(), pluginRestControllerMapping, PLUGIN_PREFIX, objectMapper);
+        this.generator = new Generator(resourceClasses.build(), pluginRestControllerMapping, PLUGIN_PREFIX, objectMapper);
     }
 
     @GET

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import naturalSort from 'javascript-natural-sort';
@@ -23,17 +39,20 @@ class FieldsList extends React.Component {
     if (type === undefined) {
       return {};
     }
+
     return PluginStore.exports('fieldValueProviders').find((p) => p.type === type) || {};
   };
 
   handleAddFieldClick = () => {
     const { onAddFieldClick } = this.props;
+
     onAddFieldClick();
   };
 
   handleEditClick = (fieldName) => {
     return () => {
       const { onEditFieldClick } = this.props;
+
       onEditFieldClick(fieldName);
     };
   };
@@ -41,12 +60,14 @@ class FieldsList extends React.Component {
   handleRemoveClick = (fieldName) => {
     return () => {
       const { onRemoveFieldClick } = this.props;
+
       onRemoveFieldClick(fieldName);
     };
   };
 
   providerFormatter = (config) => {
     const configKeys = Object.keys(config).filter((key) => key !== 'type');
+
     return (
       <p>
         {configKeys.map((key) => {
@@ -106,6 +127,7 @@ class FieldsList extends React.Component {
         </>
       );
     }
+
     return (
       <>
         <DataTable id="event-definition-fields"

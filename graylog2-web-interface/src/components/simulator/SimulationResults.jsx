@@ -1,17 +1,31 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { Alert, Col, DropdownButton, MenuItem, Row } from 'components/graylog';
 
+import { Alert, Col, DropdownButton, MenuItem, Row } from 'components/graylog';
 import { Spinner } from 'components/common';
 import MessageShow from 'components/search/MessageShow';
-
 import NumberUtils from 'util/NumberUtils';
+
 import SimulationChanges from './SimulationChanges';
 import SimulationPreview from './SimulationPreview';
 import SimulationTrace from './SimulationTrace';
-
-// eslint-disable-next-line import/no-webpack-loader-syntax
-import style from '!style/useable!css!./SimulationResults.css';
+import style from './SimulationResults.lazy.css';
 
 const VIEW_OPTIONS = {
   SIMULATION_PREVIEW: 1,
@@ -22,6 +36,7 @@ const VIEW_OPTIONS = {
 class SimulationResults extends React.Component {
   constructor(props) {
     super(props);
+
     this.state = {
       viewOption: VIEW_OPTIONS.SIMULATION_SUMMARY,
     };
@@ -37,6 +52,7 @@ class SimulationResults extends React.Component {
 
   _changeViewOptions = (eventKey) => {
     const selectedOption = Object.keys(VIEW_OPTIONS).find((key) => VIEW_OPTIONS[key] === eventKey);
+
     this.setState({ viewOption: VIEW_OPTIONS[selectedOption] });
   };
 
@@ -48,6 +64,7 @@ class SimulationResults extends React.Component {
 
   _getViewOptionsMenuItem = (option, text) => {
     const { viewOption } = this.state;
+
     return (
       <MenuItem key={option} eventKey={option} active={viewOption === option}>
         {text}
@@ -57,11 +74,13 @@ class SimulationResults extends React.Component {
 
   _getViewComponent = (streams) => {
     const { simulationResults, isLoading, originalMessage } = this.props;
+
     if (isLoading || !simulationResults) {
       return <Spinner />;
     }
 
     const { viewOption } = this.state;
+
     switch (viewOption) {
       case VIEW_OPTIONS.SIMULATION_PREVIEW:
         return <SimulationPreview simulationResults={simulationResults} streams={streams} />;
@@ -81,6 +100,7 @@ class SimulationResults extends React.Component {
 
   render() {
     const { stream, simulationResults, isLoading, error, originalMessage } = this.props;
+
     if (!originalMessage && !simulationResults) {
       return null;
     }
@@ -140,7 +160,7 @@ class SimulationResults extends React.Component {
           <p>
             {isLoading
               ? 'Simulating message processing, please wait a moment.'
-              : `These are the results of processing the loaded message. Processing took ${NumberUtils.formatNumber(simulationResults.took_microseconds)} µs.`}
+              : `These are the results of processing the loaded message. Processing took ${NumberUtils.formatNumber(simulationResults?.took_microseconds)} µs.`}
           </p>
           {errorMessage}
           {this._getViewComponent(streams)}
@@ -152,13 +172,14 @@ class SimulationResults extends React.Component {
 
 SimulationResults.propTypes = {
   stream: PropTypes.object.isRequired,
-  originalMessage: PropTypes.object.isRequired,
+  originalMessage: PropTypes.object,
   simulationResults: PropTypes.object,
   isLoading: PropTypes.bool,
   error: PropTypes.object,
 };
 
 SimulationResults.defaultProps = {
+  originalMessage: undefined,
   simulationResults: undefined,
   isLoading: false,
   error: undefined,

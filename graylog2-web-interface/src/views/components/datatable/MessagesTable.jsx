@@ -1,6 +1,22 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import chroma from 'chroma-js';
 
 import { Table } from 'components/graylog';
@@ -10,9 +26,9 @@ const MessagesContainer = styled.div`
   width: 100%;
 `;
 
-const StyledTable = styled(Table)(({ theme }) => `
+const StyledTable = styled(Table)(({ theme }) => css`
   position: relative;
-  font-size: 11px;
+  font-size: ${theme.fonts.size.small};
   margin-top: 15px;
   margin-bottom: 60px;
   border-collapse: collapse;
@@ -21,7 +37,7 @@ const StyledTable = styled(Table)(({ theme }) => `
   word-break: break-all;
 
   thead > tr {
-    color: ${theme.color.global.textAlt};
+    color: ${theme.colors.global.textAlt};
   }
 
   td,
@@ -32,10 +48,16 @@ const StyledTable = styled(Table)(({ theme }) => `
 
   > thead th {
     border: 0;
-    font-size: 11px;
+    font-size: ${theme.fonts.size.small};
     font-weight: normal;
-    background-color: ${theme.color.gray[10]};
+    background-color: ${theme.colors.gray[90]};
+    color: ${theme.utils.readableColor(theme.colors.gray[90])};
     white-space: nowrap;
+  }
+  
+  > tbody td {
+    background-color: ${theme.colors.global.contentBackground};
+    color: ${theme.utils.contrastingColor(theme.colors.global.contentBackground)};
   }
 
   tr {
@@ -47,17 +69,18 @@ const StyledTable = styled(Table)(({ theme }) => `
   }
 
   tbody.message-group-toggled {
-    border-left: 7px solid ${theme.color.variant.light.info};
+    border-left: 7px solid ${theme.colors.variant.light.info};
   }
 
   tbody.message-highlight {
-    border-left: 7px solid ${theme.color.variant.light.success};
+    border-left: 7px solid ${theme.colors.variant.light.success};
   }
 
   tr.fields-row {
     cursor: pointer;
 
     td {
+      min-width: 50px;
       padding-top: 10px;
     }
   }
@@ -66,8 +89,8 @@ const StyledTable = styled(Table)(({ theme }) => `
     border-top: 0;
     padding-top: 0;
     padding-bottom: 5px;
-    font-family: monospace;
-    color: ${theme.color.variant.light.info};
+    font-family: ${theme.fonts.family.monospace};
+    color: ${theme.colors.variant.dark.info};
   }
 
   tr.message-row {
@@ -88,7 +111,7 @@ const StyledTable = styled(Table)(({ theme }) => `
         left: 5px;
         top: 4.5em;
         height: 1.5em;
-        background: linear-gradient(to bottom, ${chroma(theme.color.global.contentBackground).alpha(0).css()}, ${chroma(theme.color.global.contentBackground).alpha(1).css()} 95%);
+        background: linear-gradient(to bottom, ${chroma(theme.colors.global.contentBackground).alpha(0).css()}, ${chroma(theme.colors.global.contentBackground).alpha(1).css()} 95%);
       }
     }
   }
@@ -117,13 +140,13 @@ const StyledTable = styled(Table)(({ theme }) => `
 
   th i.sort-order-item {
     margin-right: 2px;
-    color: ${theme.color.gray[10]};
-    visiblity: hidden;
+    color: ${theme.colors.gray[10]};
+    visibility: hidden;
   }
 
   th i.sort-order-active,
   th:hover i.sort-order-item {
-    color: ${theme.color.global.textAlt};
+    color: ${theme.colors.global.textAlt};
   }
 `);
 

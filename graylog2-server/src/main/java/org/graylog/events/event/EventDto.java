@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.events.event;
 
@@ -21,6 +21,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.auto.value.AutoValue;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import org.joda.time.DateTime;
 
@@ -50,6 +51,7 @@ public abstract class EventDto {
     private static final String FIELD_KEY = "key";
     private static final String FIELD_PRIORITY = "priority";
     private static final String FIELD_FIELDS = "fields";
+    private static final String FIELD_GROUP_BY_FIELDS = "group_by_fields";
 
     @JsonProperty(FIELD_ID)
     public abstract String id();
@@ -103,6 +105,9 @@ public abstract class EventDto {
     @JsonProperty(FIELD_FIELDS)
     public abstract Map<String, String> fields();
 
+    @JsonProperty(FIELD_GROUP_BY_FIELDS)
+    public abstract Map<String, String> groupByFields();
+
     public static Builder builder() {
         return Builder.create();
     }
@@ -115,7 +120,7 @@ public abstract class EventDto {
     public static abstract class Builder {
         @JsonCreator
         public static Builder create() {
-            return new AutoValue_EventDto.Builder().sourceStreams(ImmutableSet.of());
+            return new AutoValue_EventDto.Builder().sourceStreams(ImmutableSet.of()).groupByFields(ImmutableMap.of());
         }
 
         @JsonProperty(FIELD_ID)
@@ -172,6 +177,9 @@ public abstract class EventDto {
 
         @JsonProperty(FIELD_FIELDS)
         public abstract Builder fields(Map<String, String> fields);
+
+        @JsonProperty(FIELD_GROUP_BY_FIELDS)
+        public abstract Builder groupByFields(Map<String, String> fields);
 
         public abstract EventDto build();
     }

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -51,12 +67,14 @@ class KeyValueTable extends React.Component {
 
   _bindValue = (event) => {
     const newState = {};
+
     newState[event.target.name] = event.target.value;
     this.setState(newState);
   };
 
   _addRow = () => {
     const newPairs = ObjectUtils.clone(this.props.pairs);
+
     newPairs[this.state.newKey] = this.state.newValue;
     this._onPairsChange(newPairs);
 
@@ -67,6 +85,7 @@ class KeyValueTable extends React.Component {
     return () => {
       if (window.confirm(`Are you sure you want to delete property '${key}'?`)) {
         const newPairs = ObjectUtils.clone(this.props.pairs);
+
         delete newPairs[key];
         this._onPairsChange(newPairs);
       }
@@ -97,8 +116,10 @@ class KeyValueTable extends React.Component {
   _formattedRows = (pairs) => {
     return Object.keys(pairs).sort().map((key) => {
       let actionsColumn;
+
       if (this.props.editable) {
         const actions = [];
+
         actions.push(
           <Button key={`delete-${key}`} bsStyle="danger" bsSize={this.props.actionsSize} onClick={this._deleteRow(key)}>
             Delete
@@ -124,12 +145,14 @@ class KeyValueTable extends React.Component {
     }
 
     const addRowDisabled = !this.state.newKey || !this.state.newValue;
+
     return (
       <tr>
         <td>
           <Input type="text"
                  name="newKey"
                  id="newKey"
+                 data-testid="newKey"
                  bsSize="small"
                  placeholder={this.props.headers[0]}
                  value={this.state.newKey}
@@ -139,6 +162,7 @@ class KeyValueTable extends React.Component {
           <Input type="text"
                  name="newValue"
                  id="newValue"
+                 data-testid="newValue"
                  bsSize="small"
                  placeholder={this.props.headers[1]}
                  value={this.state.newValue}

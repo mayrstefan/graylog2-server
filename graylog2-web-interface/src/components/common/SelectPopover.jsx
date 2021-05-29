@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
@@ -85,13 +101,14 @@ class SelectPopover extends React.Component {
     };
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { items, selectedItems } = this.props;
     const { filterText } = this.state;
 
     if (!lodash.isEqual(selectedItems, nextProps.selectedItems)) {
       this.setState({ selectedItems: nextProps.selectedItems });
     }
+
     if (items !== nextProps.items) {
       this.filterData(filterText, nextProps.items);
     }
@@ -99,6 +116,7 @@ class SelectPopover extends React.Component {
 
   handleSelectionChange = (nextSelection) => {
     const { onItemSelect } = this.props;
+
     this.setState({ selectedItems: nextSelection });
     onItemSelect(nextSelection, () => this.overlay.hide());
   };
@@ -126,12 +144,14 @@ class SelectPopover extends React.Component {
 
   filterData = (filterText, items) => {
     const newFilteredItems = items.filter((item) => item.match(new RegExp(filterText, 'i')));
+
     this.setState({ filterText: filterText, filteredItems: newFilteredItems });
   };
 
   handleFilterChange = (items) => {
     return (event) => {
       const filterText = event.target.value.trim();
+
       this.filterData(filterText, items);
     };
   };

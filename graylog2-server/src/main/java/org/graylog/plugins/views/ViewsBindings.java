@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.plugins.views;
 
@@ -29,23 +29,35 @@ import org.graylog.plugins.views.migrations.V20191203120602_MigrateSavedSearches
 import org.graylog.plugins.views.migrations.V20191204000000_RemoveLegacyViewsPermissions;
 import org.graylog.plugins.views.migrations.V20200204122000_MigrateUntypedViewsToDashboards.V20200204122000_MigrateUntypedViewsToDashboards;
 import org.graylog.plugins.views.migrations.V20200409083200_RemoveRootQueriesFromMigratedDashboards;
+import org.graylog.plugins.views.migrations.V20200730000000_AddGl2MessageIdFieldAliasForEvents;
+import org.graylog.plugins.views.providers.ExportBackendProvider;
 import org.graylog.plugins.views.search.SearchRequirements;
 import org.graylog.plugins.views.search.SearchRequiresParameterSupport;
 import org.graylog.plugins.views.search.ValueParameter;
 import org.graylog.plugins.views.search.db.InMemorySearchJobService;
 import org.graylog.plugins.views.search.db.SearchJobService;
 import org.graylog.plugins.views.search.db.SearchesCleanUpJob;
-import org.graylog.plugins.views.search.elasticsearch.ESGeneratedQueryContext;
 import org.graylog.plugins.views.search.elasticsearch.ElasticsearchQueryString;
 import org.graylog.plugins.views.search.export.ChunkDecorator;
+import org.graylog.plugins.views.search.export.DecoratingMessagesExporter;
 import org.graylog.plugins.views.search.export.ExportBackend;
 import org.graylog.plugins.views.search.export.LegacyChunkDecorator;
+import org.graylog.plugins.views.search.export.MessagesExporter;
 import org.graylog.plugins.views.search.export.SimpleMessageChunkCsvWriter;
-import org.graylog.plugins.views.search.export.es.ElasticsearchExportBackend;
 import org.graylog.plugins.views.search.filter.AndFilter;
 import org.graylog.plugins.views.search.filter.OrFilter;
 import org.graylog.plugins.views.search.filter.QueryStringFilter;
 import org.graylog.plugins.views.search.filter.StreamFilter;
+import org.graylog.plugins.views.search.rest.DashboardsResource;
+import org.graylog.plugins.views.search.rest.ExportJobsResource;
+import org.graylog.plugins.views.search.rest.FieldTypesResource;
+import org.graylog.plugins.views.search.rest.MessageExportFormatFilter;
+import org.graylog.plugins.views.search.rest.MessagesResource;
+import org.graylog.plugins.views.search.rest.PivotSeriesFunctionsResource;
+import org.graylog.plugins.views.search.rest.QualifyingViewsResource;
+import org.graylog.plugins.views.search.rest.SavedSearchesResource;
+import org.graylog.plugins.views.search.rest.SearchResource;
+import org.graylog.plugins.views.search.rest.ViewsResource;
 import org.graylog.plugins.views.search.rest.ViewsRestPermissions;
 import org.graylog.plugins.views.search.rest.exceptionmappers.MissingCapabilitiesExceptionMapper;
 import org.graylog.plugins.views.search.rest.exceptionmappers.PermissionExceptionMapper;
@@ -70,16 +82,11 @@ import org.graylog.plugins.views.search.searchtypes.pivot.series.SumOfSquares;
 import org.graylog.plugins.views.search.searchtypes.pivot.series.Variance;
 import org.graylog.plugins.views.search.views.RequiresParameterSupport;
 import org.graylog.plugins.views.search.views.ViewRequirements;
-import org.graylog.plugins.views.search.views.sharing.AllUsersOfInstance;
-import org.graylog.plugins.views.search.views.sharing.AllUsersOfInstanceStrategy;
-import org.graylog.plugins.views.search.views.sharing.SpecificRoles;
-import org.graylog.plugins.views.search.views.sharing.SpecificRolesStrategy;
-import org.graylog.plugins.views.search.views.sharing.SpecificUsers;
-import org.graylog.plugins.views.search.views.sharing.SpecificUsersStrategy;
 import org.graylog.plugins.views.search.views.widgets.aggregation.AggregationConfigDTO;
 import org.graylog.plugins.views.search.views.widgets.aggregation.AreaVisualizationConfigDTO;
 import org.graylog.plugins.views.search.views.widgets.aggregation.AutoIntervalDTO;
 import org.graylog.plugins.views.search.views.widgets.aggregation.BarVisualizationConfigDTO;
+import org.graylog.plugins.views.search.views.widgets.aggregation.HeatmapVisualizationConfigDTO;
 import org.graylog.plugins.views.search.views.widgets.aggregation.LineVisualizationConfigDTO;
 import org.graylog.plugins.views.search.views.widgets.aggregation.NumberVisualizationConfigDTO;
 import org.graylog.plugins.views.search.views.widgets.aggregation.TimeHistogramConfigDTO;
@@ -90,6 +97,7 @@ import org.graylog.plugins.views.search.views.widgets.aggregation.sort.PivotSort
 import org.graylog.plugins.views.search.views.widgets.aggregation.sort.SeriesSortConfig;
 import org.graylog.plugins.views.search.views.widgets.messagelist.MessageListConfigDTO;
 import org.graylog2.plugin.PluginConfigBean;
+import org.graylog2.rest.MoreMediaTypes;
 
 import java.util.Set;
 
@@ -101,9 +109,22 @@ public class ViewsBindings extends ViewsModule {
 
     @Override
     protected void configure() {
-        registerRestControllerPackage(getClass().getPackage().getName());
+        registerExportBackendProvider();
+
+        addSystemRestResource(DashboardsResource.class);
+        addSystemRestResource(FieldTypesResource.class);
+        addSystemRestResource(MessagesResource.class);
+        addSystemRestResource(ExportJobsResource.class);
+        addSystemRestResource(PivotSeriesFunctionsResource.class);
+        addSystemRestResource(QualifyingViewsResource.class);
+        addSystemRestResource(SavedSearchesResource.class);
+        addSystemRestResource(SearchResource.class);
+        addSystemRestResource(ViewsResource.class);
 
         addPermissions(ViewsRestPermissions.class);
+
+        // Calling this once to set up binder, so injection does not fail.
+        esQueryDecoratorBinder();
 
         // filter
         registerJacksonSubtype(AndFilter.class);
@@ -122,16 +143,16 @@ public class ViewsBindings extends ViewsModule {
         // pivot specs
         registerJacksonSubtype(Values.class);
         registerJacksonSubtype(Time.class);
-        registerPivotAggregationFunction(Average.NAME, Average.class);
-        registerPivotAggregationFunction(Cardinality.NAME, Cardinality.class);
-        registerPivotAggregationFunction(Count.NAME, Count.class);
-        registerPivotAggregationFunction(Max.NAME, Max.class);
-        registerPivotAggregationFunction(Min.NAME, Min.class);
-        registerPivotAggregationFunction(StdDev.NAME, StdDev.class);
-        registerPivotAggregationFunction(Sum.NAME, Sum.class);
-        registerPivotAggregationFunction(SumOfSquares.NAME, SumOfSquares.class);
-        registerPivotAggregationFunction(Variance.NAME, Variance.class);
-        registerPivotAggregationFunction(Percentile.NAME, Percentile.class);
+        registerPivotAggregationFunction(Average.NAME, "Average", Average.class);
+        registerPivotAggregationFunction(Cardinality.NAME, "Cardinality", Cardinality.class);
+        registerPivotAggregationFunction(Count.NAME, "Count", Count.class);
+        registerPivotAggregationFunction(Max.NAME, "Maximum", Max.class);
+        registerPivotAggregationFunction(Min.NAME, "Minimum", Min.class);
+        registerPivotAggregationFunction(StdDev.NAME, "Standard Deviation", StdDev.class);
+        registerPivotAggregationFunction(Sum.NAME, "Sum", Sum.class);
+        registerPivotAggregationFunction(SumOfSquares.NAME, "Sum of Squares", SumOfSquares.class);
+        registerPivotAggregationFunction(Variance.NAME, "Variance", Variance.class);
+        registerPivotAggregationFunction(Percentile.NAME, "Percentile", Percentile.class);
 
         registerJacksonSubtype(TimeUnitInterval.class);
         registerJacksonSubtype(TimeUnitIntervalDTO.class);
@@ -139,8 +160,8 @@ public class ViewsBindings extends ViewsModule {
         registerJacksonSubtype(AutoIntervalDTO.class);
 
         bind(SearchJobService.class).to(InMemorySearchJobService.class).in(Scopes.SINGLETON);
-        bind(ExportBackend.class).to(ElasticsearchExportBackend.class);
         bind(ChunkDecorator.class).to(LegacyChunkDecorator.class);
+        bind(MessagesExporter.class).to(DecoratingMessagesExporter.class);
 
         registerWidgetConfigSubtypes();
 
@@ -157,17 +178,15 @@ public class ViewsBindings extends ViewsModule {
         addMigration(V20190127111728_MigrateWidgetFormatSettings.class);
         addMigration(V20200204122000_MigrateUntypedViewsToDashboards.class);
         addMigration(V20200409083200_RemoveRootQueriesFromMigratedDashboards.class);
+        addMigration(V20200730000000_AddGl2MessageIdFieldAliasForEvents.class);
 
         addAuditEventTypes(ViewsAuditEventTypes.class);
 
-        registerViewSharingSubtypes();
-        registerSharingStrategies();
         registerSortConfigSubclasses();
         registerParameterSubtypes();
 
         install(new FactoryModuleBuilder().build(ViewRequirements.Factory.class));
         install(new FactoryModuleBuilder().build(SearchRequirements.Factory.class));
-        install(new FactoryModuleBuilder().build(ESGeneratedQueryContext.Factory.class));
 
         registerViewRequirement(RequiresParameterSupport.class);
         registerSearchRequirement(SearchRequiresParameterSupport.class);
@@ -178,7 +197,14 @@ public class ViewsBindings extends ViewsModule {
 
         registerExceptionMappers();
 
+        addExportFormat(() -> MoreMediaTypes.TEXT_CSV_TYPE);
+
         jerseyAdditionalComponentsBinder().addBinding().toInstance(SimpleMessageChunkCsvWriter.class);
+        jerseyAdditionalComponentsBinder().addBinding().toInstance(MessageExportFormatFilter.class);
+    }
+
+    private void registerExportBackendProvider() {
+        binder().bind(ExportBackend.class).toProvider(ExportBackendProvider.class);
     }
 
     private void registerSortConfigSubclasses() {
@@ -202,22 +228,11 @@ public class ViewsBindings extends ViewsModule {
         registerJacksonSubtype(NumberVisualizationConfigDTO.class);
         registerJacksonSubtype(LineVisualizationConfigDTO.class);
         registerJacksonSubtype(AreaVisualizationConfigDTO.class);
-    }
-
-    private void registerViewSharingSubtypes() {
-        registerJacksonSubtype(AllUsersOfInstance.class);
-        registerJacksonSubtype(SpecificRoles.class);
-        registerJacksonSubtype(SpecificUsers.class);
+        registerJacksonSubtype(HeatmapVisualizationConfigDTO.class);
     }
 
     private void registerParameterSubtypes() {
         registerJacksonSubtype(ValueParameter.class);
-    }
-
-    private void registerSharingStrategies() {
-        registerSharingStrategy(AllUsersOfInstance.TYPE, AllUsersOfInstanceStrategy.class);
-        registerSharingStrategy(SpecificRoles.TYPE, SpecificRolesStrategy.class);
-        registerSharingStrategy(SpecificUsers.TYPE, SpecificUsersStrategy.class);
     }
 
     private void registerExceptionMappers() {

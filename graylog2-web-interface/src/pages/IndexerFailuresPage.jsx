@@ -1,12 +1,26 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
-import { Col, Row } from 'components/graylog';
 import numeral from 'numeral';
 import moment from 'moment';
 
+import { Col, Row } from 'components/graylog';
 import StoreProvider from 'injection/StoreProvider';
-
 import DocsHelper from 'util/DocsHelper';
-
 import { DocumentTitle, Spinner, PageHeader, PaginatedList } from 'components/common';
 import { DocumentationLink } from 'components/support';
 import { IndexerFailuresList } from 'components/indexers';
@@ -20,6 +34,7 @@ class IndexerFailuresPage extends React.Component {
     IndexerFailuresStore.count(moment().subtract(10, 'years')).then((response) => {
       this.setState({ total: response.count });
     });
+
     this.loadData(1, this.defaultPageSize);
   }
 
@@ -39,6 +54,7 @@ class IndexerFailuresPage extends React.Component {
     if (this.state.total === undefined || !this.state.failures) {
       return <Spinner />;
     }
+
     return (
       <DocumentTitle title="Indexer failures">
         <span>

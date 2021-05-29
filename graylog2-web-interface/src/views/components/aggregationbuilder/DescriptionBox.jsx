@@ -1,16 +1,31 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { Portal } from 'react-portal';
 import { Position } from 'react-overlays';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Popover } from 'components/graylog';
-import { Icon } from 'components/common';
+import { Icon, HoverForHelp } from 'components/common';
 
-import HoverForHelp from './HoverForHelp';
-
-const StyledDescriptionBox = styled.div(({ theme }) => `
-  background-color: ${theme.color.gray[90]};
+const StyledDescriptionBox = styled.div(({ theme }) => css`
+  background-color: ${theme.colors.variant.lightest.default};
+  border: 1px solid ${theme.colors.variant.lighter.default};
   padding: 10px;
   margin: 5px;
   border-radius: 6px;
@@ -38,6 +53,7 @@ class DescriptionBox extends React.Component {
 
   onToggleConfig = () => {
     const { configOpen } = this.state;
+
     this.setState({ configOpen: !configOpen });
   };
 
@@ -68,19 +84,23 @@ class DescriptionBox extends React.Component {
 
   configCaret = () => {
     const { configurableOptions } = this.props;
+
     if (configurableOptions) {
       return (
         <ConfigButton ref={(node) => { this.target = node; }}
+                      type="button"
                       onClick={this.onToggleConfig}>
           <Icon name="wrench" />
         </ConfigButton>
       );
     }
+
     return null;
   };
 
   render() {
     const { description, children, help, style: inlineStyle } = this.props;
+
     return (
       <StyledDescriptionBox style={inlineStyle}>
         <div className="description">

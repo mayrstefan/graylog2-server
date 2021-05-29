@@ -1,27 +1,43 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Alert, Col, Row, Button } from 'components/graylog';
 import EditOutputButton from 'components/outputs/EditOutputButton';
 import { ConfigurationWell } from 'components/configurationforms';
 import { IfPermitted, Spinner, Icon } from 'components/common';
 
-const NodeRow = styled.div(({ theme }) => `
-  border-bottom: 1px solid ${theme.color.gray[80]};
+const NodeRow = styled.div(({ theme }) => css`
+  border-bottom: 1px solid ${theme.colors.gray[80]};
   padding-bottom: 8px;
   margin-bottom: 8px;
   margin-top: 0;
 
   .hostname {
-    font-size: 12px;
+    font-size: ${theme.fonts.size.small};
   }
 
   .well {
     margin-bottom: 0;
     margin-top: 3px;
-    font-family: monospace;
-    font-size: 11px;
+    font-family: ${theme.fonts.family.monospace};
+    font-size: ${theme.fonts.size.small};
   }
 
   .xtrc-converters {
@@ -125,6 +141,7 @@ class Output extends React.Component {
 
     let alert;
     let configurationWell;
+
     if (this._typeNotAvailable()) {
       alert = (
         <Alert bsStyle="danger">
@@ -143,6 +160,7 @@ class Output extends React.Component {
 
     const { streamId } = this.props;
     let deleteFromStreamButton;
+
     if (streamId !== null && streamId !== undefined) {
       deleteFromStreamButton = (
         <IfPermitted permissions="stream_outputs:delete">

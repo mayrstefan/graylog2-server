@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import createReactClass from 'create-react-class';
 import PropTypes from 'prop-types';
@@ -25,7 +41,9 @@ const SidecarStatus = createReactClass({
     if (!details) {
       return <p>Node details are currently unavailable. Please wait a moment and ensure the sidecar is correctly connected to the server.</p>;
     }
+
     const metrics = details.metrics || {};
+
     return (
       <dl className={`${commonStyles.deflist} ${commonStyles.topMargin}`}>
         <dt>IP Address</dt>
@@ -54,11 +72,13 @@ const SidecarStatus = createReactClass({
     }
 
     const collectorStatuses = details.status.collectors;
+
     if (collectorStatuses.length === 0) {
       return <p>There are no collectors configured in this sidecar.</p>;
     }
 
     const statuses = [];
+
     collectorStatuses.forEach((status) => {
       const collector = collectors.find((c) => c.id === status.collector_id);
 
@@ -66,6 +86,7 @@ const SidecarStatus = createReactClass({
       let statusBadge;
       let statusClass;
       let verboseButton;
+
       switch (status.status) {
         case SidecarStatusEnum.RUNNING:
           statusMessage = 'Collector is running.';
@@ -75,7 +96,7 @@ const SidecarStatus = createReactClass({
         case SidecarStatusEnum.FAILING:
           statusMessage = status.message;
           statusClass = 'text-danger';
-          statusBadge = <Icon name="warning" fixedWidth />;
+          statusBadge = <Icon name="exclamation-triangle" fixedWidth />;
 
           if (status.verbose_message) {
             verboseButton = (
@@ -86,6 +107,7 @@ const SidecarStatus = createReactClass({
               </Button>
             );
           }
+
           break;
         case SidecarStatusEnum.STOPPED:
           statusMessage = status.message;

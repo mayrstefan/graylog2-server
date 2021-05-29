@@ -1,9 +1,27 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 // eslint-disable-next-line no-restricted-imports
 import createReactClass from 'create-react-class';
 import Reflux from 'reflux';
-import { Link } from 'react-router';
+
+import { Link } from 'components/graylog/router';
+
 import numeral from 'numeral';
 import moment from 'moment';
 import {} from 'moment-duration-format';
@@ -12,13 +30,9 @@ import styled from 'styled-components';
 import { Row, Col, Alert } from 'components/graylog';
 import ProgressBar, { Bar } from 'components/graylog/ProgressBar';
 import MetricsExtractor from 'logic/metrics/MetricsExtractor';
-
 import ActionsProvider from 'injection/ActionsProvider';
-
 import StoreProvider from 'injection/StoreProvider';
-
 import { Spinner, Timestamp, Icon } from 'components/common';
-
 import NumberUtils from 'util/NumberUtils';
 import Routes from 'routing/Routes';
 
@@ -80,6 +94,7 @@ const JournalDetails = createReactClass({
         utilizationRatio: 'org.graylog2.journal.utilization-ratio',
         oldestSegment: 'org.graylog2.journal.oldest-segment',
       };
+
       Object.keys(this.metricNames).forEach((metricShortName) => MetricsActions.add(nodeId, this.metricNames[metricShortName]));
     }
   },
@@ -120,6 +135,7 @@ const JournalDetails = createReactClass({
 
     const oldestSegment = moment(metrics.oldestSegment);
     let overcommittedWarning;
+
     if (metrics.utilizationRatio >= 1) {
       overcommittedWarning = (
         <span>

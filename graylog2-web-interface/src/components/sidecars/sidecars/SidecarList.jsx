@@ -1,12 +1,51 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
+import styled from 'styled-components';
 
 import { Button, Alert, Col, Row, Table } from 'components/graylog';
-import { PaginatedList } from 'components/common';
+import { Icon, PaginatedList } from 'components/common';
 import SidecarSearchForm from 'components/sidecars/common/SidecarSearchForm';
 
 import SidecarRow from './SidecarRow';
 import style from './SidecarList.css';
+
+const SortableIcon = styled(Icon)`
+  && {
+    width: 12px;
+    margin-left: 5px;
+    line-height: 1;
+  }
+`;
+
+const SortableTH = styled.th`
+  cursor: pointer;
+
+  ${SortableIcon} {
+    visibility: ${(props) => (props.sorted ? 'visible' : 'hidden')};
+  }
+
+  &:hover {
+    ${SortableIcon} {
+      visibility: visible;
+    }
+  }
+`;
 
 class SidecarList extends React.Component {
   static propTypes = {
@@ -21,39 +60,36 @@ class SidecarList extends React.Component {
     toggleShowInactive: PropTypes.func.isRequired,
   };
 
-  getTableHeaderClassName = (field) => {
-    return (this.props.sort.field === field ? `sort-${this.props.sort.order}` : 'sortable');
+  _getTableHeaderSortIcon = (field) => {
+    const { sort } = this.props;
+    const iconSort = {
+      asc: 'sort-amount-down',
+      desc: 'sort-amount-up',
+    };
+
+    return (sort.field === field ? iconSort[sort.order] : 'sort');
   };
 
   formatSidecarList = (sidecars) => {
-    const { onSortChange } = this.props;
+    const { onSortChange, sort } = this.props;
+    const sidecarCollection = {
+      node_name: 'Name',
+      'node_details.status.status': 'Status',
+      'node_details.operating_system': 'Operating System',
+      last_seen: 'Last Seen',
+      node_id: 'Node Id',
+      sidecar_version: 'Sidecar Version',
+    };
 
     return (
       <Table striped responsive className={style.sidecarList}>
         <thead>
           <tr>
-            <th className={this.getTableHeaderClassName('node_name')}
-                onClick={onSortChange('node_name')}>Name
-            </th>
-            <th className={this.getTableHeaderClassName('node_details.status.status')}
-                onClick={onSortChange('node_details.status.status')}>
-              Status
-            </th>
-            <th className={this.getTableHeaderClassName('node_details.operating_system')}
-                onClick={onSortChange('node_details.operating_system')}>
-              Operating System
-            </th>
-            <th className={this.getTableHeaderClassName('last_seen')}
-                onClick={onSortChange('last_seen')}>Last Seen
-            </th>
-            <th className={this.getTableHeaderClassName('node_id')}
-                onClick={onSortChange('node_id')}>
-              Node Id
-            </th>
-            <th className={this.getTableHeaderClassName('sidecar_version')}
-                onClick={onSortChange('sidecar_version')}>
-              Sidecar Version
-            </th>
+            {Object.keys(sidecarCollection).map((sidecar) => (
+              <SortableTH onClick={onSortChange(sidecar)} sorted={sort.field === sidecar} key={sidecar}>
+                {sidecarCollection[sidecar]} <SortableIcon name={this._getTableHeaderSortIcon(sidecar)} />
+              </SortableTH>
+            ))}
             <th className={style.actions}>&nbsp;</th>
           </tr>
         </thead>
@@ -65,7 +101,9 @@ class SidecarList extends React.Component {
   };
 
   formatEmptyListAlert = () => {
-    const showInactiveHint = (this.props.onlyActive ? ' and/or click on "Include inactive sidecars"' : null);
+    const { onlyActive } = this.props;
+    const showInactiveHint = (onlyActive ? ' and/or click on "Include inactive sidecars"' : null);
+
     return <Alert>There are no sidecars to show. Try adjusting your search filter{showInactiveHint}.</Alert>;
   };
 

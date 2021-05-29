@@ -1,22 +1,23 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.shared.security;
 
 import com.google.common.collect.ImmutableSet;
+import org.graylog.security.authzroles.BuiltinRole;
 import org.graylog2.plugin.security.Permission;
 import org.graylog2.plugin.security.PluginPermissions;
 
@@ -30,8 +31,15 @@ public class RestPermissions implements PluginPermissions {
      * These should all be in the form of "group:action", because {@link Permissions#allPermissionsMap()} below depends on it.
      * Should this ever change, you need to adapt the code below, too.
      */
-    public static final String AUTHENTICATION_READ = "authentication:read";
-    public static final String AUTHENTICATION_EDIT = "authentication:edit";
+    public static final String AUTH_HTTP_HEADER_CONFIG_EDIT = "authhttpheaderconfig:edit";
+    public static final String AUTH_HTTP_HEADER_CONFIG_READ = "authhttpheaderconfig:read";
+    public static final String AUTH_SERVICE_BACKEND_CREATE = "authservicebackend:create";
+    public static final String AUTH_SERVICE_BACKEND_DELETE = "authservicebackend:delete";
+    public static final String AUTH_SERVICE_BACKEND_EDIT = "authservicebackend:edit";
+    public static final String AUTH_SERVICE_BACKEND_READ = "authservicebackend:read";
+    public static final String AUTH_SERVICE_GLOBAL_CONFIG_READ = "authserviceglobalconfig:read";
+    public static final String AUTH_SERVICE_GLOBAL_CONFIG_EDIT = "authserviceglobalconfig:edit";
+    public static final String AUTH_SERVICE_TEST_BACKEND_EXECUTE = "authservicetestbackend:execute";
     public static final String BUFFERS_READ = "buffers:read";
     public static final String CATALOG_LIST = "catalog:list";
     public static final String CATALOG_RESOLVE = "catalog:resolve";
@@ -52,6 +60,8 @@ public class RestPermissions implements PluginPermissions {
     public static final String DECORATORS_READ = "decorators:read";
     public static final String DEFLECTOR_CYCLE = "deflector:cycle";
     public static final String DEFLECTOR_READ = "deflector:read";
+    public static final String FREELICENSES_CREATE = "freelicenses:create";
+    public static final String LICENSEINFOS_READ = "licenseinfos:read";
     public static final String EVENT_DEFINITIONS_CREATE = "eventdefinitions:create";
     public static final String EVENT_DEFINITIONS_DELETE = "eventdefinitions:delete";
     public static final String EVENT_DEFINITIONS_EDIT = "eventdefinitions:edit";
@@ -62,6 +72,7 @@ public class RestPermissions implements PluginPermissions {
     public static final String EVENT_NOTIFICATIONS_EDIT = "eventnotifications:edit";
     public static final String EVENT_NOTIFICATIONS_READ = "eventnotifications:read";
     public static final String FIELDNAMES_READ = "fieldnames:read";
+    public static final String GRANTS_OVERVIEW_READ = "grantsoverview:read";
     public static final String INDEXERCLUSTER_READ = "indexercluster:read";
     public static final String INDEXRANGES_READ = "indexranges:read";
     public static final String INDEXRANGES_REBUILD = "indexranges:rebuild";
@@ -82,9 +93,6 @@ public class RestPermissions implements PluginPermissions {
     public static final String JOURNAL_READ = "journal:read";
     public static final String JVMSTATS_READ = "jvmstats:read";
     public static final String LBSTATUS_CHANGE = "lbstatus:change";
-    public static final String LDAP_EDIT = "ldap:edit";
-    public static final String LDAPGROUPS_EDIT = "ldapgroups:edit";
-    public static final String LDAPGROUPS_READ = "ldapgroups:read";
     public static final String LOOKUP_TABLES_CREATE = "lookuptables:create";
     public static final String LOOKUP_TABLES_DELETE = "lookuptables:delete";
     public static final String LOOKUP_TABLES_EDIT = "lookuptables:edit";
@@ -113,9 +121,6 @@ public class RestPermissions implements PluginPermissions {
     public static final String ROLES_DELETE = "roles:delete";
     public static final String ROLES_EDIT = "roles:edit";
     public static final String ROLES_READ = "roles:read";
-    public static final String SAVEDSEARCHES_CREATE = "savedsearches:create";
-    public static final String SAVEDSEARCHES_EDIT = "savedsearches:edit";
-    public static final String SAVEDSEARCHES_READ = "savedsearches:read";
     public static final String SEARCHES_ABSOLUTE = "searches:absolute";
     public static final String SEARCHES_KEYWORD = "searches:keyword";
     public static final String SEARCHES_RELATIVE = "searches:relative";
@@ -139,6 +144,7 @@ public class RestPermissions implements PluginPermissions {
     public static final String URL_WHITELIST_WRITE = "urlwhitelist:write";
     public static final String USERS_CREATE = "users:create";
     public static final String USERS_EDIT = "users:edit";
+    public static final String USERS_READ = "users:read";
     public static final String USERS_LIST = "users:list";
     public static final String USERS_PASSWORDCHANGE = "users:passwordchange";
     public static final String USERS_PERMISSIONSEDIT = "users:permissionsedit";
@@ -147,147 +153,168 @@ public class RestPermissions implements PluginPermissions {
     public static final String USERS_TOKENLIST = "users:tokenlist";
     public static final String USERS_TOKENREMOVE = "users:tokenremove";
 
+    // This is a special permission that ONLY works with GRNs as ID/target
+    // TODO does this belong here?
+    public static final String ENTITY_OWN = "entity:own";
+
     protected static final ImmutableSet<Permission> PERMISSIONS = ImmutableSet.<Permission>builder()
-        .add(create(AUTHENTICATION_EDIT, ""))
-        .add(create(AUTHENTICATION_READ, ""))
-        .add(create(BUFFERS_READ, ""))
-        .add(create(CONTENT_PACK_CREATE, ""))
-        .add(create(CONTENT_PACK_DELETE, ""))
-        .add(create(CONTENT_PACK_READ, ""))
-        .add(create(CATALOG_LIST, ""))
-        .add(create(CATALOG_RESOLVE, ""))
-        .add(create(CLUSTER_CONFIG_ENTRY_CREATE, ""))
-        .add(create(CLUSTER_CONFIG_ENTRY_DELETE, ""))
-        .add(create(CLUSTER_CONFIG_ENTRY_EDIT, ""))
-        .add(create(CLUSTER_CONFIG_ENTRY_READ, ""))
-        .add(create(DASHBOARDS_CREATE, ""))
-        .add(create(DASHBOARDS_EDIT, ""))
-        .add(create(DASHBOARDS_READ, ""))
-        .add(create(DECORATORS_CREATE, ""))
-        .add(create(DECORATORS_EDIT, ""))
-        .add(create(DECORATORS_READ, ""))
-        .add(create(DEFLECTOR_CYCLE, ""))
-        .add(create(DEFLECTOR_READ, ""))
-        .add(create(EVENT_DEFINITIONS_CREATE, ""))
-        .add(create(EVENT_DEFINITIONS_DELETE, ""))
-        .add(create(EVENT_DEFINITIONS_EDIT, ""))
-        .add(create(EVENT_DEFINITIONS_EXECUTE, ""))
-        .add(create(EVENT_DEFINITIONS_READ, ""))
-        .add(create(EVENT_NOTIFICATIONS_CREATE, ""))
-        .add(create(EVENT_NOTIFICATIONS_DELETE, ""))
-        .add(create(EVENT_NOTIFICATIONS_EDIT, ""))
-        .add(create(EVENT_NOTIFICATIONS_READ, ""))
-        .add(create(FIELDNAMES_READ, ""))
-        .add(create(INDEXERCLUSTER_READ, ""))
-        .add(create(INDEXRANGES_READ, ""))
-        .add(create(INDEXRANGES_REBUILD, ""))
-        .add(create(INDEXSETS_CREATE, ""))
-        .add(create(INDEXSETS_DELETE, ""))
-        .add(create(INDEXSETS_EDIT, ""))
-        .add(create(INDEXSETS_READ, ""))
-        .add(create(INDICES_CHANGESTATE, ""))
-        .add(create(INDICES_DELETE, ""))
-        .add(create(INDICES_FAILURES, ""))
-        .add(create(INDICES_READ, ""))
-        .add(create(INPUTS_CHANGESTATE, ""))
-        .add(create(INPUTS_CREATE, ""))
-        .add(create(INPUTS_EDIT, ""))
-        .add(create(INPUTS_READ, ""))
-        .add(create(INPUTS_TERMINATE, ""))
-        .add(create(JOURNAL_EDIT, ""))
-        .add(create(JOURNAL_READ, ""))
-        .add(create(JVMSTATS_READ, ""))
-        .add(create(LBSTATUS_CHANGE, ""))
-        .add(create(LDAP_EDIT, ""))
-        .add(create(LDAPGROUPS_EDIT, ""))
-        .add(create(LDAPGROUPS_READ, ""))
-        .add(create(LOOKUP_TABLES_CREATE, ""))
-        .add(create(LOOKUP_TABLES_DELETE, ""))
-        .add(create(LOOKUP_TABLES_EDIT, ""))
-        .add(create(LOOKUP_TABLES_READ, ""))
-        .add(create(LOGGERS_EDIT, ""))
-        .add(create(LOGGERS_EDITSUBSYSTEM, ""))
-        .add(create(LOGGERS_READ, ""))
-        .add(create(LOGGERS_READSUBSYSTEM, ""))
-        .add(create(LOGGERSMESSAGES_READ, ""))
-        .add(create(MESSAGECOUNT_READ, ""))
-        .add(create(MESSAGES_ANALYZE, ""))
-        .add(create(MESSAGES_READ, ""))
-        .add(create(METRICS_ALLKEYS, ""))
-        .add(create(METRICS_READ, ""))
-        .add(create(METRICS_READALL, ""))
-        .add(create(METRICS_READHISTORY, ""))
-        .add(create(NODE_SHUTDOWN, ""))
-        .add(create(NOTIFICATIONS_DELETE, ""))
-        .add(create(NOTIFICATIONS_READ, ""))
-        .add(create(OUTPUTS_CREATE, ""))
-        .add(create(OUTPUTS_EDIT, ""))
-        .add(create(OUTPUTS_READ, ""))
-        .add(create(OUTPUTS_TERMINATE, ""))
-        .add(create(PROCESSING_CHANGESTATE, ""))
-        .add(create(ROLES_CREATE, ""))
-        .add(create(ROLES_DELETE, ""))
-        .add(create(ROLES_EDIT, ""))
-        .add(create(ROLES_READ, ""))
-        .add(create(SAVEDSEARCHES_CREATE, ""))
-        .add(create(SAVEDSEARCHES_EDIT, ""))
-        .add(create(SAVEDSEARCHES_READ, ""))
-        .add(create(SEARCHES_ABSOLUTE, ""))
-        .add(create(SEARCHES_KEYWORD, ""))
-        .add(create(SEARCHES_RELATIVE, ""))
-        .add(create(SOURCES_READ, ""))
-        .add(create(STREAM_OUTPUTS_CREATE, ""))
-        .add(create(STREAM_OUTPUTS_DELETE, ""))
-        .add(create(STREAM_OUTPUTS_READ, ""))
-        .add(create(STREAMS_CHANGESTATE, ""))
-        .add(create(STREAMS_CREATE, ""))
-        .add(create(STREAMS_EDIT, ""))
-        .add(create(STREAMS_READ, ""))
-        .add(create(SYSTEM_READ, ""))
-        .add(create(SYSTEMJOBS_CREATE, ""))
-        .add(create(SYSTEMJOBS_DELETE, ""))
-        .add(create(SYSTEMJOBS_READ, ""))
-        .add(create(SYSTEMMESSAGES_READ, ""))
-        .add(create(THREADS_DUMP, ""))
-        .add(create(PROCESSBUFFER_DUMP, ""))
-        .add(create(THROUGHPUT_READ, ""))
-        .add(create(URL_WHITELIST_READ, ""))
-        .add(create(URL_WHITELIST_WRITE, ""))
-        .add(create(USERS_CREATE, ""))
-        .add(create(USERS_EDIT, ""))
-        .add(create(USERS_LIST, ""))
-        .add(create(USERS_PASSWORDCHANGE, ""))
-        .add(create(USERS_PERMISSIONSEDIT, ""))
-        .add(create(USERS_ROLESEDIT, ""))
-        .add(create(USERS_TOKENCREATE, ""))
-        .add(create(USERS_TOKENLIST, ""))
-        .add(create(USERS_TOKENREMOVE, ""))
-        .build();
+            .add(create(AUTH_HTTP_HEADER_CONFIG_EDIT, ""))
+            .add(create(AUTH_HTTP_HEADER_CONFIG_READ, ""))
+            .add(create(AUTH_SERVICE_BACKEND_CREATE, ""))
+            .add(create(AUTH_SERVICE_BACKEND_DELETE, ""))
+            .add(create(AUTH_SERVICE_BACKEND_EDIT, ""))
+            .add(create(AUTH_SERVICE_BACKEND_READ, ""))
+            .add(create(AUTH_SERVICE_GLOBAL_CONFIG_READ, ""))
+            .add(create(AUTH_SERVICE_GLOBAL_CONFIG_EDIT, ""))
+            .add(create(AUTH_SERVICE_TEST_BACKEND_EXECUTE, ""))
+            .add(create(BUFFERS_READ, ""))
+            .add(create(CONTENT_PACK_CREATE, ""))
+            .add(create(CONTENT_PACK_DELETE, ""))
+            .add(create(CONTENT_PACK_READ, ""))
+            .add(create(CATALOG_LIST, ""))
+            .add(create(CATALOG_RESOLVE, ""))
+            .add(create(CLUSTER_CONFIG_ENTRY_CREATE, ""))
+            .add(create(CLUSTER_CONFIG_ENTRY_DELETE, ""))
+            .add(create(CLUSTER_CONFIG_ENTRY_EDIT, ""))
+            .add(create(CLUSTER_CONFIG_ENTRY_READ, ""))
+            .add(create(DASHBOARDS_CREATE, ""))
+            .add(create(DASHBOARDS_EDIT, ""))
+            .add(create(DASHBOARDS_READ, ""))
+            .add(create(DECORATORS_CREATE, ""))
+            .add(create(DECORATORS_EDIT, ""))
+            .add(create(DECORATORS_READ, ""))
+            .add(create(DEFLECTOR_CYCLE, ""))
+            .add(create(DEFLECTOR_READ, ""))
+            .add(create(FREELICENSES_CREATE, ""))
+            .add(create(LICENSEINFOS_READ, ""))
+            .add(create(EVENT_DEFINITIONS_CREATE, ""))
+            .add(create(EVENT_DEFINITIONS_DELETE, ""))
+            .add(create(EVENT_DEFINITIONS_EDIT, ""))
+            .add(create(EVENT_DEFINITIONS_EXECUTE, ""))
+            .add(create(EVENT_DEFINITIONS_READ, ""))
+            .add(create(EVENT_NOTIFICATIONS_CREATE, ""))
+            .add(create(EVENT_NOTIFICATIONS_DELETE, ""))
+            .add(create(EVENT_NOTIFICATIONS_EDIT, ""))
+            .add(create(EVENT_NOTIFICATIONS_READ, ""))
+            .add(create(FIELDNAMES_READ, ""))
+            .add(create(GRANTS_OVERVIEW_READ, ""))
+            .add(create(INDEXERCLUSTER_READ, ""))
+            .add(create(INDEXRANGES_READ, ""))
+            .add(create(INDEXRANGES_REBUILD, ""))
+            .add(create(INDEXSETS_CREATE, ""))
+            .add(create(INDEXSETS_DELETE, ""))
+            .add(create(INDEXSETS_EDIT, ""))
+            .add(create(INDEXSETS_READ, ""))
+            .add(create(INDICES_CHANGESTATE, ""))
+            .add(create(INDICES_DELETE, ""))
+            .add(create(INDICES_FAILURES, ""))
+            .add(create(INDICES_READ, ""))
+            .add(create(INPUTS_CHANGESTATE, ""))
+            .add(create(INPUTS_CREATE, ""))
+            .add(create(INPUTS_EDIT, ""))
+            .add(create(INPUTS_READ, ""))
+            .add(create(INPUTS_TERMINATE, ""))
+            .add(create(JOURNAL_EDIT, ""))
+            .add(create(JOURNAL_READ, ""))
+            .add(create(JVMSTATS_READ, ""))
+            .add(create(LBSTATUS_CHANGE, ""))
+            .add(create(LOOKUP_TABLES_CREATE, ""))
+            .add(create(LOOKUP_TABLES_DELETE, ""))
+            .add(create(LOOKUP_TABLES_EDIT, ""))
+            .add(create(LOOKUP_TABLES_READ, ""))
+            .add(create(LOGGERS_EDIT, ""))
+            .add(create(LOGGERS_EDITSUBSYSTEM, ""))
+            .add(create(LOGGERS_READ, ""))
+            .add(create(LOGGERS_READSUBSYSTEM, ""))
+            .add(create(LOGGERSMESSAGES_READ, ""))
+            .add(create(MESSAGECOUNT_READ, ""))
+            .add(create(MESSAGES_ANALYZE, ""))
+            .add(create(MESSAGES_READ, ""))
+            .add(create(METRICS_ALLKEYS, ""))
+            .add(create(METRICS_READ, ""))
+            .add(create(METRICS_READALL, ""))
+            .add(create(METRICS_READHISTORY, ""))
+            .add(create(NODE_SHUTDOWN, ""))
+            .add(create(NOTIFICATIONS_DELETE, ""))
+            .add(create(NOTIFICATIONS_READ, ""))
+            .add(create(OUTPUTS_CREATE, ""))
+            .add(create(OUTPUTS_EDIT, ""))
+            .add(create(OUTPUTS_READ, ""))
+            .add(create(OUTPUTS_TERMINATE, ""))
+            .add(create(PROCESSING_CHANGESTATE, ""))
+            .add(create(ROLES_CREATE, ""))
+            .add(create(ROLES_DELETE, ""))
+            .add(create(ROLES_EDIT, ""))
+            .add(create(ROLES_READ, ""))
+            .add(create(SEARCHES_ABSOLUTE, ""))
+            .add(create(SEARCHES_KEYWORD, ""))
+            .add(create(SEARCHES_RELATIVE, ""))
+            .add(create(SOURCES_READ, ""))
+            .add(create(STREAM_OUTPUTS_CREATE, ""))
+            .add(create(STREAM_OUTPUTS_DELETE, ""))
+            .add(create(STREAM_OUTPUTS_READ, ""))
+            .add(create(STREAMS_CHANGESTATE, ""))
+            .add(create(STREAMS_CREATE, ""))
+            .add(create(STREAMS_EDIT, ""))
+            .add(create(STREAMS_READ, ""))
+            .add(create(SYSTEM_READ, ""))
+            .add(create(SYSTEMJOBS_CREATE, ""))
+            .add(create(SYSTEMJOBS_DELETE, ""))
+            .add(create(SYSTEMJOBS_READ, ""))
+            .add(create(SYSTEMMESSAGES_READ, ""))
+            .add(create(THREADS_DUMP, ""))
+            .add(create(PROCESSBUFFER_DUMP, ""))
+            .add(create(THROUGHPUT_READ, ""))
+            .add(create(URL_WHITELIST_READ, ""))
+            .add(create(URL_WHITELIST_WRITE, ""))
+            .add(create(USERS_CREATE, ""))
+            .add(create(USERS_EDIT, ""))
+            .add(create(USERS_READ, ""))
+            .add(create(USERS_LIST, ""))
+            .add(create(USERS_PASSWORDCHANGE, ""))
+            .add(create(USERS_PERMISSIONSEDIT, ""))
+            .add(create(USERS_ROLESEDIT, ""))
+            .add(create(USERS_TOKENCREATE, ""))
+            .add(create(USERS_TOKENLIST, ""))
+            .add(create(USERS_TOKENREMOVE, ""))
+            .build();
 
     // Standard set of PERMISSIONS of readers.
     protected static final ImmutableSet<String> READER_BASE_PERMISSION_SELECTION = ImmutableSet.<String>builder().add(
-        BUFFERS_READ,
-        CLUSTER_CONFIG_ENTRY_READ,
-        DECORATORS_READ,
-        FIELDNAMES_READ,
-        INDEXERCLUSTER_READ,
-        INPUTS_READ,
-        JOURNAL_READ,
-        JVMSTATS_READ,
-        MESSAGECOUNT_READ,
-        MESSAGES_ANALYZE,
-        MESSAGES_READ,
-        METRICS_READ,
-        SAVEDSEARCHES_CREATE,
-        SAVEDSEARCHES_EDIT,
-        SAVEDSEARCHES_READ,
-        SYSTEM_READ,
-        THROUGHPUT_READ
+            BUFFERS_READ,
+            CLUSTER_CONFIG_ENTRY_READ,
+            DECORATORS_READ,
+            FIELDNAMES_READ,
+            INDEXERCLUSTER_READ,
+            INPUTS_READ,
+            JOURNAL_READ,
+            JVMSTATS_READ,
+            MESSAGECOUNT_READ,
+            MESSAGES_ANALYZE,
+            MESSAGES_READ,
+            METRICS_READ,
+            SYSTEM_READ,
+            THROUGHPUT_READ
     ).build();
 
     protected static final Set<Permission> READER_BASE_PERMISSIONS = PERMISSIONS.stream()
-        .filter(permission -> READER_BASE_PERMISSION_SELECTION.contains(permission.permission()))
-        .collect(Collectors.toSet());
+            .filter(permission -> READER_BASE_PERMISSION_SELECTION.contains(permission.permission()))
+            .collect(Collectors.toSet());
+
+    protected static final ImmutableSet<BuiltinRole> BUILTIN_ROLES = ImmutableSet.<BuiltinRole>builder().add(
+            BuiltinRole.create("Dashboard Creator", "Allows creation of Dashboards (built-in)", ImmutableSet.of(
+                    RestPermissions.DASHBOARDS_CREATE
+            )),
+            BuiltinRole.create("Event Definition Creator", "Allows creation of Event Definitions (built-in)", ImmutableSet.of(
+                    RestPermissions.EVENT_DEFINITIONS_CREATE
+            )),
+            BuiltinRole.create("Event Notification Creator", "Allows creation of Event Notifications (built-in)", ImmutableSet.of(
+                    RestPermissions.EVENT_NOTIFICATIONS_CREATE
+            )),
+            BuiltinRole.create("User Inspector", "Allows listing all user accounts (built-in)", ImmutableSet.of(
+                    RestPermissions.USERS_READ
+            ))
+    ).build();
 
     @Override
     public Set<Permission> readerBasePermissions() {
@@ -297,5 +324,10 @@ public class RestPermissions implements PluginPermissions {
     @Override
     public Set<Permission> permissions() {
         return PERMISSIONS;
+    }
+
+    @Override
+    public Set<BuiltinRole> builtinRoles() {
+        return BUILTIN_ROLES;
     }
 }

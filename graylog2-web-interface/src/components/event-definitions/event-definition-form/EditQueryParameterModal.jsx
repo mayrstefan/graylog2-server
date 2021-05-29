@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
 import React from 'react';
@@ -5,9 +21,8 @@ import styled from 'styled-components';
 
 import { Button, Panel, ControlLabel, FormGroup, HelpBlock } from 'components/graylog';
 import { BootstrapModalForm, Input } from 'components/bootstrap';
-
 import { Select } from 'components/common';
-import FormsUtils from 'util/FormsUtils';
+import * as FormsUtils from 'util/FormsUtils';
 import { naturalSortIgnoreCase } from 'util/SortUtils';
 
 const StyledPanel = styled(Panel)`
@@ -31,6 +46,7 @@ class EditQueryParameterModal extends React.Component {
     super(props);
 
     const { queryParameter } = this.props;
+
     this.state = {
       queryParameter: lodash.cloneDeep(queryParameter),
       validation: {},
@@ -43,15 +59,18 @@ class EditQueryParameterModal extends React.Component {
 
   _saved = () => {
     const { queryParameter } = this.state;
+
     if (!this._validate(queryParameter)) {
       return;
     }
+
     this.propagateChanges();
     this.modal.close();
   };
 
   _cleanState = () => {
     const { queryParameter } = this.props;
+
     this.setState({ queryParameter: lodash.cloneDeep(queryParameter) });
   }
 
@@ -61,9 +80,11 @@ class EditQueryParameterModal extends React.Component {
     const config = lodash.cloneDeep(eventDefinition.config);
     const { query_parameters: queryParameters } = config;
     const index = queryParameters.findIndex((p) => p.name === prevQueryParameter.name);
+
     if (index < 0) {
       throw new Error(`Query parameter "${queryParameter.name}" not found`);
     }
+
     queryParameters[index] = lodash.omit(queryParameter, 'embryonic');
     onChange('config', config);
   };
@@ -71,6 +92,7 @@ class EditQueryParameterModal extends React.Component {
   handleParameterChange = (key, value) => {
     const { queryParameter } = this.state;
     const nextQueryParameter = { ...queryParameter, [key]: value };
+
     this.setState({ queryParameter: nextQueryParameter });
   };
 
@@ -83,18 +105,23 @@ class EditQueryParameterModal extends React.Component {
   handleChange = (event) => {
     const { name } = event.target;
     const value = FormsUtils.getValueFromInput(event.target);
+
     this.handleParameterChange(name, value);
   };
 
   _validate = (queryParameter) => {
     const newValidation = {};
+
     if (!queryParameter.lookup_table) {
       newValidation.lookup_table = 'Cannot be empty';
     }
+
     if (!queryParameter.key) {
       newValidation.key = 'Cannot be empty';
     }
+
     this.setState({ validation: newValidation });
+
     return lodash.isEmpty(newValidation);
   };
 
@@ -102,6 +129,7 @@ class EditQueryParameterModal extends React.Component {
     if (!lookupTables) {
       return [];
     }
+
     return lookupTables
       .sort((lt1, lt2) => naturalSortIgnoreCase(lt1.title, lt2.title))
       .map((table) => ({ label: table.title, value: table.name }));
@@ -111,6 +139,7 @@ class EditQueryParameterModal extends React.Component {
     const { lookupTables } = this.props;
     const { queryParameter, validation } = this.state;
     const parameterSyntax = `$${queryParameter.name}$`;
+
     return (
       <>
         <Button bsSize="small"

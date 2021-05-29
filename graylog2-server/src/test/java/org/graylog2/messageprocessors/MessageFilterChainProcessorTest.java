@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.messageprocessors;
 
@@ -24,7 +24,7 @@ import org.graylog2.plugin.Messages;
 import org.graylog2.plugin.ServerStatus;
 import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.filters.MessageFilter;
-import org.graylog2.shared.journal.Journal;
+import org.graylog2.shared.messageq.MessageQueueAcknowledger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.junit.Assert;
@@ -49,7 +49,7 @@ public class MessageFilterChainProcessorTest {
     @Mock
     private ServerStatus serverStatus;
     @Mock
-    private Journal journal;
+    private MessageQueueAcknowledger acknowledger;
 
     @Before
     public void setUp() throws Exception {
@@ -64,7 +64,7 @@ public class MessageFilterChainProcessorTest {
         final Set<MessageFilter> filters = ImmutableSet.of(third, first, second);
         final MessageFilterChainProcessor processor = new MessageFilterChainProcessor(new MetricRegistry(),
                                                                                       filters,
-                                                                                      journal,
+                                                                                      acknowledger,
                                                                                       serverStatus);
         final List<MessageFilter> filterRegistry = processor.getFilterRegistry();
 
@@ -78,7 +78,7 @@ public class MessageFilterChainProcessorTest {
         try {
             new MessageFilterChainProcessor(new MetricRegistry(),
                                             Collections.emptySet(),
-                                            journal,
+                                            acknowledger,
                                             serverStatus);
             Assert.fail("A processor without message filters should fail on creation");
         } catch (RuntimeException ignored) {}
@@ -113,7 +113,7 @@ public class MessageFilterChainProcessorTest {
 
         final MessageFilterChainProcessor filterTest = new MessageFilterChainProcessor(new MetricRegistry(),
                                                                                        Collections.singleton(filterOnlyFirst),
-                                                                                       journal,
+                                                                                       acknowledger,
                                                                                        serverStatus);
         Message filteredoutMessage = new Message("filtered out", "source", Tools.nowUTC());
         filteredoutMessage.setJournalOffset(1);
@@ -136,7 +136,7 @@ public class MessageFilterChainProcessorTest {
         final Set<MessageFilter> filters = ImmutableSet.of(first, second, third);
         final MessageFilterChainProcessor processor = new MessageFilterChainProcessor(new MetricRegistry(),
                 filters,
-                journal,
+                acknowledger,
                 serverStatus);
 
         final Message message = new Message("message", "source", new DateTime(2016, 1, 1, 0, 0, DateTimeZone.UTC));
@@ -153,7 +153,7 @@ public class MessageFilterChainProcessorTest {
         final Set<MessageFilter> filters = ImmutableSet.of(first, second);
         final MessageFilterChainProcessor processor = new MessageFilterChainProcessor(new MetricRegistry(),
                 filters,
-                journal,
+                acknowledger,
                 serverStatus);
 
         final Message message = new Message("message", "source", new DateTime(2016, 1, 1, 0, 0, DateTimeZone.UTC));

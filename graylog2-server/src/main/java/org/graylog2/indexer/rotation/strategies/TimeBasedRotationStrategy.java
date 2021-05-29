@@ -1,20 +1,19 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
-
 package org.graylog2.indexer.rotation.strategies;
 
 import com.google.common.base.MoreObjects;
@@ -120,7 +119,7 @@ public class TimeBasedRotationStrategy extends AbstractRotationStrategy {
             throw new IllegalArgumentException("Could not determine rotation stride length.");
         }
 
-        final DateTime anchorTime = MoreObjects.firstNonNull(lastAnchor, Tools.nowUTC());
+        final DateTime anchorTime = anchorTimeFrom(lastAnchor);
 
         final DateTimeField field = largestStrideType.getField(anchorTime.getChronology());
         // use normalized here to make sure we actually have the largestStride type available! see https://github.com/Graylog2/graylog2-server/issues/836
@@ -136,6 +135,13 @@ public class TimeBasedRotationStrategy extends AbstractRotationStrategy {
         final long difference = fieldValueInUnit % periodValue;
         final long newValue = field.add(fieldValue, -1 * difference);
         return new DateTime(newValue, DateTimeZone.UTC);
+    }
+
+    private static DateTime anchorTimeFrom(@Nullable DateTime lastAnchor) {
+        if (lastAnchor != null && !lastAnchor.getZone().equals(DateTimeZone.UTC)) {
+            return lastAnchor.withZone(DateTimeZone.UTC);
+        }
+        return MoreObjects.firstNonNull(lastAnchor, Tools.nowUTC());
     }
 
     @Nullable

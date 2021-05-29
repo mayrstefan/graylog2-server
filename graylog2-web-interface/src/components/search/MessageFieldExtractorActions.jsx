@@ -1,7 +1,24 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
+
+import { LinkContainer } from 'components/graylog/router';
 import { DropdownButton, MenuItem } from 'components/graylog';
-import { LinkContainer } from 'react-router-bootstrap';
 import ExtractorUtils from 'util/ExtractorUtils';
 
 class MessageFieldExtractorActions extends React.Component {
@@ -10,11 +27,11 @@ class MessageFieldExtractorActions extends React.Component {
     message: PropTypes.object.isRequired,
   };
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this._refreshExtractorRoutes(this.props);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this._refreshExtractorRoutes(nextProps);
   }
 
@@ -36,6 +53,7 @@ class MessageFieldExtractorActions extends React.Component {
   render() {
     const { fieldName, message } = this.props;
     const messageField = message.fields[fieldName];
+
     if (typeof messageField === 'string') {
       return (
         <div className="message-field-actions pull-right">
@@ -49,6 +67,7 @@ class MessageFieldExtractorActions extends React.Component {
         </div>
       );
     }
+
     return (
       <div className="message-field-actions pull-right">
         <DropdownButton pullRight

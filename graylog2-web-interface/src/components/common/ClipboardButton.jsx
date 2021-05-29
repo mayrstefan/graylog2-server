@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import ClipboardJS from 'clipboard';
@@ -50,9 +66,13 @@ class ClipboardButton extends React.Component {
     onSuccess: () => {},
   };
 
-  state = {
-    tooltipMessage: '',
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      tooltipMessage: '',
+    };
+  }
 
   componentDidMount() {
     const { container } = this.props;
@@ -75,6 +95,7 @@ class ClipboardButton extends React.Component {
 
   _onSuccess = (event) => {
     const { onSuccess } = this.props;
+
     this.setState({ tooltipMessage: 'Copied!' });
 
     onSuccess(event);
@@ -84,6 +105,7 @@ class ClipboardButton extends React.Component {
 
   _onError = (event) => {
     const key = event.action === 'cut' ? 'K' : 'C';
+
     this.setState({ tooltipMessage: <span>Press Ctrl+{key}&thinsp;/&thinsp;&#8984;{key} to {event.action}</span> });
   };
 
@@ -98,7 +120,7 @@ class ClipboardButton extends React.Component {
     const { tooltipMessage } = this.state;
 
     const filteredProps = this._getFilteredProps();
-    const tooltip = <Tooltip id="copy-button-tooltip">{tooltipMessage}</Tooltip>;
+    const tooltip = <Tooltip id="copy-button-tooltip" show>{tooltipMessage}</Tooltip>;
 
     if (text) {
       filteredProps['data-clipboard-text'] = text;

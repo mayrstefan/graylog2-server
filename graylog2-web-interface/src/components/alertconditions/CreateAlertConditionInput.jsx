@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import createReactClass from 'create-react-class';
 import PropTypes from 'prop-types';
@@ -11,7 +27,6 @@ import { AlertConditionForm } from 'components/alertconditions';
 import Routes from 'routing/Routes';
 import UserNotification from 'util/UserNotification';
 import history from 'util/History';
-
 import CombinedProvider from 'injection/CombinedProvider';
 
 const { AlertConditionsStore, AlertConditionsActions } = CombinedProvider.get('AlertConditions');
@@ -42,11 +57,14 @@ const CreateAlertConditionInput = createReactClass({
     StreamsStore.listStreams().then((streams) => {
       const nextState = { streams: streams };
       const { initialSelectedStream } = this.props;
+
       if (initialSelectedStream) {
         nextState.selectedStream = this._findStream(streams, initialSelectedStream);
       }
+
       this.setState(nextState);
     });
+
     AlertConditionsActions.available();
   },
 
@@ -62,11 +80,13 @@ const CreateAlertConditionInput = createReactClass({
 
   _onStreamChange(nextStream) {
     const { streams } = this.state;
+
     this.setState({ selectedStream: this._findStream(streams, nextStream) });
   },
 
   _onSubmit(data) {
     const { selectedStream } = this.state;
+
     if (!selectedStream) {
       UserNotification.error('Please select the stream that the condition should check.', 'Could not save condition');
     }
@@ -86,6 +106,7 @@ const CreateAlertConditionInput = createReactClass({
 
   _formatConditionForm(type) {
     const { availableConditions } = this.state;
+
     return (
       <AlertConditionForm ref={(configurationForm) => { this.configurationForm = configurationForm; }}
                           onCancel={this._resetForm}
@@ -100,6 +121,7 @@ const CreateAlertConditionInput = createReactClass({
 
   _isLoading() {
     const { availableConditions, streams } = this.state;
+
     return !availableConditions || !streams;
   },
 
@@ -117,6 +139,7 @@ const CreateAlertConditionInput = createReactClass({
     const formattedStreams = streams
       .map((stream) => this._formatOption(stream.title, stream.id))
       .sort((s1, s2) => naturalSort(s1.label.toLowerCase(), s2.label.toLowerCase()));
+
     return (
       <div>
         <h2>Condition</h2>

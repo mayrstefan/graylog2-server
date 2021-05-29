@@ -1,11 +1,27 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Checkbox, Col, FormGroup, HelpBlock, Row } from 'components/graylog';
 import lodash from 'lodash';
 
+import { Checkbox, Col, FormGroup, HelpBlock, Row } from 'components/graylog';
 import { Input } from 'components/bootstrap';
 import { ExternalLink } from 'components/common';
-import FormsUtils from 'util/FormsUtils';
+import * as FormsUtils from 'util/FormsUtils';
 
 import TemplateFieldValueProviderPreview from './TemplateFieldValueProviderPreview';
 
@@ -32,6 +48,7 @@ class TemplateFieldValueProviderForm extends React.Component {
     const value = FormsUtils.getValueFromInput(event.target);
     const nextProviders = lodash.cloneDeep(config.providers);
     const templateProvider = nextProviders.find((provider) => provider.type === TemplateFieldValueProviderForm.type);
+
     templateProvider[name] = value;
     onChange({ ...config, providers: nextProviders });
   };

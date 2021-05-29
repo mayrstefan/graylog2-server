@@ -1,9 +1,24 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import Reflux from 'reflux';
 
 import ActionsProvider from 'injection/ActionsProvider';
-
 import UserNotification from 'util/UserNotification';
-import URLUtils from 'util/URLUtils';
+import * as URLUtils from 'util/URLUtils';
 import ApiRoutes from 'routing/ApiRoutes';
 import fetch from 'logic/rest/FetchProvider';
 
@@ -24,11 +39,13 @@ const AlertNotificationsStore = Reflux.createStore({
   available() {
     const url = URLUtils.qualifyUrl(ApiRoutes.AlarmCallbacksApiController.available().url);
     const promise = fetch('GET', url);
+
     promise
       .then(
         (response) => {
           this.availableNotifications = response.types;
           this.trigger({ availableNotifications: this.availableNotifications });
+
           return this.availableNotifications;
         },
         (error) => {
@@ -43,10 +60,12 @@ const AlertNotificationsStore = Reflux.createStore({
   listAll() {
     const url = URLUtils.qualifyUrl(ApiRoutes.AlarmCallbacksApiController.listAll().url);
     const promise = fetch('GET', url);
+
     promise.then(
       (response) => {
         this.allNotifications = response.alarmcallbacks;
         this.trigger({ allNotifications: this.allNotifications });
+
         return this.allNotifications;
       },
       (error) => {
@@ -62,10 +81,12 @@ const AlertNotificationsStore = Reflux.createStore({
     const url = URLUtils.qualifyUrl(ApiRoutes.AlarmCallbacksApiController.testAlert(alarmCallbackId).url);
 
     const promise = fetch('POST', url);
+
     promise.then(
       () => UserNotification.success('Test notification was sent successfully'),
       (error) => {
         const message = (error.additional && error.additional.body && error.additional.body.message ? error.additional.body.message : error.message);
+
         UserNotification.error(`Sending test alert notification failed with message: ${message}`,
           'Could not send test alert notification');
       },

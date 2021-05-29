@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.bindings;
 
@@ -33,8 +33,6 @@ import org.graylog2.bindings.providers.MongoConnectionProvider;
 import org.graylog2.bindings.providers.SystemJobFactoryProvider;
 import org.graylog2.bindings.providers.SystemJobManagerProvider;
 import org.graylog2.cluster.ClusterConfigServiceImpl;
-import org.graylog2.dashboards.widgets.WidgetCacheTime;
-import org.graylog2.dashboards.widgets.WidgetEventsListener;
 import org.graylog2.database.MongoConnection;
 import org.graylog2.events.ClusterEventBus;
 import org.graylog2.grok.GrokModule;
@@ -54,6 +52,7 @@ import org.graylog2.inputs.PersistedInputsImpl;
 import org.graylog2.lookup.LookupModule;
 import org.graylog2.plugin.cluster.ClusterConfigService;
 import org.graylog2.plugin.inject.Graylog2Module;
+import org.graylog2.plugin.rest.ValidationFailureExceptionMapper;
 import org.graylog2.plugin.streams.DefaultStream;
 import org.graylog2.plugin.streams.Stream;
 import org.graylog2.rest.ElasticsearchExceptionMapper;
@@ -63,15 +62,11 @@ import org.graylog2.rest.NotFoundExceptionMapper;
 import org.graylog2.rest.QueryParsingExceptionMapper;
 import org.graylog2.rest.ScrollChunkWriter;
 import org.graylog2.rest.ValidationExceptionMapper;
-import org.graylog2.security.ldap.LdapConnector;
-import org.graylog2.security.ldap.LdapSettingsImpl;
 import org.graylog2.security.realm.AuthenticatingRealmModule;
-import org.graylog2.security.realm.LdapUserAuthenticator;
+import org.graylog2.security.realm.AuthorizationOnlyRealmModule;
 import org.graylog2.shared.buffers.processors.ProcessBufferProcessor;
 import org.graylog2.shared.inputs.PersistedInputs;
-import org.graylog2.shared.journal.JournalReaderModule;
-import org.graylog2.shared.journal.KafkaJournalModule;
-import org.graylog2.shared.journal.NoopJournalModule;
+import org.graylog2.shared.messageq.MessageQueueModule;
 import org.graylog2.shared.metrics.jersey2.MetricsDynamicBinding;
 import org.graylog2.shared.security.RestrictToMasterFeature;
 import org.graylog2.shared.system.activities.ActivityWriter;
@@ -89,7 +84,6 @@ import org.graylog2.users.RoleService;
 import org.graylog2.users.RoleServiceImpl;
 import org.graylog2.users.StartPageCleanupListener;
 import org.graylog2.users.UserImpl;
-import org.graylog2.users.UserPermissionsCleanupListener;
 
 import javax.ws.rs.container.DynamicFeature;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -98,6 +92,7 @@ public class ServerBindings extends Graylog2Module {
     private final Configuration configuration;
 
     public ServerBindings(Configuration configuration) {
+
         this.configuration = configuration;
     }
 
@@ -105,6 +100,7 @@ public class ServerBindings extends Graylog2Module {
     protected void configure() {
         bindInterfaces();
         bindSingletons();
+        install(new MessageQueueModule(configuration));
         bindProviders();
         bindFactoryModules();
         bindDynamicFeatures();
@@ -112,9 +108,10 @@ public class ServerBindings extends Graylog2Module {
         bindAdditionalJerseyComponents();
         bindEventBusListeners();
         install(new AuthenticatingRealmModule(configuration));
+        install(new AuthorizationOnlyRealmModule());
         bindSearchResponseDecorators();
         install(new GrokModule());
-        install(new LookupModule());
+        install(new LookupModule(configuration));
         install(new FieldTypesModule());
 
         // Just to create the binders so they are present in the injector. Prevents a server startup error when no
@@ -137,8 +134,6 @@ public class ServerBindings extends Graylog2Module {
         install(new FactoryModuleBuilder().build(FixDeflectorByMoveJob.Factory.class));
         install(new FactoryModuleBuilder().build(SetIndexReadOnlyAndCalculateRangeJob.Factory.class));
 
-        install(new FactoryModuleBuilder().build(LdapSettingsImpl.Factory.class));
-        install(new FactoryModuleBuilder().build(WidgetCacheTime.Factory.class));
         install(new FactoryModuleBuilder().build(UserImpl.Factory.class));
 
         install(new FactoryModuleBuilder().build(EmailRecipients.Factory.class));
@@ -150,17 +145,7 @@ public class ServerBindings extends Graylog2Module {
 
     private void bindSingletons() {
         bind(MongoConnection.class).toProvider(MongoConnectionProvider.class);
-
-        if (configuration.isMessageJournalEnabled()) {
-            install(new KafkaJournalModule());
-            install(new JournalReaderModule());
-        } else {
-            install(new NoopJournalModule());
-        }
-
         bind(SystemJobManager.class).toProvider(SystemJobManagerProvider.class);
-        bind(LdapConnector.class).in(Scopes.SINGLETON);
-        bind(LdapUserAuthenticator.class).in(Scopes.SINGLETON);
         bind(DefaultSecurityManager.class).toProvider(DefaultSecurityManagerProvider.class).asEagerSingleton();
         bind(SystemJobFactory.class).toProvider(SystemJobFactoryProvider.class);
         bind(GracefulShutdown.class).in(Scopes.SINGLETON);
@@ -169,9 +154,6 @@ public class ServerBindings extends Graylog2Module {
         bind(GrokPatternRegistry.class).in(Scopes.SINGLETON);
         bind(Engine.class).toInstance(Engine.createEngine());
         bind(ErrorPageGenerator.class).to(GraylogErrorPageGenerator.class).asEagerSingleton();
-
-        registerRestControllerPackage("org.graylog2.rest.resources");
-        registerRestControllerPackage("org.graylog2.shared.rest.resources");
     }
 
     private void bindInterfaces() {
@@ -195,6 +177,7 @@ public class ServerBindings extends Graylog2Module {
         final Multibinder<Class<? extends ExceptionMapper>> exceptionMappers = jerseyExceptionMapperBinder();
         exceptionMappers.addBinding().toInstance(NotFoundExceptionMapper.class);
         exceptionMappers.addBinding().toInstance(ValidationExceptionMapper.class);
+        exceptionMappers.addBinding().toInstance(ValidationFailureExceptionMapper.class);
         exceptionMappers.addBinding().toInstance(ElasticsearchExceptionMapper.class);
         exceptionMappers.addBinding().toInstance(QueryParsingExceptionMapper.class);
     }
@@ -210,8 +193,6 @@ public class ServerBindings extends Graylog2Module {
         bind(LocalDebugEventListener.class).asEagerSingleton();
         bind(ClusterDebugEventListener.class).asEagerSingleton();
         bind(StartPageCleanupListener.class).asEagerSingleton();
-        bind(WidgetEventsListener.class).asEagerSingleton();
-        bind(UserPermissionsCleanupListener.class).asEagerSingleton();
     }
 
     private void bindSearchResponseDecorators() {

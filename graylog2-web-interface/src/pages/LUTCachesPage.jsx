@@ -1,15 +1,32 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { LinkContainer } from 'react-router-bootstrap';
+
+import { LinkContainer } from 'components/graylog/router';
 import connect from 'stores/connect';
 import { ButtonToolbar, Col, Row, Button } from 'components/graylog';
 import Routes from 'routing/Routes';
 import history from 'util/History';
 import { DocumentTitle, PageHeader, Spinner } from 'components/common';
-
 import { Cache, CacheCreate, CacheForm, CachesOverview } from 'components/lookup-tables';
-
 import CombinedProvider from 'injection/CombinedProvider';
+import withParams from 'routing/withParams';
+import withLocation from 'routing/withLocation';
 
 const { LookupTableCachesStore, LookupTableCachesActions } = CombinedProvider.get(
   'LookupTableCaches',
@@ -23,6 +40,7 @@ class LUTCachesPage extends React.Component {
   componentDidUpdate(prevProps) {
     const { location: { pathname } } = this.props;
     const { location: { pathname: prevPathname } } = prevProps;
+
     if (pathname !== prevPathname) {
       this._loadData(this.props);
     }
@@ -30,6 +48,7 @@ class LUTCachesPage extends React.Component {
 
   _loadData = (props) => {
     const { pagination } = props;
+
     if (props.params && props.params.cacheName) {
       LookupTableCachesActions.get(props.params.cacheName);
     } else if (this._isCreating(props)) {
@@ -43,8 +62,8 @@ class LUTCachesPage extends React.Component {
     history.push(Routes.SYSTEM.LOOKUPTABLES.CACHES.OVERVIEW);
   }
 
-  _isCreating = (props) => {
-    return props.route.action === 'create';
+  _isCreating = ({ action }) => {
+    return action === 'create';
   }
 
   _validateCache = (adapter) => {
@@ -53,7 +72,7 @@ class LUTCachesPage extends React.Component {
 
   render() {
     const {
-      route: { action },
+      action,
       cache,
       validationErrors,
       types,
@@ -116,7 +135,7 @@ class LUTCachesPage extends React.Component {
                   <Button bsStyle="info">Lookup Tables</Button>
                 </LinkContainer>
                 <LinkContainer to={Routes.SYSTEM.LOOKUPTABLES.CACHES.OVERVIEW}>
-                  <Button bsStyle="info" className="active">Caches</Button>
+                  <Button bsStyle="info">Caches</Button>
                 </LinkContainer>
                 <LinkContainer to={Routes.SYSTEM.LOOKUPTABLES.DATA_ADAPTERS.OVERVIEW}>
                   <Button bsStyle="info">Data Adapters</Button>
@@ -131,6 +150,7 @@ class LUTCachesPage extends React.Component {
     );
   }
 }
+
 LUTCachesPage.propTypes = {
   cache: PropTypes.object,
   validationErrors: PropTypes.object,
@@ -138,7 +158,7 @@ LUTCachesPage.propTypes = {
   caches: PropTypes.array,
   location: PropTypes.object.isRequired,
   pagination: PropTypes.object.isRequired,
-  route: PropTypes.object.isRequired,
+  action: PropTypes.string,
 };
 
 LUTCachesPage.defaultProps = {
@@ -146,8 +166,14 @@ LUTCachesPage.defaultProps = {
   validationErrors: {},
   types: null,
   caches: null,
+  action: undefined,
 };
-export default connect(LUTCachesPage, { cachesStore: LookupTableCachesStore }, ({ cachesStore, ...otherProps }) => ({
-  ...otherProps,
-  ...cachesStore,
-}));
+
+export default connect(
+  withParams(withLocation(LUTCachesPage)),
+  { cachesStore: LookupTableCachesStore },
+  ({ cachesStore, ...otherProps }) => ({
+    ...otherProps,
+    ...cachesStore,
+  }),
+);

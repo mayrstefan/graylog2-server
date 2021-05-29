@@ -1,23 +1,22 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.testing.elasticsearch;
 
 import com.github.zafarkhaja.semver.Version;
-import io.searchbox.client.JestClient;
 import org.junit.Before;
 import org.junit.Rule;
 
@@ -37,11 +36,7 @@ import static org.graylog2.indexer.IndexMappingFactory.indexMappingFor;
  * <p>
  * Check the {@link #importFixture(String)} method if you need to load fixture data from JSON files.
  */
-public class ElasticsearchBaseTest {
-
-    @Rule
-    public final ElasticsearchInstance elasticsearch = ElasticsearchInstance.create();
-
+public abstract class ElasticsearchBaseTest {
     @Rule
     public final SkipDefaultIndexTemplateWatcher skipTemplatesWatcher = new SkipDefaultIndexTemplateWatcher();
 
@@ -53,7 +48,7 @@ public class ElasticsearchBaseTest {
     }
 
     private void addGraylogDefaultIndexTemplate() {
-        addIndexTemplates(getGraylogDefaultMessageTemplates(elasticsearch.version()));
+        addIndexTemplates(getGraylogDefaultMessageTemplates(elasticsearch().version()));
     }
 
     private static Map<String, Map<String, Object>> getGraylogDefaultMessageTemplates(Version version) {
@@ -66,18 +61,11 @@ public class ElasticsearchBaseTest {
         for (Map.Entry<String, Map<String, Object>> template : templates.entrySet()) {
             final String templateName = template.getKey();
 
-            elasticsearch.client().putTemplate(templateName, template.getValue());
+            elasticsearch().client().putTemplate(templateName, template.getValue());
         }
     }
 
-    /**
-     * Returns the Elasticsearch client.
-     *
-     * @return the client
-     */
-    protected JestClient jestClient() {
-        return elasticsearch.jestClient();
-    }
+    protected abstract ElasticsearchInstance elasticsearch();
 
     /**
      * Returns a custom Elasticsearch client with a bunch of utility methods.
@@ -85,7 +73,7 @@ public class ElasticsearchBaseTest {
      * @return the client
      */
     protected Client client() {
-        return elasticsearch.client();
+        return elasticsearch().client();
     }
 
     /**
@@ -97,10 +85,10 @@ public class ElasticsearchBaseTest {
      * @param resourcePath the fixture resource path
      */
     protected void importFixture(String resourcePath) {
-        elasticsearch.importFixtureResource(resourcePath, getClass());
+        elasticsearch().importFixtureResource(resourcePath, getClass());
     }
 
     protected Version elasticsearchVersion() {
-        return elasticsearch.version();
+        return elasticsearch().version();
     }
 }

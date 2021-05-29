@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 
 import UserNotification from 'util/UserNotification';
@@ -33,6 +49,7 @@ class ContentPackUploadControls extends React.Component {
 
   _save(submitEvent) {
     submitEvent.preventDefault();
+
     if (!this.uploadInput.getInputDOMNode().files || !this.uploadInput.getInputDOMNode().files[0]) {
       return;
     }
@@ -41,6 +58,7 @@ class ContentPackUploadControls extends React.Component {
 
     reader.onload = (evt) => {
       const request = evt.target.result;
+
       ContentPacksActions.create.triggerPromise(request)
         .then(
           () => {
@@ -52,9 +70,11 @@ class ContentPackUploadControls extends React.Component {
               + 'Graylog logs for more information.';
             const title = 'Could not import content pack';
             let smallMessage = '';
+
             if (response.additional && response.additional.body && response.additional.body.message) {
               smallMessage = `<br /><small>${response.additional.body.message}</small>`;
             }
+
             UserNotification.error(message + smallMessage, title);
           },
         );

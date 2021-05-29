@@ -1,12 +1,27 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 import naturalSort from 'javascript-natural-sort';
 
-import { util } from 'theme';
 import { ShardRouting } from 'components/indices';
 
-const ShardRoutingWrap = styled.div(({ theme }) => `
+const ShardRoutingWrap = styled.div(({ theme }) => css`
   .shards {
     .shard {
       padding: 10px;
@@ -17,30 +32,30 @@ const ShardRoutingWrap = styled.div(({ theme }) => `
     }
 
     .shard-started {
-      background-color: ${util.colorLevel(theme.color.variant.light.success, -2)};
+      background-color: ${theme.utils.colorLevel(theme.colors.variant.light.success, -2)};
     }
 
     .shard-relocating {
-      background-color: ${util.colorLevel(theme.color.variant.light.primary, -2)};
+      background-color: ${theme.utils.colorLevel(theme.colors.variant.light.primary, -2)};
     }
 
     .shard-initializing {
-      background-color: ${util.colorLevel(theme.color.variant.light.warning, -5)};
+      background-color: ${theme.utils.colorLevel(theme.colors.variant.light.warning, -5)};
     }
 
     .shard-unassigned {
-      background-color: ${util.colorLevel(theme.color.variant.light.default, -2)};
+      background-color: ${theme.utils.colorLevel(theme.colors.variant.light.default, -2)};
     }
 
     .shard-primary .id {
       font-weight: bold;
       margin-bottom: 3px;
-      border-bottom: 1px solid ${theme.color.gray[10]};
+      border-bottom: 1px solid ${theme.colors.gray[10]};
     }
   }
 
   .description {
-    font-size: 11px;
+    font-size: ${theme.fonts.size.small};
     margin-top: 2px;
     margin-left: 6px;
   }

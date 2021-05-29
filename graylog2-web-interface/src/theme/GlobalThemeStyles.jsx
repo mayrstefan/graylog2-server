@@ -1,25 +1,39 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import { createGlobalStyle, css } from 'styled-components';
-
-import 'opensans-npm-webfont/open_sans.css';
-import 'opensans-npm-webfont/open_sans_italic.css';
-import 'opensans-npm-webfont/open_sans_bold.css';
-
-import { util } from 'theme';
-
-const fontFamily = '"Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif';
 
 const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   #editor {
     height: 256px;
   }
 
+  html {
+    font-size: ${theme.fonts.size.root} !important; /* override Bootstrap default */
+  }
+
   body {
-    background-color: ${theme.color.global.background};
-    font-family: ${fontFamily};
-    font-size: 12px;
-    overflow-x: hidden;
-    margin-top: 50px;
-    min-height: calc(100vh - 50px);
+    background-color: ${theme.colors.global.background};
+    color: ${theme.colors.global.textDefault};
+    font-family: ${theme.fonts.family.body};
+    height: 100vh;
+  }
+
+  #app-root {
+    height: 100%;
   }
 
   ul {
@@ -32,7 +46,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   hr {
-    border-top: 1px solid ${theme.color.global.background};
+    border-top: 1px solid ${theme.colors.global.background};
   }
 
   h1,
@@ -44,32 +58,41 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     font-weight: normal;
     padding: 0;
     margin: 0;
-    color: ${theme.color.global.textDefault};
+    color: ${theme.colors.global.textDefault};
   }
 
   h1 {
-    font-size: 28px;
+    font-size: ${theme.fonts.size.h1};
   }
 
   h2 {
-    font-size: 21px;
+    font-size: ${theme.fonts.size.h2};
   }
 
   h3 {
-    font-size: 18px;
+    font-size: ${theme.fonts.size.h3};
   }
 
   h4 {
-    font-size: 14px;
-    font-weight: normal;
+    font-size: ${theme.fonts.size.h4};
+  }
+
+  h5 {
+    font-size: ${theme.fonts.size.h5};
+  }
+
+  h6 {
+    font-size: ${theme.fonts.size.h6};
+    font-weight: bold;
   }
 
   a {
-    color: ${theme.color.global.link};
+    color: ${theme.colors.global.link};
   }
 
-  a:hover {
-    color: ${theme.color.global.linkHover};
+  a:hover,
+  a:focus {
+    color: ${theme.colors.global.linkHover};
   }
 
   /* Remove boostrap outline */
@@ -85,22 +108,37 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
 
   input.form-control,
   select.form-control,
+  textarea,
   textarea.form-control {
-    color: ${theme.color.gray[30]};
-    font-family: ${fontFamily};
+    color: ${theme.colors.input.color};
+    background-color: ${theme.colors.input.background};
+    border-color: ${theme.colors.input.border};
+    font-family: ${theme.fonts.family.body};
 
-    &:hover {
-      border-color: hsl(0, 0%, 70%);
+    &::placeholder {
+      color: ${theme.colors.input.placeholder};
+    }
+
+    &:focus {
+      border-color: ${theme.colors.input.borderFocus};
+      box-shadow: ${theme.colors.input.boxShadow};
+    }
+    
+    &[disabled],
+    &[readonly],
+    fieldset[disabled] & {
+      background-color: ${theme.colors.input.backgroundDisabled};
+      color: ${theme.colors.input.colorDisabled};
     }
   }
 
-  label {
-    font-size: 14px;
+  legend small {
+    color: ${theme.colors.gray[60]};
+    margin-left: 5px;
   }
 
-  legend small {
-    color: ${theme.color.gray[60]};
-    margin-left: 5px;
+  small {
+    font-size: ${theme.fonts.size.small};
   }
 
   .input-group-addon.input-group-separator {
@@ -111,18 +149,17 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   .content {
     padding-top: 15px;
     padding-bottom: 15px;
-    background-color: ${theme.color.global.contentBackground};
-    border: 1px solid ${theme.color.gray[80]};
+    background-color: ${theme.colors.global.contentBackground};
+    border: 1px solid ${theme.colors.gray[80]};
     margin-bottom: 10px;
 
     p.description {
       margin-top: 3px;
-      color: ${theme.color.gray[50]};
+      color: ${theme.colors.gray[50]};
     }
   }
 
   .actions-lg .actions-container {
-    height: 60px;
     margin-top: 10px;
     padding-left: 50px;
   }
@@ -135,17 +172,12 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     margin-top: 10px;
   }
 
-  .row {
-    margin-bottom: 15px;
-  }
-
   .no-bm {
     margin-bottom: 0;
   }
 
-  .alert {
-    margin-bottom: 0;
-    margin-top: 5px;
+  .has-bm {
+    margin-bottom: 10px;
   }
 
   .modal form {
@@ -161,7 +193,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .u-light {
-    border-bottom: 1px dotted ${theme.color.gray[70]};
+    border-bottom: 1px dotted ${theme.colors.gray[70]};
     margin-bottom: 5px;
     padding-bottom: 5px;
   }
@@ -179,7 +211,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .master-node {
-    color: ${theme.color.variant.dark.warning};
+    color: ${theme.colors.variant.dark.warning};
   }
 
   .loglevel-metrics-row {
@@ -203,7 +235,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .sources.overlay {
-    background-color: ${theme.color.gray[60]};
+    background-color: ${theme.colors.gray[60]};
     height: 200px;
     line-height: 200px;
     opacity: 0.2;
@@ -216,32 +248,8 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     margin-bottom: 15px !important;
   }
 
-  dl.metric-def dt {
-    float: left;
-  }
-
   dl.metric-timer dd {
-    margin-left: 125px;
-  }
-
-  dl.metric-meter dd {
-    margin-left: 95px;
-  }
-
-  dl.metric-gauge dd {
-    margin-left: 80px;
-  }
-
-  dl.metric-counter dd {
-    margin-left: 80px;
-  }
-
-  dl.metric-histogram dd {
-    margin-left: 125px;
-  }
-
-  #user-list th.user-type {
-    width: 50px;
+    margin-left: 145px;
   }
 
   td.centered {
@@ -256,7 +264,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
 
   .configuration-field-optional {
     margin-left: 5px;
-    font-size: 11px;
+    font-size: ${theme.fonts.size.small};
   }
 
   .index-description {
@@ -311,14 +319,6 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     margin-top: 5px;
   }
 
-  .system-system dt {
-    float: left;
-  }
-
-  .system-system dd {
-    margin-left: 75px;
-  }
-
   dl.system-journal {
     margin-top: 5px;
     margin-bottom: 0;
@@ -345,14 +345,6 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     margin-left: 180px;
   }
 
-  .system-rest dt {
-    float: left;
-  }
-
-  .system-rest dd {
-    margin-left: 120px;
-  }
-
   .search-help {
     margin: 0 5px;
     line-height: 34px;
@@ -367,8 +359,8 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .sources th {
-    background-color: ${theme.color.gray[20]};
-    color: ${util.readableColor(theme.color.gray[20])};
+    background-color: ${theme.colors.gray[20]};
+    color: ${theme.utils.readableColor(theme.colors.gray[20])};
     font-weight: normal;
   }
 
@@ -378,8 +370,8 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .parse-error {
-    background-color: ${theme.color.variant.light.danger};
-    color: ${util.contrastingColor(theme.color.variant.light.danger)};
+    background-color: ${theme.colors.variant.light.danger};
+    color: ${theme.utils.contrastingColor(theme.colors.variant.light.danger)};
     padding-left: 2px;
     padding-right: 2px;
   }
@@ -397,8 +389,8 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .alerts th {
-    background-color: ${theme.color.gray[10]};
-    color: ${theme.color.global.textAlt};
+    background-color: ${theme.colors.gray[10]};
+    color: ${theme.colors.global.textAlt};
     font-weight: normal;
   }
 
@@ -407,11 +399,11 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .alerts th a:focus {
-    color: ${theme.color.global.textAlt};
+    color: ${theme.colors.global.textAlt};
   }
 
   .result-highlight-colored {
-    background-color: ${theme.color.variant.warning};
+    background-color: ${theme.colors.variant.warning};
   }
 
   .annotation .content {
@@ -428,7 +420,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     margin-top: 5px;
     margin-bottom: 0;
     padding: 9px;
-    font-family: monospace;
+    font-family: ${theme.fonts.family.monospace};
     word-wrap: break-word;
   }
 
@@ -500,8 +492,8 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   .btn-text {
-    font-family: ${fontFamily};
-    font-size: 12px;
+    font-family: ${theme.fonts.family.body};
+    font-size: ${theme.fonts.size.small};
     padding: 0;
     vertical-align: baseline;
   }
@@ -511,7 +503,7 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   }
 
   nav.navbar-fixed-top ul.dropdown-menu li a {
-    font-size: 12px;
+    font-size: ${theme.fonts.size.body};
   }
 
   nav.navbar-fixed-top ul.dropdown-menu {
@@ -533,12 +525,6 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
 
   div.row-sm {
     margin-bottom: 5px;
-  }
-
-  dl.system-system,
-  dl.system-rest {
-    margin-top: 5px;
-    margin-bottom: 0;
   }
 
   .table-sm {
@@ -571,11 +557,11 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
   .alarm-callbacks li:not(:last-child) {
     margin-bottom: 10px;
     padding-bottom: 10px;
-    border-bottom: 1px solid ${theme.color.gray[90]};
+    border-bottom: 1px solid ${theme.colors.gray[90]};
   }
 
   .threaddump {
-    font-size: 11px;
+    font-size: ${theme.fonts.size.small};
   }
 
   h2.extractor-title {
@@ -590,6 +576,19 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
     display: inline-block;
     vertical-align: middle;
     width: auto;
+  }
+  
+  .typeahead-wrapper .tt-menu {
+    background-color: ${theme.colors.global.contentBackground};
+    box-shadow: 0 3px 3px ${theme.colors.global.navigationBoxShadow};
+    color: ${theme.colors.global.textDefault};
+    
+    .tt-suggestion:hover,
+    .tt-suggestion.tt-cursor {
+      color: ${theme.colors.variant.darkest.info};
+      background-color: ${theme.colors.variant.lighter.info};
+      background-image: none;
+    }
   }
 
   .form-group-inline {
@@ -623,19 +622,19 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
 
   .tag,
   .pill {
-    font-size: 14px;
+    font-size: ${theme.fonts.size.body};
     margin-right: 5px;
   }
 
   .pill {
-    color: ${theme.color.global.textDefault};
-    background-color: ${theme.color.gray[90]};
+    color: ${theme.colors.global.textDefault};
+    background-color: ${theme.colors.gray[90]};
     padding: 6px 12px;
   }
 
   .tag-remove,
   .pill-remove {
-    color: ${theme.color.global.textDefault};
+    color: ${theme.colors.global.textDefault};
     cursor: pointer;
     margin-left: 5px;
   }
@@ -651,6 +650,29 @@ const GlobalThemeStyles = createGlobalStyle(({ theme }) => css`
 
   .form-control.message-id-input {
     width: 300px;
+  }
+
+  /* additional styles for 'StyledAceEditor' */
+  .ace_editor.ace_autocomplete.ace-queryinput {
+    width: 600px !important;
+    margin-top: 6px;
+  }
+
+  code {
+    color: ${theme.colors.variant.darker.danger};
+    background-color: ${theme.colors.variant.lightest.danger};
+  }
+
+  pre {
+    color: ${theme.colors.variant.darker.default};
+    background-color: ${theme.colors.variant.lightest.default};
+    border-color: ${theme.colors.variant.lighter.default};
+  }
+  
+  input[type="range"],
+  input[type="range"]:focus {
+    box-shadow: none;
+    height: auto;
   }
 `);
 

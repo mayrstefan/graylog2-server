@@ -1,11 +1,29 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
-import { mount } from 'wrappedEnzyme';
-import 'helpers/mocking/react-dom_mock';
-import URLUtils from 'util/URLUtils';
+import { mount, shallow } from 'wrappedEnzyme';
 
+import 'helpers/mocking/react-dom_mock';
+import * as URLUtils from 'util/URLUtils';
 import ContentPacksList from 'components/content-packs/ContentPacksList';
 
 describe('<ContentPacksList />', () => {
+  // TODO: Should be replaced with call to `jest.mock` instead.
+  // eslint-disable-next-line import/no-named-as-default-member
   URLUtils.areCredentialsInURLSupported = jest.fn(() => { return false; });
 
   const contentPacks = [
@@ -28,7 +46,8 @@ describe('<ContentPacksList />', () => {
 
   it('should render with empty content packs', () => {
     const wrapper = mount(<ContentPacksList contentPacks={[]} />);
-    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper).toExist();
   });
 
   it('should render with content packs', () => {
@@ -37,15 +56,23 @@ describe('<ContentPacksList />', () => {
       2: { 5: { installation_count: 2 } },
     };
     const wrapper = mount(<ContentPacksList contentPacks={contentPacks} contentPackMetadata={metadata} />);
-    expect(wrapper).toMatchSnapshot();
+
+    expect(wrapper).toExist();
   });
 
   it('should do pagination', () => {
-    const wrapper = mount(<ContentPacksList contentPacks={contentPacks} />);
-    const beforeFilter = wrapper.find('div.content-packs-summary').length;
+    const NEXT_PAGE = 2;
+    const wrapper = shallow(<ContentPacksList contentPacks={contentPacks} />);
+    const onChangePageSpy = jest.spyOn(wrapper.instance(), '_onChangePage');
+    const beforeFilter = wrapper.find('.content-packs-summary').length;
+
     expect(beforeFilter).toBe(10);
-    wrapper.find('span[children="›"]').at(0).simulate('click');
-    const afterFilter = wrapper.find('div.content-packs-summary').length;
+
+    wrapper.instance()._onChangePage(NEXT_PAGE);
+
+    const afterFilter = wrapper.find('.content-packs-summary').length;
+
+    expect(onChangePageSpy).toHaveBeenCalledWith(NEXT_PAGE);
     expect(afterFilter).toBe(5);
   });
 
@@ -54,7 +81,9 @@ describe('<ContentPacksList />', () => {
       expect(token).toEqual('1');
     });
     const wrapper = mount(<ContentPacksList contentPacks={contentPacks} onDeletePack={deleteFn} />);
+
     wrapper.find('a[children="Delete All Versions"]').at(0).simulate('click');
+
     expect(deleteFn.mock.calls.length).toBe(1);
   });
 });

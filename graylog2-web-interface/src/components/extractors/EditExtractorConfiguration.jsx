@@ -1,7 +1,23 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Col, Panel } from 'components/graylog';
 
+import { Col, Panel } from 'components/graylog';
 import {
   CopyInputExtractorConfiguration,
   GrokExtractorConfiguration,
@@ -12,7 +28,6 @@ import {
   SubstringExtractorConfiguration,
   LookupTableExtractorConfiguration,
 } from 'components/extractors/extractors_configuration';
-
 import ExtractorUtils from 'util/ExtractorUtils';
 
 class EditExtractorConfiguration extends React.Component {
@@ -45,6 +60,7 @@ class EditExtractorConfiguration extends React.Component {
                                       onChange={this.props.onChange}
                                       onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       case ExtractorUtils.ExtractorTypes.JSON:
         extractorConfiguration = (
@@ -53,6 +69,7 @@ class EditExtractorConfiguration extends React.Component {
                                       onChange={this.props.onChange}
                                       onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       case ExtractorUtils.ExtractorTypes.REGEX:
         extractorConfiguration = (
@@ -61,6 +78,7 @@ class EditExtractorConfiguration extends React.Component {
                                        onChange={this.props.onChange}
                                        onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       case ExtractorUtils.ExtractorTypes.REGEX_REPLACE:
         extractorConfiguration = (
@@ -69,6 +87,7 @@ class EditExtractorConfiguration extends React.Component {
                                               onChange={this.props.onChange}
                                               onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       case ExtractorUtils.ExtractorTypes.SUBSTRING:
         extractorConfiguration = (
@@ -77,6 +96,7 @@ class EditExtractorConfiguration extends React.Component {
                                            onChange={this.props.onChange}
                                            onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       case ExtractorUtils.ExtractorTypes.SPLIT_AND_INDEX:
         extractorConfiguration = (
@@ -85,6 +105,7 @@ class EditExtractorConfiguration extends React.Component {
                                                onChange={this.props.onChange}
                                                onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       case ExtractorUtils.ExtractorTypes.LOOKUP_TABLE:
         extractorConfiguration = (
@@ -93,6 +114,7 @@ class EditExtractorConfiguration extends React.Component {
                                              onChange={this.props.onChange}
                                              onExtractorPreviewLoad={this._onExtractorPreviewLoad} />
         );
+
         break;
       default:
         console.warn(`Unsupported extractor type ${this.props.extractorType}`);

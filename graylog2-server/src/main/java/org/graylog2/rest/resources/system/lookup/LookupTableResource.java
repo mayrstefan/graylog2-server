@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.resources.system.lookup;
 
@@ -121,19 +121,19 @@ public class LookupTableResource extends RestResource {
             CacheDto.FIELD_NAME
     );
     private static final ImmutableMap<String, SearchQueryField> LUT_SEARCH_FIELD_MAPPING = ImmutableMap.<String, SearchQueryField>builder()
-            .put("id", SearchQueryField.create(LookupTableDto.FIELD_ID))
+            .put("id", SearchQueryField.create("_id", SearchQueryField.Type.OBJECT_ID))
             .put("title", SearchQueryField.create(LookupTableDto.FIELD_TITLE))
             .put("description", SearchQueryField.create(LookupTableDto.FIELD_DESCRIPTION))
             .put("name", SearchQueryField.create(LookupTableDto.FIELD_NAME))
             .build();
     private static final ImmutableMap<String, SearchQueryField> ADAPTER_SEARCH_FIELD_MAPPING = ImmutableMap.<String, SearchQueryField>builder()
-            .put("id", SearchQueryField.create(DataAdapterDto.FIELD_ID))
+            .put("id", SearchQueryField.create("_id", SearchQueryField.Type.OBJECT_ID))
             .put("title", SearchQueryField.create(DataAdapterDto.FIELD_TITLE))
             .put("description", SearchQueryField.create(DataAdapterDto.FIELD_DESCRIPTION))
             .put("name", SearchQueryField.create(DataAdapterDto.FIELD_NAME))
             .build();
     private static final ImmutableMap<String, SearchQueryField> CACHE_SEARCH_FIELD_MAPPING = ImmutableMap.<String, SearchQueryField>builder()
-            .put("id", SearchQueryField.create(CacheDto.FIELD_ID))
+            .put("id", SearchQueryField.create("_id", SearchQueryField.Type.OBJECT_ID))
             .put("title", SearchQueryField.create(CacheDto.FIELD_TITLE))
             .put("description", SearchQueryField.create(CacheDto.FIELD_DESCRIPTION))
             .put("name", SearchQueryField.create(CacheDto.FIELD_NAME))
@@ -202,6 +202,11 @@ public class LookupTableResource extends RestResource {
         return lookupTableService.newBuilder().lookupTable(name).build().lookup(key);
     }
 
+    /**
+     * NOTE: Must NOT be called directly by clients. Consider calling
+     * {@link org.graylog2.rest.resources.cluster.ClusterLookupTableResource#performPurge(String, String)}
+     * instead!
+     */
     @POST
     @Path("tables/{idOrName}/purge")
     @ApiOperation(value = "Purge lookup table cache")

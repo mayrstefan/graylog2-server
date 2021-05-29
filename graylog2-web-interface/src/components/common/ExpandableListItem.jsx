@@ -1,16 +1,33 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Checkbox } from 'components/graylog';
+
 import Icon from './Icon';
 
-const ItemWrap = styled.li(({ padded }) => `
+const ItemWrap = styled.li(({ padded }) => css`
   padding: ${padded ? '10px 5px' : ''};
 `);
 
-const Container = styled.div`
-  font-size: 14px;
+const Container = styled.div(({ theme }) => css`
+  font-size: ${theme.fonts.size.body};
   line-height: 20px;
 
   label {
@@ -22,7 +39,7 @@ const Container = styled.div`
       cursor: pointer;
     }
   }
-`;
+`);
 
 const Toggle = styled.div`
   display: inline-block;
@@ -30,17 +47,17 @@ const Toggle = styled.div`
   margin-right: 5px;
 `;
 
-const IconStack = styled.div(({ theme }) => `
+const IconStack = styled.div(({ theme }) => css`
   &.fa-stack {
     cursor: pointer;
-    font-size: 1.4em;
+    font-size: ${theme.fonts.size.large};
     line-height: 20px;
     width: 1em;
     height: 1em;
     vertical-align: text-top;
 
     &:hover [class*="fa-"] {
-      color: ${theme.color.variant.primary};
+      color: ${theme.colors.variant.primary};
       opacity: 1;
     }
   }
@@ -49,14 +66,14 @@ const IconStack = styled.div(({ theme }) => `
     opacity: 0;
 
     ~ [class*="fa-"]:hover {
-      color: ${theme.color.global.contentBackground};
+      color: ${theme.colors.global.contentBackground};
     }
   }
 `);
 
-const HeaderWrap = styled.span`
-  font-size: 14px;
-`;
+const HeaderWrap = styled.span(({ theme }) => css`
+  font-size: ${theme.fonts.size.large};
+`);
 
 const Header = styled.button`
   border: 0;
@@ -65,19 +82,18 @@ const Header = styled.button`
   background: transparent;
 `;
 
-const Subheader = styled.span(({ theme }) => `
-  font-size: 0.95em;
+const Subheader = styled.span(({ theme }) => css`
+  font-size: ${theme.fonts.size.body};
   margin-left: 0.5em;
-  color: ${theme.color.gray[70]};
+  color: ${theme.colors.gray[70]};
 `);
 
-const ExpandableContent = styled.div(({ theme }) => `
-  border-left: 1px ${theme.color.gray[90]} solid;
+const ExpandableContent = styled.div(({ theme }) => css`
+  border-left: 1px ${theme.colors.gray[90]} solid;
   margin-left: 35px;
   margin-top: 10px;
   padding-left: 5px;
 `);
-
 
 /**
  * The ExpandableListItem is needed to render a ExpandableList.
@@ -136,7 +152,6 @@ class ExpandableListItem extends React.Component {
     };
   }
 
-
   componentDidMount() {
     const { indetermined } = this.props;
 
@@ -170,6 +185,7 @@ class ExpandableListItem extends React.Component {
 
   _filterInputProps = (props) => {
     const { expanded, indetermined, stayExpanded, padded, ...inputProps } = props;
+
     return inputProps;
   };
 

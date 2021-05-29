@@ -1,36 +1,51 @@
-import React, { useEffect, useState } from 'react';
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import styled, { css } from 'styled-components';
 // eslint-disable-next-line no-restricted-imports
 import { Panel as BootstrapPanel } from 'react-bootstrap';
 
 import deprecationNotice from 'util/deprecationNotice';
-import { util } from 'theme';
-import bsStyleThemeVariant from './variants/bsStyle';
 
-const PanelHeading = styled(BootstrapPanel.Heading)``;
+const PanelHeading = styled(BootstrapPanel.Heading)`
+  .panel-title {
+    > a {
+      display: block;
+    }
+  }
+`;
 
 const PanelFooter = styled(BootstrapPanel.Footer)(({ theme }) => css`
-  background-color: ${theme.color.gray[80]};
-  border-top-color: ${theme.color.gray[90]};
+  background-color: ${theme.colors.gray[90]};
+  border-top-color: ${theme.colors.gray[80]};
 `);
 
-const panelVariantStyles = (hex, variant) => css(({ theme }) => {
-  const backgroundColor = util.colorLevel(theme.color.variant.light[variant], -9);
-  const borderColor = util.colorLevel(theme.color.variant.dark[variant], -10);
+const panelVariantStyles = css(({ bsStyle = 'default', theme }) => {
+  const backgroundColor = theme.colors.variant.lighter[bsStyle];
+  const borderColor = theme.colors.variant.dark[bsStyle];
 
   return css`
     border-color: ${borderColor};
 
-    & > ${PanelHeading} {
-      color: ${util.readableColor(backgroundColor)};
+    > ${PanelHeading} {
+      color: ${theme.utils.readableColor(backgroundColor)};
       background-color: ${backgroundColor};
       border-color: ${borderColor};
-
-      > .panel-title,
-      > .panel-title > * {
-        font-size: 16px;
-      }
 
       + .panel-collapse > .panel-body {
         border-top-color: ${borderColor};
@@ -38,11 +53,11 @@ const panelVariantStyles = (hex, variant) => css(({ theme }) => {
 
       .badge {
         color: ${backgroundColor};
-        background-color: ${hex};
+        background-color: ${theme.colors.variant[bsStyle]};
       }
     }
 
-    & > ${PanelFooter} {
+    > ${PanelFooter} {
       + .panel-collapse > .panel-body {
         border-bottom-color: ${borderColor};
       }
@@ -51,40 +66,50 @@ const panelVariantStyles = (hex, variant) => css(({ theme }) => {
 });
 
 const StyledPanel = styled(BootstrapPanel)(({ theme }) => css`
+  background-color: ${theme.utils.colorLevel(theme.colors.global.background, -4)};
+
+  > ${PanelHeading} {
+    .panel-title,
+    .panel-title h3 {
+      font-size: ${theme.fonts.size.large};
+    }
+  }
+
   .panel-group {
-    ${PanelHeading} {
+    > ${PanelHeading} {
       + .panel-collapse > .panel-body,
       + .panel-collapse > .list-group {
-        border-top-color: ${theme.color.gray[90]};
+        border-top-color: ${theme.colors.gray[90]};
       }
     }
 
-    ${PanelFooter} {
+    > ${PanelFooter} {
       + .panel-collapse .panel-body {
-        border-bottom-color: ${theme.color.gray[90]};
+        border-bottom-color: ${theme.colors.gray[90]};
       }
     }
   }
 
-  ${bsStyleThemeVariant(panelVariantStyles)};
+  ${panelVariantStyles}
 `);
 
-const deprecatedVariantStyles = (hex) => css(({ theme }) => {
-  const backgroundColor = theme.color.global.background;
-  const borderColor = theme.color.gray[80];
+const deprecatedVariantStyles = css(({ bsStyle = 'default', theme }) => {
+  const backgroundColor = theme.colors.variant.lightest[bsStyle];
+  const borderColor = theme.colors.variant.light[bsStyle];
 
   return css`
     /** NOTE: Deprecated & should be removed in 4.0 */
     border-color: ${borderColor};
+    background: ${theme.colors.table.background};
 
     & > .panel-heading {
-      color: ${util.colorLevel(backgroundColor, 9)};
+      color: ${theme.utils.contrastingColor(backgroundColor)};
       background-color: ${backgroundColor};
       border-color: ${borderColor};
 
       > .panel-title,
       > .panel-title > * {
-        font-size: 16px;
+        font-size: ${theme.fonts.size.large};
       }
 
       + .panel-collapse > .panel-body {
@@ -93,7 +118,7 @@ const deprecatedVariantStyles = (hex) => css(({ theme }) => {
 
       .badge {
         color: ${backgroundColor};
-        background-color: ${hex};
+        background-color: ${theme.colors.variant[bsStyle]};
       }
     }
 
@@ -107,29 +132,29 @@ const deprecatedVariantStyles = (hex) => css(({ theme }) => {
 
 const DeprecatedStyledPanel = styled(BootstrapPanel)(({ theme }) => css`
   /** NOTE: Deprecated & should be removed in 4.0 */
-  background-color: ${theme.color.global.background};
+  background-color: ${theme.utils.colorLevel(theme.colors.global.background, -4)};
 
   .panel-footer {
-    background-color: ${theme.color.gray[80]};
-    border-top-color: ${theme.color.gray[90]};
+    background-color: ${theme.colors.gray[90]};
+    border-top-color: ${theme.colors.gray[80]};
   }
 
   .panel-group {
     .panel-heading {
       + .panel-collapse > .panel-body,
       + .panel-collapse > .list-group {
-        border-top-color: ${theme.color.gray[90]};
+        border-top-color: ${theme.colors.gray[90]};
       }
     }
 
     .panel-footer {
       + .panel-collapse .panel-body {
-        border-bottom-color: ${theme.color.gray[90]};
+        border-bottom-color: ${theme.colors.gray[90]};
       }
     }
   }
 
-  ${bsStyleThemeVariant(deprecatedVariantStyles)}
+  ${deprecatedVariantStyles}
 `);
 
 const Panel = ({
@@ -143,13 +168,18 @@ const Panel = ({
   onToggle,
   ...props
 }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(null);
+  const didRender = useRef(false);
 
-  React.useEffect(() => {
-    setIsExpanded((defaultExpanded && expanded)
-      || (!defaultExpanded && expanded)
-      || (defaultExpanded && isExpanded === expanded));
-  }, [expanded]);
+  useEffect(() => {
+    setIsExpanded((prevIsExpanded) => ((defaultExpanded && expanded)
+        || (!defaultExpanded && expanded)
+        || (defaultExpanded && prevIsExpanded === expanded)));
+  }, [expanded, defaultExpanded]);
+
+  useEffect(() => {
+    didRender.current = true;
+  }, []);
 
   const handleToggle = (nextIsExpanded) => {
     setIsExpanded(nextIsExpanded);
@@ -160,9 +190,9 @@ const Panel = ({
 
   if (header || footer || title || collapsible || hasDeprecatedChildren) {
     /** NOTE: Deprecated & should be removed in 4.0 */
-    useEffect(() => {
+    if (!didRender.current) {
       deprecationNotice('You have used a deprecated `Panel` prop, please check the documentation to use the latest `Panel`.');
-    }, []);
+    }
 
     return (
       /* NOTE: this exists as a deprecated render for older Panel instances */
@@ -206,7 +236,7 @@ Panel.propTypes = {
    */
   defaultExpanded: PropTypes.bool,
   /**
-   * Controls the collapsed/expanded state ofthe Panel. Requires
+   * Controls the collapsed/expanded state of the Panel. Requires
    * a `Panel.Collapse` or `<Panel.Body collapsible>` child component
    * in order to actually animate out or in.
    *
@@ -230,7 +260,7 @@ Panel.propTypes = {
 Panel.defaultProps = {
   collapsible: false,
   defaultExpanded: null,
-  expanded: false,
+  expanded: null,
   footer: undefined,
   header: undefined,
   onToggle: () => {},

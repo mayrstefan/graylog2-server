@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.events.notifications.types;
 
@@ -58,6 +58,7 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
             "Timestamp Processing: ${event.timestamp}\n" +
             "Timerange Start:      ${event.timerange_start}\n" +
             "Timerange End:        ${event.timerange_end}\n" +
+            "Source Streams:       ${event.source_streams}\n" +
             "Fields:\n" +
             "${foreach event.fields field}  ${field.key}: ${field.value}\n" +
             "${end}\n" +
@@ -73,11 +74,11 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
     private static final String FIELD_SENDER = "sender";
     private static final String FIELD_SUBJECT = "subject";
     private static final String FIELD_BODY_TEMPLATE = "body_template";
+    private static final String FIELD_HTML_BODY_TEMPLATE = "html_body_template";
     private static final String FIELD_EMAIL_RECIPIENTS = "email_recipients";
     private static final String FIELD_USER_RECIPIENTS = "user_recipients";
 
     @JsonProperty(FIELD_SENDER)
-    @NotBlank
     public abstract String sender();
 
     @JsonProperty(FIELD_SUBJECT)
@@ -85,8 +86,10 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
     public abstract String subject();
 
     @JsonProperty(FIELD_BODY_TEMPLATE)
-    @NotBlank
     public abstract String bodyTemplate();
+
+    @JsonProperty(FIELD_HTML_BODY_TEMPLATE)
+    public abstract String htmlBodyTemplate();
 
     @JsonProperty(FIELD_EMAIL_RECIPIENTS)
     public abstract Set<String> emailRecipients();
@@ -107,14 +110,11 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
     public ValidationResult validate() {
         final ValidationResult validation = new ValidationResult();
 
-        if (sender().isEmpty()) {
-            validation.addError(FIELD_SENDER, "Email Notification sender cannot be empty.");
-        }
         if (subject().isEmpty()) {
             validation.addError(FIELD_SUBJECT, "Email Notification subject cannot be empty.");
         }
-        if (bodyTemplate().isEmpty()) {
-            validation.addError(FIELD_BODY_TEMPLATE, "Email Notification body template cannot be empty.");
+        if (bodyTemplate().isEmpty() && htmlBodyTemplate().isEmpty()) {
+            validation.addError("body", "One of Email Notification body template or Email Notification HTML body must not be empty.");
         }
         if (emailRecipients().isEmpty() && userRecipients().isEmpty()) {
             validation.addError("recipients", "Email Notification must have email recipients or user recipients.");
@@ -133,7 +133,8 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
                     .subject(DEFAULT_SUBJECT)
                     .emailRecipients(ImmutableSet.of())
                     .userRecipients(ImmutableSet.of())
-                    .bodyTemplate(DEFAULT_BODY_TEMPLATE);
+                    .bodyTemplate(DEFAULT_BODY_TEMPLATE)
+                    .htmlBodyTemplate("");
         }
 
         @JsonProperty(FIELD_SENDER)
@@ -144,6 +145,9 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
 
         @JsonProperty(FIELD_BODY_TEMPLATE)
         public abstract Builder bodyTemplate(String bodyTemplate);
+
+        @JsonProperty(FIELD_HTML_BODY_TEMPLATE)
+        public abstract Builder htmlBodyTemplate(String htmlBodyTemplate);
 
         @JsonProperty(FIELD_EMAIL_RECIPIENTS)
         public abstract Builder emailRecipients(Set<String> emailRecipients);
@@ -160,6 +164,7 @@ public abstract class EmailEventNotificationConfig implements EventNotificationC
             .sender(ValueReference.of(sender()))
             .subject(ValueReference.of(subject()))
             .bodyTemplate(ValueReference.of(bodyTemplate()))
+            .htmlBodyTemplate(ValueReference.of(htmlBodyTemplate()))
             .emailRecipients(emailRecipients())
             .userRecipients(userRecipients())
             .build();

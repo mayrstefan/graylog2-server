@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
@@ -5,7 +21,6 @@ import naturalSort from 'javascript-natural-sort';
 
 import { Select } from 'components/common';
 import { Col, ControlLabel, FormGroup, HelpBlock, Row } from 'components/graylog';
-
 import { numberRefNodePropType } from 'logic/alerts/AggregationExpressionTypes';
 
 const formatFunctions = (functions) => {
@@ -43,15 +58,19 @@ const NumberRefExpression = ({
     const series = lodash.cloneDeep(eventDefinition.config.series);
     const nextSeries = lodash.cloneDeep(getOrCreateSeries(expression.ref));
     const nextSeriesId = getSeriesId(nextSeries, nextFunction, nextField);
+
     if (nextFunction !== undefined) {
       nextSeries.function = nextFunction;
     }
+
     if (nextField !== undefined) {
       nextSeries.field = nextField;
     }
+
     nextSeries.id = nextSeriesId;
 
     const seriesIndex = series.findIndex((s) => s.id === nextSeries.id);
+
     if (seriesIndex >= 0) {
       series[seriesIndex] = nextSeries;
     } else {
@@ -59,6 +78,7 @@ const NumberRefExpression = ({
     }
 
     const nextExpression = lodash.cloneDeep(expression);
+
     nextExpression.ref = nextSeriesId;
 
     onChange({
@@ -93,6 +113,7 @@ const NumberRefExpression = ({
           </Col>
           <Col md={6}>
             <Select className="aggregation-function-field"
+                    ignoreAccents={false}
                     matchProp="label"
                     placeholder="Select Field (Optional)"
                     onChange={handleAggregationFieldChange}

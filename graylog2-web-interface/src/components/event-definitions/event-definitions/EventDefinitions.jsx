@@ -1,40 +1,52 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { LinkContainer } from 'react-router-bootstrap';
-import { PluginStore } from 'graylog-web-plugin/plugin';
-import moment from 'moment';
-import {} from 'moment-duration-format';
 
-import { Button, Col, DropdownButton, MenuItem, Row } from 'components/graylog';
+import { LinkContainer } from 'components/graylog/router';
+import { Button, Col, Row } from 'components/graylog';
 import Routes from 'routing/Routes';
-
 import {
   EmptyEntity,
   EntityList,
-  EntityListItem,
   IfPermitted,
   PaginatedList,
-  Pluralize,
   SearchForm,
 } from 'components/common';
+import QueryHelper from 'components/common/QueryHelper';
 
 import styles from './EventDefinitions.css';
+import EventDefinitionEntry from './EventDefinitionEntry';
 
 class EventDefinitions extends React.Component {
   static propTypes = {
     eventDefinitions: PropTypes.array.isRequired,
+    context: PropTypes.object,
     pagination: PropTypes.object.isRequired,
     query: PropTypes.string.isRequired,
     onPageChange: PropTypes.func.isRequired,
     onQueryChange: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
+    onEnable: PropTypes.func.isRequired,
+    onDisable: PropTypes.func.isRequired,
   };
 
-  getConditionPlugin = (type) => {
-    if (type === undefined) {
-      return {};
-    }
-    return PluginStore.exports('eventDefinitionTypes').find((edt) => edt.type === type) || {};
+  static defaultProps = {
+    context: {},
   };
 
   renderEmptyContent = () => {
@@ -57,68 +69,20 @@ class EventDefinitions extends React.Component {
     );
   };
 
-  renderDescription = (definition) => {
-    let schedulingInformation = 'Not scheduled.';
-    if (definition.config.search_within_ms && definition.config.execute_every_ms) {
-      const executeEveryFormatted = moment.duration(definition.config.execute_every_ms)
-        .format('d [days] h [hours] m [minutes] s [seconds]', { trim: 'all', usePlural: false });
-      const searchWithinFormatted = moment.duration(definition.config.search_within_ms)
-        .format('d [days] h [hours] m [minutes] s [seconds]', { trim: 'all' });
-      schedulingInformation = `Runs every ${executeEveryFormatted}, searching within the last ${searchWithinFormatted}.`;
-    }
-
-    let notificationsInformation = <span>Does <b>not</b> trigger any Notifications.</span>;
-    if (definition.notifications.length > 0) {
-      notificationsInformation = (
-        <span>
-          Triggers {definition.notifications.length}{' '}
-          <Pluralize singular="Notification" plural="Notifications" value={definition.notifications.length} />.
-        </span>
-      );
-    }
-
-    return (
-      <>
-        <p>{definition.description}</p>
-        <p>{schedulingInformation} {notificationsInformation}</p>
-      </>
-    );
-  };
-
   render() {
-    const { eventDefinitions, pagination, query, onPageChange, onQueryChange, onDelete } = this.props;
+    const { eventDefinitions, context, pagination, query, onPageChange, onQueryChange, onDelete, onEnable, onDisable } = this.props;
 
     if (pagination.grandTotal === 0) {
       return this.renderEmptyContent();
     }
 
-    const items = eventDefinitions.map((definition) => {
-      const actions = (
-        <React.Fragment key={`actions-${definition.id}`}>
-          <IfPermitted permissions={`eventdefinitions:edit:${definition.id}`}>
-            <LinkContainer to={Routes.ALERTS.DEFINITIONS.edit(definition.id)}>
-              <Button bsStyle="info">Edit</Button>
-            </LinkContainer>
-          </IfPermitted>
-          <IfPermitted permissions={`eventdefinitions:delete:${definition.id}`}>
-            <DropdownButton id="more-dropdown" title="More" pullRight>
-              <MenuItem onClick={onDelete(definition)}>Delete</MenuItem>
-            </DropdownButton>
-          </IfPermitted>
-        </React.Fragment>
-      );
-
-      const plugin = this.getConditionPlugin(definition.config.type);
-      const titleSuffix = plugin.displayName || definition.config.type;
-      return (
-        <EntityListItem key={`event-definition-${definition.id}`}
-                        title={definition.title}
-                        titleSuffix={titleSuffix}
-                        description={this.renderDescription(definition)}
-                        noItemsText="Could not find any items with the given filter."
-                        actions={actions} />
-      );
-    });
+    const items = eventDefinitions.map((definition) => (
+      <EventDefinitionEntry context={context}
+                            eventDefinition={definition}
+                            onDisable={onDisable}
+                            onEnable={onEnable}
+                            onDelete={onDelete} />
+    ));
 
     return (
       <Row>
@@ -129,6 +93,7 @@ class EventDefinitions extends React.Component {
                       searchButtonLabel="Find"
                       placeholder="Find Event Definitions"
                       wrapperClass={styles.inline}
+                      queryHelpComponent={<QueryHelper entityName="event definition" />}
                       queryWidth={200}
                       topMargin={0}
                       useLoadingState>

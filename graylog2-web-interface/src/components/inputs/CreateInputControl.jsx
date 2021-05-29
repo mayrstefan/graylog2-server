@@ -1,16 +1,29 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import createReactClass from 'create-react-class';
 import Reflux from 'reflux';
 import styled from 'styled-components';
+import { PluginStore } from 'graylog-web-plugin/plugin';
 
 import { Col, Row, Button } from 'components/graylog';
 import { ExternalLinkButton, Select } from 'components/common';
-
 import ActionsProvider from 'injection/ActionsProvider';
-
 import StoreProvider from 'injection/StoreProvider';
-import { PluginStore } from 'graylog-web-plugin/plugin';
-
 import { InputForm } from 'components/inputs';
 
 const InputTypesActions = ActionsProvider.getActions('InputTypes');
@@ -36,11 +49,14 @@ const CreateInputControl = createReactClass({
     let options = [];
 
     const { inputTypes } = this.state;
+
     if (inputTypes) {
       const inputTypesIds = Object.keys(inputTypes);
+
       options = inputTypesIds.map((id) => {
         return { value: id, label: inputTypes[id] };
       });
+
       options.sort((inputTypeA, inputTypeB) => inputTypeA.label.toLowerCase().localeCompare(inputTypeB.label.toLowerCase()));
     } else {
       options.push({ value: 'none', label: 'No inputs available', disabled: true });
@@ -89,6 +105,7 @@ const CreateInputControl = createReactClass({
 
     if (selectedInputDefinition && !customInputsComponent) {
       const inputTypeName = inputTypes[selectedInput];
+
       inputModal = (
         <InputForm ref={(configurationForm) => { this.configurationForm = configurationForm; }}
                    key="configuration-form-input"

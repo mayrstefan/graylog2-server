@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { PluginStore } from 'graylog-web-plugin/plugin';
@@ -18,8 +34,7 @@ import {
 import { Input } from 'components/bootstrap';
 import { Icon, Select } from 'components/common';
 import EventKeyHelpPopover from 'components/event-definitions/common/EventKeyHelpPopover';
-
-import FormsUtils from 'util/FormsUtils';
+import * as FormsUtils from 'util/FormsUtils';
 
 import commonStyles from '../common/commonStyles.css';
 
@@ -60,6 +75,7 @@ class FieldForm extends React.Component {
     if (type === undefined) {
       return {};
     }
+
     return PluginStore.exports('fieldValueProviders').find((edt) => edt.type === type) || {};
   };
 
@@ -73,8 +89,10 @@ class FieldForm extends React.Component {
 
     const providerType = this.getConfigProviderType(config);
     let pluginRequiredFields = [];
+
     if (providerType) {
       const providerPlugin = this.getProviderPlugin(providerType);
+
       pluginRequiredFields = providerPlugin.requiredFields;
     }
 
@@ -95,6 +113,7 @@ class FieldForm extends React.Component {
     });
 
     const errorNumber = Object.keys(errors).length;
+
     if (errorNumber > 0) {
       this.setState({ validation: { errors: errors } });
     }
@@ -106,12 +125,14 @@ class FieldForm extends React.Component {
     if (this.validate()) {
       const { fieldName: prevFieldName, onChange } = this.props;
       const { fieldName, config, isKey, keyPosition } = this.state;
+
       onChange(prevFieldName, fieldName, config, isKey, keyPosition - 1);
     }
   };
 
   handleFieldNameChange = (event) => {
     const nextFieldName = FormsUtils.getValueFromInput(event.target);
+
     this.setState({ fieldName: nextFieldName });
   };
 
@@ -130,16 +151,19 @@ class FieldForm extends React.Component {
         type: nextProvider,
       }],
     };
+
     this.handleConfigChange(nextConfig);
   };
 
   handleKeySortChange = (event) => {
     const nextPosition = event.target.value === '' ? '' : FormsUtils.getValueFromInput(event.target);
+
     this.setState({ keyPosition: nextPosition });
   };
 
   toggleKey = (event) => {
     const checked = FormsUtils.getValueFromInput(event.target);
+
     this.setState({ isKey: checked });
   };
 
@@ -148,11 +172,13 @@ class FieldForm extends React.Component {
     const { currentUser } = this.props;
 
     const providerType = this.getConfigProviderType(config);
+
     if (!providerType) {
       return null;
     }
 
     const providerPlugin = this.getProviderPlugin(providerType);
+
     return (providerPlugin.formComponent
       ? React.createElement(providerPlugin.formComponent, {
         fieldName: fieldName,
@@ -225,6 +251,7 @@ class FieldForm extends React.Component {
                      validationState={validation.errors['config.providers[0].type'] ? 'error' : null}>
             <ControlLabel>Set Value From</ControlLabel>
             <Select name="event-field-provider"
+                    ignoreAccents={false}
                     placeholder="Select Value Source"
                     onChange={this.handleProviderTypeChange}
                     options={this.formatFieldValueProviders()}

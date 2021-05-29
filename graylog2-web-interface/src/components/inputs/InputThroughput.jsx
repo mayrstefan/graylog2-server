@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 /* eslint-disable no-restricted-globals */
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -5,23 +21,20 @@ import React from 'react';
 import createReactClass from 'create-react-class';
 import Reflux from 'reflux';
 import numeral from 'numeral';
-import styled from 'styled-components';
-
+import styled, { css } from 'styled-components';
 
 import StoreProvider from 'injection/StoreProvider';
-
 import ActionsProvider from 'injection/ActionsProvider';
-
 import NumberUtils from 'util/NumberUtils';
 import { Icon, LinkToNode, Spinner } from 'components/common';
 
-const InputIO = styled.span(({ theme }) => `
+const InputIO = styled.span(({ theme }) => css`
   .total {
-    color: ${theme.color.gray[70]};
+    color: ${theme.colors.gray[70]};
   }
 
   .value {
-    font-family: monospace;
+    font-family: ${theme.fonts.family.monospace};
   }
 
   .persec {
@@ -85,6 +98,7 @@ const InputThroughput = createReactClass({
 
   _prefix(metric) {
     const { input } = this.props;
+
     return `${input.type}.${input.id}.${metric}`;
   },
 
@@ -107,15 +121,19 @@ const InputThroughput = createReactClass({
 
   _calculateMetrics(metrics) {
     const result = {};
+
     this._metricNames().forEach((metricName) => {
       result[metricName] = Object.keys(metrics).reduce((previous, nodeId) => {
         if (!metrics[nodeId][metricName]) {
           return previous;
         }
+
         const value = this._getValueFromMetric(metrics[nodeId][metricName]);
+
         if (value !== undefined) {
           return isNaN(previous) ? value : previous + value;
         }
+
         return previous;
       }, NaN);
     });
@@ -211,6 +229,7 @@ const InputThroughput = createReactClass({
     if (!metrics) {
       return <Spinner />;
     }
+
     const calculatedMetrics = this._calculateMetrics(metrics);
     const incomingMessages = calculatedMetrics[this._prefix('incomingMessages')];
     const emptyMessages = calculatedMetrics[this._prefix('emptyMessages')];
@@ -220,6 +239,7 @@ const InputThroughput = createReactClass({
     const writtenBytesTotal = calculatedMetrics[this._prefix('written_bytes_total')];
     const readBytes1Sec = calculatedMetrics[this._prefix('read_bytes_1sec')];
     const readBytesTotal = calculatedMetrics[this._prefix('read_bytes_total')];
+
     return (
       <div className="graylog-input-metrics">
         <h3>Throughput / Metrics</h3>

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 // eslint-disable-next-line no-restricted-imports
@@ -7,10 +23,8 @@ import styled, { css } from 'styled-components';
 
 import ProgressBar, { Bar } from 'components/graylog/ProgressBar';
 import { Spinner } from 'components/common';
-
 import NumberUtils from 'util/NumberUtils';
 import MetricsExtractor from 'logic/metrics/MetricsExtractor';
-
 import StoreProvider from 'injection/StoreProvider';
 import ActionsProvider from 'injection/ActionsProvider';
 
@@ -33,18 +47,18 @@ const Blob = styled.span(({ theme }) => css`
   border: 1px solid;
 
   &.used-memory {
-    background-color: ${theme.color.variant.primary};
-    border-color: ${theme.color.variant.dark.primary};
+    background-color: ${theme.colors.variant.primary};
+    border-color: ${theme.colors.variant.dark.primary};
   }
 
   &.committed-memory {
-    background-color: ${theme.color.variant.warning};
-    border-color: ${theme.color.variant.dark.warning};
+    background-color: ${theme.colors.variant.warning};
+    border-color: ${theme.colors.variant.dark.warning};
   }
 
   &.max-memory {
-    background-color: ${theme.color.global.background};
-    border-color: ${theme.color.gray[80]};
+    background-color: ${theme.colors.global.background};
+    border-color: ${theme.colors.gray[80]};
   }
 `);
 
@@ -66,7 +80,7 @@ const JvmHeapUsage = createReactClass({
 
   mixins: [Reflux.connect(MetricsStore)],
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     const { nodeId } = this.props;
 
     this.metricNames = {

@@ -1,35 +1,50 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 // eslint-disable-next-line no-restricted-imports
 import { FormControl as BootstrapFormControl } from 'react-bootstrap';
 import styled, { css } from 'styled-components';
-import chroma from 'chroma-js';
 
-const FormControl = styled(BootstrapFormControl)(({ theme }) => {
-  return css`
-    color: ${theme.color.global.textDefault};
-    background-color: ${theme.color.global.contentBackground};
-    border-color: ${theme.color.gray[80]};
+const FormControl = styled(BootstrapFormControl)(({ theme }) => css`
+  &.form-control:not([type="range"]) {
+    color: ${theme.colors.input.color};
+    background-color: ${theme.colors.input.background};
+    border-color: ${theme.colors.input.border};
 
     &::placeholder {
-      color: ${theme.color.gray[60]};
+      color: ${theme.colors.input.placeholder};
     }
 
     &:focus {
-      border-color: ${theme.color.variant.light.info};
-      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075),
-        0 0 8px ${chroma(theme.color.variant.light.info).alpha(0.4).css()};
+      border-color: ${theme.colors.input.borderFocus};
+      box-shadow: ${theme.colors.input.boxShadow};
     }
 
     &[disabled],
     &[readonly],
     fieldset[disabled] & {
-      background-color: ${theme.color.gray[80]};
+      background-color: ${theme.colors.input.backgroundDisabled};
+      color: ${theme.colors.input.colorDisabled};
     }
 
     ~ .form-control-feedback.glyphicon {
       display: none;
     }
-  `;
-});
+  }
+`);
 
 FormControl.Static = BootstrapFormControl.Static;
 FormControl.Feedback = BootstrapFormControl.Feedback;

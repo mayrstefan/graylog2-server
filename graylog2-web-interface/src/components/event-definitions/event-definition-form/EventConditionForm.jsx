@@ -1,15 +1,32 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Clearfix, Col, ControlLabel, FormGroup, HelpBlock, Row } from 'components/graylog';
 import { PluginStore } from 'graylog-web-plugin/plugin';
 import lodash from 'lodash';
 import naturalSort from 'javascript-natural-sort';
 
+import { Clearfix, Col, ControlLabel, FormGroup, HelpBlock, Row } from 'components/graylog';
 import { Select } from 'components/common';
 import HelpPanel from 'components/event-definitions/common/HelpPanel';
 
-import commonStyles from '../common/commonStyles.css';
 import styles from './EventConditionForm.css';
+
+import commonStyles from '../common/commonStyles.css';
 
 class EventConditionForm extends React.Component {
   static propTypes = {
@@ -24,6 +41,7 @@ class EventConditionForm extends React.Component {
     if (type === undefined) {
       return {};
     }
+
     return PluginStore.exports('eventDefinitionTypes').find((edt) => edt.type === type) || {};
   };
 
@@ -35,6 +53,7 @@ class EventConditionForm extends React.Component {
 
       if (edt1Order !== undefined || edt2Order !== undefined) {
         const sort = lodash.defaultTo(edt1Order, Number.MAX_SAFE_INTEGER) - lodash.defaultTo(edt2Order, Number.MAX_SAFE_INTEGER);
+
         if (sort !== 0) {
           return sort;
         }
@@ -53,6 +72,7 @@ class EventConditionForm extends React.Component {
     const { onChange } = this.props;
     const conditionPlugin = this.getConditionPlugin(nextType);
     const defaultConfig = conditionPlugin.defaultConfig || {};
+
     onChange('config', { ...defaultConfig, type: nextType });
   };
 
@@ -105,7 +125,7 @@ class EventConditionForm extends React.Component {
           </FormGroup>
         </Col>
 
-        <Col md={5} lg={4} lgOffset={1}>
+        <Col md={5} lg={5} lgOffset={1}>
           <HelpPanel className={styles.conditionTypesInfo}
                      title="Available Conditions">
             {this.renderConditionTypeDescriptions()}

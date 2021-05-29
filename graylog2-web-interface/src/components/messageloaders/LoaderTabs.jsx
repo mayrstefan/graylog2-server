@@ -1,14 +1,30 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import * as React from 'react';
 import PropTypes from 'prop-types';
-import { Col, Tab, Tabs } from 'components/graylog';
 import * as Immutable from 'immutable';
 
+import { Col, Tab, Tabs } from 'components/graylog';
 import connect from 'stores/connect';
 import StoreProvider from 'injection/StoreProvider';
 import ActionsProvider from 'injection/ActionsProvider';
-
 import MessageShow from 'components/search/MessageShow';
 import MessageLoader from 'components/extractors/MessageLoader';
+
 import RawMessageLoader from './RawMessageLoader';
 import RecentMessageLoader from './RecentMessageLoader';
 
@@ -34,15 +50,12 @@ class LoaderTabs extends React.Component {
 
   componentDidMount() {
     this.loadData();
-    const { messageId, index } = this.props;
-    if (messageId && index) {
-      this.messageLoader.submit(messageId, index);
-    }
   }
 
   onMessageLoaded = (message) => {
     this.setState({ message });
     const { onMessageLoaded } = this.props;
+
     if (onMessageLoaded) {
       onMessageLoaded(message);
     }
@@ -50,27 +63,33 @@ class LoaderTabs extends React.Component {
 
   loadData = () => {
     InputsActions.list();
+
     StreamsStore.listStreams().then((response) => {
       const streams = {};
+
       response.forEach((stream) => {
         streams[stream.id] = stream;
       });
+
       this.setState({ streams: Immutable.Map(streams) });
     });
   };
 
   _isTabVisible = (tabKey) => {
     const { tabs } = this.props;
+
     return tabs === tabKey || tabs.indexOf(tabKey) !== -1;
   };
 
   _getActiveTab = () => {
     const { activeTab } = this.state;
+
     if (activeTab) {
       return activeTab;
     }
 
     const { messageId, index } = this.props;
+
     if (this._isTabVisible('messageId') && messageId && index) {
       return this.TAB_KEYS.messageId;
     }
@@ -78,14 +97,17 @@ class LoaderTabs extends React.Component {
     if (this._isTabVisible('recent')) {
       return this.TAB_KEYS.recent;
     }
+
     if (this._isTabVisible('messageId')) {
       return this.TAB_KEYS.messageId;
     }
+
     return this.TAB_KEYS.raw;
   };
 
   _changeActiveTab = (selectedTab) => {
     const { activeTab } = this.state;
+
     if (activeTab !== selectedTab) {
       this.setState({ activeTab: selectedTab, message: undefined });
     }
@@ -96,6 +118,7 @@ class LoaderTabs extends React.Component {
 
     if (this._isTabVisible('recent')) {
       const { inputs, selectedInputId } = this.props;
+
       messageLoaders.push(
         <Tab key="recent" eventKey={this.TAB_KEYS.recent} title="Recent Message" style={{ marginBottom: 10 }}>
           <RecentMessageLoader inputs={inputs}
@@ -106,13 +129,18 @@ class LoaderTabs extends React.Component {
     }
 
     if (this._isTabVisible('messageId')) {
+      const { messageId, index } = this.props;
+
       messageLoaders.push(
         <Tab key="messageId" eventKey={this.TAB_KEYS.messageId} title="Message ID" style={{ marginBottom: 10 }}>
           <div style={{ marginTop: 5, marginBottom: 15 }}>
             Please provide the id and index of the message that you want to load in this form:
           </div>
-
-          <MessageLoader ref={(messageLoader) => { this.messageLoader = messageLoader; }} onMessageLoaded={this.onMessageLoaded} hidden={false} hideText />
+          <MessageLoader messageId={messageId}
+                         index={index}
+                         onMessageLoaded={this.onMessageLoaded}
+                         hidden={false}
+                         hideText />
         </Tab>,
       );
     }

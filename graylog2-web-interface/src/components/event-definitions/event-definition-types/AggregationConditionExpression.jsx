@@ -1,12 +1,26 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
 
 import { Button, ButtonToolbar, Clearfix, Col, FormGroup } from 'components/graylog';
 import { Icon } from 'components/common';
-
 import { emptyBooleanExpressionConfig, emptyGroupExpressionConfig, replaceBooleanExpressionOperatorInGroup } from 'logic/alerts/AggregationExpressionConfig';
-
 import { internalNodePropType } from 'logic/alerts/AggregationExpressionTypes';
 
 import NumberExpression from './AggregationConditionExpressions/NumberExpression';
@@ -20,7 +34,6 @@ import GroupExpression from './AggregationConditionExpressions/GroupExpression';
 /* eslint-enable import/no-cycle */
 
 import styles from './AggregationConditionExpression.css';
-
 
 class AggregationConditionExpression extends React.Component {
   static propTypes = {
@@ -48,11 +61,13 @@ class AggregationConditionExpression extends React.Component {
 
   getEffectiveGlobalGroupOperator = () => {
     const { globalGroupOperator } = this.state;
+
     if (globalGroupOperator) {
       return globalGroupOperator;
     }
 
     const { expression } = this.props;
+
     return (expression.expr === '&&' || expression.expr === '||' ? expression.expr : '&&');
   };
 
@@ -60,7 +75,9 @@ class AggregationConditionExpression extends React.Component {
     if (!expression) {
       return defaultOperator;
     }
+
     const key = expression.expr === 'group' ? 'operator' : 'expr';
+
     return lodash.get(expression, key, defaultOperator) === '&&' ? '&&' : '||';
   };
 
@@ -69,6 +86,7 @@ class AggregationConditionExpression extends React.Component {
     const defaultOperator = this.getEffectiveGlobalGroupOperator();
     const prevOperator = this.getBooleanOperator(parent, defaultOperator);
     const nextExpression = emptyBooleanExpressionConfig({ operator: prevOperator, left: expression });
+
     onChange({ conditions: nextExpression });
   };
 
@@ -79,11 +97,13 @@ class AggregationConditionExpression extends React.Component {
     const groupOperator = prevOperator === '&&' ? '||' : '&&';
     const groupExpression = emptyGroupExpressionConfig({ operator: groupOperator });
     const nextExpression = emptyBooleanExpressionConfig({ operator: prevOperator, left: expression, right: groupExpression });
+
     onChange({ conditions: nextExpression });
   };
 
   handleDeleteExpression = () => {
     const { onChange } = this.props;
+
     onChange({ conditions: null });
   };
 
@@ -93,11 +113,13 @@ class AggregationConditionExpression extends React.Component {
 
       if (!Object.keys(changes).includes('conditions')) {
         onChange(changes);
+
         return;
       }
 
       const update = changes.conditions;
       let nextUpdate;
+
       // A null update indicates that one of the branches got removed
       if (update === null) {
         if (branch === 'child') {
@@ -113,6 +135,7 @@ class AggregationConditionExpression extends React.Component {
       } else {
         // Propagate the update in the expression tree.
         const nextExpression = lodash.cloneDeep(expression);
+
         nextExpression[branch] = update;
         nextUpdate = nextExpression;
       }
@@ -123,8 +146,10 @@ class AggregationConditionExpression extends React.Component {
 
   handleOperatorChange = (nextOperator) => {
     const { expression, onChange } = this.props;
+
     this.setState({ globalGroupOperator: nextOperator });
     const nextExpression = replaceBooleanExpressionOperatorInGroup(nextOperator, expression);
+
     onChange({ conditions: nextExpression });
   };
 
@@ -149,6 +174,7 @@ class AggregationConditionExpression extends React.Component {
                              onChildChange={this.handleChildChange}
                              parent={parent} />
         );
+
         break;
       case '<':
       case '<=':

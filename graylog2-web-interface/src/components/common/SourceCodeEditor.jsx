@@ -1,20 +1,81 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import lodash from 'lodash';
 import { PropTypes } from 'prop-types';
 import { Resizable } from 'react-resizable';
 import AceEditor from 'react-ace';
+import styled, { css } from 'styled-components';
 
-import URLUtils from 'util/URLUtils';
+import { qualifyUrl } from 'util/URLUtils';
 import ApiRoutes from 'routing/ApiRoutes';
 import fetch from 'logic/rest/FetchProvider';
-
 import { Button, ButtonGroup, ButtonToolbar, OverlayTrigger, Tooltip } from 'components/graylog';
 import PipelineRulesMode from 'components/rules/mode-pipeline';
 
 import ClipboardButton from './ClipboardButton';
 import Icon from './Icon';
-import style from './SourceCodeEditor.css';
 import './webpack-resolver';
+import './ace/theme-graylog';
+
+const SourceCodeContainer = styled.div(({ resizable, theme }) => css`
+  .react-resizable-handle {
+    z-index: 100; /* Ensure resize handle is over text editor */
+    display: ${resizable ? 'block' : 'none'};
+  }
+
+  ${theme.components.aceEditor}
+`);
+
+const StyledTooltip = styled(Tooltip)`
+  width: 250px;
+`;
+
+const Toolbar = styled.div(({ theme }) => css`
+  background: ${theme.colors.global.contentBackground};
+  border: 1px solid ${theme.colors.gray[80]};
+  border-bottom: 0;
+  border-radius: 5px 5px 0 0;
+
+  .btn-link {
+    color: ${theme.colors.variant.dark.info};
+    
+    :hover {
+      color: ${theme.colors.variant.darkest.info};
+      background-color: ${theme.colors.variant.lightest.info};
+    }
+
+    &.disabled,
+    &[disabled] {
+      color: ${theme.colors.variant.light.default};
+      
+      :hover {
+        color: ${theme.colors.variant.light.default};
+      }
+    }
+  }
+
+  & + ${SourceCodeContainer} {
+    /* Do not add border radius if code editor comes after toolbar */
+    .ace_editor {
+      border-radius: 0 0 5px 5px;
+    }
+  }
+`);
 
 /**
  * Component that renders a source code editor input. This is what powers the pipeline rules and collector
@@ -39,18 +100,21 @@ class SourceCodeEditor extends React.Component {
     height: PropTypes.number,
     /** Specifies a unique ID for the source code editor. */
     id: PropTypes.string.isRequired,
+    /** Provides a ref associated to AceEditor component */
+    innerRef: PropTypes.oneOfType([
+      PropTypes.func,
+      PropTypes.shape({ current: PropTypes.any }),
+    ]),
     /** Specifies the mode to use in the editor. This is used for highlighting and auto-completion. */
     mode: PropTypes.oneOf(['json', 'lua', 'markdown', 'text', 'yaml', 'pipeline']),
     /** Function called on editor load. The first argument is the instance of the editor. */
     onLoad: PropTypes.func,
-    /** Function called when the value of the text changes. It receives the the new value and an event as arguments. */
+    /** Function called when the value of the text changes. It receives the new value and an event as arguments. */
     onChange: PropTypes.func,
     /** Specifies if the editor should be in read-only mode. */
     readOnly: PropTypes.bool,
     /** Specifies if the editor should be resizable by the user. */
     resizable: PropTypes.bool,
-    /** Specifies the theme to use for the editor. */
-    theme: PropTypes.oneOf(['light', 'dark']),
     /** Specifies if the editor should also include a toolbar. */
     toolbar: PropTypes.bool,
     /** Text to use in the editor. */
@@ -64,31 +128,34 @@ class SourceCodeEditor extends React.Component {
     focus: false,
     fontSize: 13,
     height: 200,
+    innerRef: undefined,
     mode: 'text',
     onChange: () => {},
     onLoad: () => {},
     readOnly: false,
     resizable: true,
-    theme: 'light',
     toolbar: true,
-    value: '',
+    value: undefined,
     width: Infinity,
   };
 
   constructor(props) {
     super(props);
+
     this.state = {
       height: props.height,
       width: props.width,
       selectedText: '',
     };
+
+    this.overlayContainerRef = React.createRef();
   }
 
   componentDidMount() {
     const { mode } = this.props;
 
     if (mode === 'pipeline') {
-      const url = URLUtils.qualifyUrl(ApiRoutes.RulesController.functions().url);
+      const url = qualifyUrl(ApiRoutes.RulesController.functions().url);
 
       fetch('GET', url).then((response) => {
         const functions = response.map((res) => res.name).join('|');
@@ -101,9 +168,9 @@ class SourceCodeEditor extends React.Component {
     }
   }
 
-
   componentDidUpdate(prevProps) {
     const { height, width } = this.props;
+
     if (height !== prevProps.height || width !== prevProps.width) {
       this.reloadEditor();
     }
@@ -111,11 +178,13 @@ class SourceCodeEditor extends React.Component {
 
   handleResize = (event, { size }) => {
     const { height, width } = size;
+
     this.setState({ height: height, width: width }, this.reloadEditor);
   };
 
   reloadEditor = () => {
     const { resizable } = this.props;
+
     if (resizable) {
       this.reactAce.editor.resize();
     }
@@ -145,11 +214,13 @@ class SourceCodeEditor extends React.Component {
 
   handleSelectionChange = (selection) => {
     const { toolbar, readOnly } = this.props;
+
     if (!this.reactAce || !toolbar || readOnly) {
       return;
     }
 
     const selectedText = this.reactAce.editor.getSession().getTextRange(selection.getRange());
+
     this.setState({ selectedText: selectedText });
   };
 
@@ -160,7 +231,6 @@ class SourceCodeEditor extends React.Component {
   render() {
     const { height, width, selectedText } = this.state;
     const {
-      theme,
       resizable,
       toolbar,
       annotations,
@@ -168,21 +238,22 @@ class SourceCodeEditor extends React.Component {
       fontSize,
       mode,
       id,
+      innerRef,
       onLoad,
       onChange,
       readOnly,
       value,
     } = this.props;
     const validCssWidth = lodash.isFinite(width) ? width : '100%';
-    const containerStyle = `${style.sourceCodeEditor} ${theme !== 'light' && style.darkMode} ${!resizable && style.static}`;
-    const overlay = <Tooltip id="paste-button-tooltip">Press Ctrl+V (&#8984;V in macOS) or select Edit&thinsp;&rarr;&thinsp;Paste to paste from clipboard.</Tooltip>;
+    const overlay = <StyledTooltip id="paste-button-tooltip" className="in">Press Ctrl+V (&#8984;V in macOS) or select Edit&thinsp;&rarr;&thinsp;Paste to paste from clipboard.</StyledTooltip>;
+
     return (
       <div>
         {toolbar
           && (
-          <div className={style.toolbar} style={{ width: validCssWidth }}>
+          <Toolbar style={{ width: validCssWidth }}>
             <ButtonToolbar>
-              <ButtonGroup>
+              <ButtonGroup ref={this.overlayContainerRef}>
                 <ClipboardButton title={<Icon name="copy" fixedWidth />}
                                  bsStyle="link"
                                  bsSize="sm"
@@ -190,9 +261,9 @@ class SourceCodeEditor extends React.Component {
                                  text={selectedText}
                                  buttonTitle="Copy (Ctrl+C / &#8984;C)"
                                  disabled={this.isCopyDisabled()} />
-                <OverlayTrigger placement="top" trigger="click" overlay={overlay} rootClose>
+                <OverlayTrigger placement="top" trigger="click" overlay={overlay} rootClose container={this.overlayContainerRef.current}>
                   <Button bsStyle="link" bsSize="sm" title="Paste (Ctrl+V / &#8984;V)" disabled={this.isPasteDisabled()}>
-                    <Icon name="paste" fixedWidth />
+                    <Icon name="clipboard" fixedWidth />
                   </Button>
                 </OverlayTrigger>
               </ButtonGroup>
@@ -209,18 +280,22 @@ class SourceCodeEditor extends React.Component {
                         onClick={this.handleRedo}
                         title="Redo (Ctrl+Shift+Z / &#8984;&#8679;Z)"
                         disabled={this.isRedoDisabled()}>
-                  <Icon name="repeat" fixedWidth />
+                  <Icon name="redo" fixedWidth />
                 </Button>
               </ButtonGroup>
             </ButtonToolbar>
-          </div>
+          </Toolbar>
           )}
         <Resizable height={height}
                    width={width}
                    minConstraints={[200, 200]}
                    onResize={this.handleResize}>
-          <div className={containerStyle} style={{ height: height, width: validCssWidth }}>
-            <AceEditor ref={(c) => { this.reactAce = c; }}
+          <SourceCodeContainer style={{ height: height, width: validCssWidth }}
+                               resizable={resizable}>
+            <AceEditor ref={(c) => {
+              this.reactAce = c;
+              if (innerRef) { innerRef.current = c; }
+            }}
                        annotations={annotations}
                        editorProps={{ $blockScrolling: 'Infinity' }}
                        // Convert Windows line breaks to Unix. See issue #7889
@@ -228,7 +303,7 @@ class SourceCodeEditor extends React.Component {
                        focus={focus}
                        fontSize={fontSize}
                        mode={mode}
-                       theme={theme === 'light' ? 'tomorrow' : 'monokai'}
+                       theme="graylog"
                        name={id}
                        height="100%"
                        onLoad={onLoad}
@@ -237,7 +312,7 @@ class SourceCodeEditor extends React.Component {
                        readOnly={readOnly}
                        value={value}
                        width="100%" />
-          </div>
+          </SourceCodeContainer>
         </Resizable>
       </div>
     );

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -6,14 +22,12 @@ import Reflux from 'reflux';
 import { DocumentTitle, PageHeader, Spinner } from 'components/common';
 import DocumentationLink from 'components/support/DocumentationLink';
 import EditExtractor from 'components/extractors/EditExtractor';
-
 import DocsHelper from 'util/DocsHelper';
 import history from 'util/History';
 import Routes from 'routing/Routes';
-
 import ActionsProvider from 'injection/ActionsProvider';
-
 import StoreProvider from 'injection/StoreProvider';
+import withParams from 'routing/withParams';
 
 const InputsActions = ActionsProvider.getActions('Inputs');
 const ExtractorsActions = ActionsProvider.getActions('Extractors');
@@ -39,8 +53,10 @@ const EditExtractorsPage = createReactClass({
 
   componentDidMount() {
     const { params } = this.props;
+
     InputsActions.get.triggerPromise(params.inputId);
     ExtractorsActions.get.triggerPromise(params.inputId, params.extractorId);
+
     UniversalSearchstore.search('relative', `gl2_source_input:${params.inputId} OR gl2_source_radio_input:${params.inputId}`, { relative: 3600 }, undefined, 1)
       .then((response) => {
         if (response.total_results > 0) {
@@ -60,6 +76,7 @@ const EditExtractorsPage = createReactClass({
     let url;
     const { input } = this.state;
     const { params } = this.props;
+
     if (input.global) {
       url = Routes.global_input_extractors(params.inputId);
     } else {
@@ -78,6 +95,7 @@ const EditExtractorsPage = createReactClass({
     }
 
     const { extractor, exampleMessage, input } = this.state;
+
     return (
       <DocumentTitle title={`Edit extractor ${extractor.title}`}>
         <div>
@@ -103,4 +121,4 @@ const EditExtractorsPage = createReactClass({
   },
 });
 
-export default EditExtractorsPage;
+export default withParams(EditExtractorsPage);

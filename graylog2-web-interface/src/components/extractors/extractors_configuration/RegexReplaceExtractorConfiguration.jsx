@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -6,10 +22,8 @@ import { Icon } from 'components/common';
 import { Input } from 'components/bootstrap';
 import DocumentationLink from 'components/support/DocumentationLink';
 import DocsHelper from 'util/DocsHelper';
-
 import UserNotification from 'util/UserNotification';
 import FormUtils from 'util/FormsUtils';
-
 import StoreProvider from 'injection/StoreProvider';
 
 const ToolsStore = StoreProvider.getStore('Tools');
@@ -30,6 +44,7 @@ class RegexReplaceExtractorConfiguration extends React.Component {
     return (event) => {
       this.props.onExtractorPreviewLoad(undefined);
       const newConfig = this.props.configuration;
+
       newConfig[key] = FormUtils.getValueFromInput(event.target);
       this.props.onChange(newConfig);
     };
@@ -41,18 +56,22 @@ class RegexReplaceExtractorConfiguration extends React.Component {
     const { configuration } = this.props;
     const promise = ToolsStore.testRegexReplace(configuration.regex, configuration.replacement,
       configuration.replace_all, this.props.exampleMessage);
+
     promise.then((result) => {
       if (!result.matched) {
         UserNotification.warning('Regular expression did not match.');
+
         return;
       }
 
       if (!result.match) {
         UserNotification.warning('Regular expression does not contain any matcher group to extract.');
+
         return;
       }
 
       const preview = (result.match.match ? <samp>{result.match.match}</samp> : '');
+
       this.props.onExtractorPreviewLoad(preview);
     });
 

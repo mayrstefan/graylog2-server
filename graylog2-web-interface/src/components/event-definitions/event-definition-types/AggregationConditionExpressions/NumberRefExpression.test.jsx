@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import { mount } from 'wrappedEnzyme';
 
@@ -35,9 +51,11 @@ describe('NumberRefExpression', () => {
     );
 
     const functionSelect = wrapper.find('Select.aggregation-function').at(0);
+
     expect(functionSelect.prop('value')).toBe(undefined);
 
     const fieldSelect = wrapper.find('Select.aggregation-function-field').at(0);
+
     expect(fieldSelect.prop('value')).toBe(undefined);
   });
 
@@ -61,9 +79,11 @@ describe('NumberRefExpression', () => {
     );
 
     const functionSelect = wrapper.find('Select.aggregation-function').at(0);
+
     expect(functionSelect.prop('value')).toBe('avg');
 
     const fieldSelect = wrapper.find('Select.aggregation-function-field').at(0);
+
     expect(fieldSelect.prop('value')).toBe('took_ms');
   });
 
@@ -94,7 +114,9 @@ describe('NumberRefExpression', () => {
     );
 
     const functionSelect = wrapper.find('Select Select.aggregation-function').at(0);
+
     functionSelect.prop('onChange')({ value: 'card' });
+
     expect(handleChange.mock.calls.length).toBe(1);
   });
 
@@ -125,7 +147,9 @@ describe('NumberRefExpression', () => {
     );
 
     const fieldSelect = wrapper.find('Select Select.aggregation-function-field').at(0);
+
     fieldSelect.prop('onChange')({ value: 'source' }, { action: 'select-option' });
+
     expect(handleChange.mock.calls.length).toBe(1);
   });
 
@@ -156,7 +180,9 @@ describe('NumberRefExpression', () => {
     );
 
     const fieldSelect = wrapper.find('Select Select.aggregation-function-field').at(0);
+
     fieldSelect.prop('onChange')({ value: 'source' }, { action: 'select-option' });
+
     expect(handleChange.mock.calls.length).toBe(1);
   });
 });

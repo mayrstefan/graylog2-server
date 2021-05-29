@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.testing.graylognode;
 
@@ -21,10 +21,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -34,7 +34,7 @@ public class MavenPackager {
     private static final Logger LOG = LoggerFactory.getLogger(MavenPackager.class);
     private static final String MVN_COMMAND = "mvn package -DskipTests -Dskip.web.build -Dforbiddenapis.skip=true -Dmaven.javadoc.skip=true";
 
-    static void packageJarIfNecessary(String projectDir) {
+    static void packageJarIfNecessary(Path projectDir) {
         if (isRunFromMaven()) {
             LOG.info("Running from Maven. Assuming jars are current.");
         } else {
@@ -49,7 +49,7 @@ public class MavenPackager {
         return System.getProperty("surefire.test.class.path") != null;
     }
 
-    static void packageJar(String pomDir) {
+    static void packageJar(Path pomDir) {
         Process p = startProcess(pomDir);
 
         Stopwatch sw = Stopwatch.createStarted();
@@ -70,9 +70,9 @@ public class MavenPackager {
         }
     }
 
-    private static Process startProcess(String pomDir) {
+    private static Process startProcess(Path pomDir) {
         try {
-            return new ProcessBuilder().command("sh", "-c", MVN_COMMAND).directory(new File(pomDir)).start();
+            return new ProcessBuilder().command("sh", "-c", MVN_COMMAND).directory(pomDir.toFile()).inheritIO().start();
         } catch (IOException e) {
             String msg = String.format(Locale.US, "Failed to start maven process with command [%s].", MVN_COMMAND);
             throw new RuntimeException(msg, e);

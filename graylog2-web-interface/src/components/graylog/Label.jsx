@@ -1,40 +1,42 @@
-import React, { forwardRef, useMemo } from 'react';
-import PropTypes from 'prop-types';
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
+import React, { forwardRef } from 'react';
 import styled, { css } from 'styled-components';
 // eslint-disable-next-line no-restricted-imports
 import { Label as BootstrapLabel } from 'react-bootstrap';
 
-import { util } from 'theme';
-import bsStyleThemeVariant, { bsStyles } from './variants/bsStyle';
+const StyledLabel = styled(BootstrapLabel)(({ bsStyle, theme }) => {
+  if (!bsStyle) {
+    return undefined;
+  }
 
-const labelStyles = (hex) => {
-  const textColor = util.readableColor(hex);
+  const backgroundColor = theme.colors.variant[bsStyle];
+  const textColor = theme.utils.contrastingColor(backgroundColor);
 
   return css`
-    background-color: ${hex};
+    background-color: ${backgroundColor};
     color: ${textColor};
   `;
-};
-
-const Label = forwardRef(({ bsStyle, ...props }, ref) => {
-  const StyledLabel = useMemo(
-    () => styled(BootstrapLabel)`
-      ${bsStyleThemeVariant(labelStyles)}
-    `,
-    [bsStyle],
-  );
-
-  return (
-    <StyledLabel bsStyle={bsStyle} ref={ref} {...props} />
-  );
 });
 
-Label.propTypes = {
-  bsStyle: PropTypes.oneOf(bsStyles),
-};
-
-Label.defaultProps = {
-  bsStyle: 'default',
-};
+const Label = forwardRef(({ ...props }, ref) => {
+  return (
+    <StyledLabel ref={ref} {...props} />
+  );
+});
 
 export default Label;

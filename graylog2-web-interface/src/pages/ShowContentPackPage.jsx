@@ -1,16 +1,30 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import Reflux from 'reflux';
 import createReactClass from 'create-react-class';
 import PropTypes from 'prop-types';
-import { LinkContainer } from 'react-router-bootstrap';
 
+import { LinkContainer } from 'components/graylog/router';
 import { Row, Col, Button, ButtonToolbar } from 'components/graylog';
 import Spinner from 'components/common/Spinner';
 import { BootstrapModalConfirm } from 'components/bootstrap';
-
 import history from 'util/History';
 import Routes from 'routing/Routes';
-
 import UserNotification from 'util/UserNotification';
 import { DocumentTitle, PageHeader } from 'components/common';
 import ContentPackDetails from 'components/content-packs/ContentPackDetails';
@@ -18,6 +32,8 @@ import ContentPackVersions from 'components/content-packs/ContentPackVersions';
 import ContentPackInstallations from 'components/content-packs/ContentPackInstallations';
 import ContentPackInstallEntityList from 'components/content-packs/ContentPackInstallEntityList';
 import CombinedProvider from 'injection/CombinedProvider';
+import withParams from 'routing/withParams';
+
 import ShowContentPackStyle from './ShowContentPackPage.css';
 
 const { ContentPacksActions, ContentPacksStore } = CombinedProvider.get('ContentPacks');
@@ -40,7 +56,6 @@ const ShowContentPackPage = createReactClass({
     };
   },
 
-
   componentDidMount() {
     ContentPacksActions.get(this.props.params.contentPackId).catch((error) => {
       if (error.status === 404) {
@@ -50,8 +65,10 @@ const ShowContentPackPage = createReactClass({
       } else {
         UserNotification.error('An internal server error occurred. Please check your logfiles for more information');
       }
+
       history.push(Routes.SYSTEM.CONTENTPACKS.LIST);
     });
+
     ContentPacksActions.installList(this.props.params.contentPackId);
   },
 
@@ -64,17 +81,21 @@ const ShowContentPackPage = createReactClass({
     if (window.confirm('You are about to delete this content pack revision, are you sure?')) {
       ContentPacksActions.deleteRev(contentPackId, revision).then(() => {
         UserNotification.success('Content pack revision deleted successfully.', 'Success');
+
         ContentPacksActions.get(contentPackId).catch((error) => {
           if (error.status !== 404) {
             UserNotification.error('An internal server error occurred. Please check your logfiles for more information');
           }
+
           history.push(Routes.SYSTEM.CONTENTPACKS.LIST);
         });
       }, (error) => {
         let errMessage = error.message;
+
         if (error.responseMessage) {
           errMessage = error.responseMessage;
         }
+
         UserNotification.error(`Deleting content pack failed: ${errMessage}`, 'Error');
       });
     }
@@ -84,10 +105,12 @@ const ShowContentPackPage = createReactClass({
     ContentPacksActions.uninstallDetails(contentPackId, installId).then((result) => {
       this.setState({ uninstallEntities: result.entities });
     });
+
     this.setState({
       uninstallContentPackId: contentPackId,
       uninstallInstallId: installId,
     });
+
     this.modal.open();
   },
 
@@ -97,11 +120,13 @@ const ShowContentPackPage = createReactClass({
       uninstallInstallId: undefined,
       uninstallEntities: undefined,
     });
+
     this.modal.close();
   },
 
   _uninstallContentPackRev() {
     const contentPackId = this.state.uninstallContentPackId;
+
     ContentPacksActions.uninstall(this.state.uninstallContentPackId, this.state.uninstallInstallId).then(() => {
       UserNotification.success('Content Pack uninstalled successfully.', 'Success');
       ContentPacksActions.installList(contentPackId);
@@ -127,6 +152,7 @@ const ShowContentPackPage = createReactClass({
     }
 
     const { contentPackRevisions, selectedVersion, constraints } = this.state;
+
     return (
       <DocumentTitle title="Content packs">
         <span>
@@ -187,4 +213,4 @@ const ShowContentPackPage = createReactClass({
   },
 });
 
-export default ShowContentPackPage;
+export default withParams(ShowContentPackPage);

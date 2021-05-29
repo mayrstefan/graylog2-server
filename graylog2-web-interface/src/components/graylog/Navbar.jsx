@@ -1,287 +1,224 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 // eslint-disable-next-line no-restricted-imports
 import { Navbar as BootstrapNavbar } from 'react-bootstrap';
 import styled, { css } from 'styled-components';
 import chroma from 'chroma-js';
 
-import { breakpoint, util } from 'theme';
-
 const Navbar = styled(BootstrapNavbar)(({ theme }) => css`
-  &.navbar-default {
-    background-color: ${theme.color.gray[90]};
-    border-color: ${theme.color.gray[80]};
+  position: relative;
+  min-height: auto;
+  background-color: ${theme.colors.global.navigationBackground};
+  border: 0;
+  box-shadow: 0 3px 3px ${theme.colors.global.navigationBoxShadow};
+  margin-bottom: 0;
 
-    .navbar-brand {
-      color: ${theme.color.variant.info};
-      padding: 12px 15px 0 15px;
+  .navbar-brand {
+    color: ${theme.colors.variant.default};
+    padding: 12px 15px 0 15px;
+
+    &:hover,
+    &:focus {
+      color: ${theme.colors.variant.dark.default};
+      background-color: transparent;
+    }
+  }
+
+  .navbar-text {
+    color: ${theme.colors.global.textDefault};
+  }
+
+  @media (max-width: ${theme.breakpoints.max.md}) {
+    && .navbar-collapse {
+      position: absolute;
+      background-color: ${theme.colors.global.navigationBackground};
+      width: 100%;
+    }
+  }
+
+  .navbar-nav {
+    > li > a,
+    > li > .btn-link {
+      color: ${theme.colors.global.textDefault};
 
       &:hover,
       &:focus {
-        color: ${theme.color.variant.dark.info};
+        color: ${theme.colors.variant.darker.default};
+        background-color: ${theme.colors.variant.lightest.default};
+      }
+    }
+
+    > .active > a,
+    > .active > .btn-link {
+      color: ${theme.colors.variant.darkest.default};
+      background-color: ${theme.colors.gray[90]};
+      
+      &:hover,
+      &:focus {
+        color: ${theme.colors.variant.darkest.default};
+        background-color: ${theme.colors.gray[80]};
+      }
+    }
+
+    > .disabled > a,
+    > .disabled > .btn-link {
+      &,
+      &:hover,
+      &:focus {
+        color: ${theme.colors.gray[70]};
         background-color: transparent;
       }
     }
 
-    .navbar-text {
-      color: ${theme.color.global.textDefault};
+    > .open > a,
+    > .open > .btn-link {
+      &,
+      &:hover,
+      &:focus {
+        color: ${theme.colors.variant.darkest.default};
+        background-color: ${theme.colors.gray[90]};
+      }
     }
 
-    .navbar-nav {
+    @media (max-width: ${theme.breakpoints.max.md}) {
+      padding-left: 50px;
+
       > li > a,
       > li > .btn-link {
-        color: ${theme.color.variant.info};
-
         &:hover,
         &:focus {
-          color: ${theme.color.variant.dark.info};
-          background-color: transparent;
+          color: ${theme.colors.variant.darker.default};
+          background-color: ${theme.colors.variant.lightest.default};
         }
       }
 
-      > .active > a {
-        &,
-        &:hover,
-        &:focus {
-          color: ${util.readableColor(theme.color.gray[80])};
-          background-color: ${theme.color.gray[80]};
-        }
-      }
+      .open .dropdown-menu {
+        > li > a,
+        > li > .btn-link {
+          color: ${theme.colors.variant.darkest.default};
 
-      > .disabled > a {
-        &,
-        &:hover,
-        &:focus {
-          color: ${theme.color.gray[70]};
-          background-color: transparent;
-        }
-      }
-
-      > .open > a {
-        &,
-        &:hover,
-        &:focus {
-          color: ${chroma(theme.color.variant.info).darken(0.15)};
-          background-color: ${chroma(theme.color.gray[90]).darken(0.065)};
-        }
-      }
-
-      @media (max-width: ${breakpoint.max.sm}) {
-        .open .dropdown-menu {
-          > li > a,
-          > li > .btn-link {
-            color: ${theme.color.variant.info};
-
-            &:hover,
-            &:focus {
-              color: ${chroma(theme.color.variant.info).darken(0.25)};
-              background-color: transparent;
-            }
-          }
-
-          > .active > a {
-            &,
-            &:hover,
-            &:focus {
-              color: ${chroma(theme.color.variant.info).darken(0.15)};
-              background-color: ${chroma(theme.color.gray[90]).darken(0.065)};
-            }
-          }
-
-          > .disabled > a {
-            &,
-            &:hover,
-            &:focus {
-              color: ${theme.color.gray[80]};
-              background-color: transparent;
-            }
+          &:hover,
+          &:focus {
+            color: ${theme.colors.variant.darker.default};
+            background-color: ${theme.colors.variant.lightest.default};
           }
         }
-      }
-    }
 
-    .navbar-toggle {
-      border-color: ${theme.color.gray[80]};
+        > .active > a,
+        > .active > .btn-link {
+          color: ${theme.colors.variant.darkest.default};
+          background-color: ${theme.colors.gray[90]};
+          
+          &:hover,
+          &:focus {
+            color: ${theme.colors.variant.darkest.default};
+            background-color: ${theme.colors.gray[80]};
+          }
+        }
 
-      &:hover,
-      &:focus {
-        background-color: ${theme.color.gray[80]};
-      }
-
-      .icon-bar {
-        background-color: ${chroma(theme.color.gray[80]).darken(0.25)};
-      }
-    }
-
-    .navbar-collapse,
-    .navbar-form {
-      border-color: ${chroma(theme.color.gray[90]).darken(0.065)};
-    }
-
-    .navbar-link {
-      color: ${theme.color.variant.info};
-
-      &:hover {
-        color: ${chroma(theme.color.variant.info).darken(0.25)};
-      }
-    }
-
-    .btn-link {
-      color: ${theme.color.variant.info};
-
-      &:hover,
-      &:focus {
-        color: ${theme.color.variant.dark.info};
-      }
-
-      &[disabled],
-      fieldset[disabled] & {
-        &:hover,
-        &:focus {
-          color: ${theme.color.gray[80]};
+        > .disabled > a,
+        > .disabled > .btn-link {
+          &,
+          &:hover,
+          &:focus {
+            color: ${theme.colors.gray[70]};
+            background-color: transparent;
+          }
         }
       }
     }
   }
 
-  &.navbar-inverse {
-    background-color: ${theme.color.gray[10]};
-    border: 0;
+  .navbar-toggle {
+    background-color: ${theme.colors.global.navigationBackground};
+    border-color: ${theme.colors.variant.dark.default};
+    transition: background-color 150ms ease-in-out,
+      border-color 150ms ease-in-out;
+    position: relative;
 
-    .navbar-brand {
-      color: ${chroma(theme.color.variant.info).brighten(0.15)};
-      padding: 12px 15px 0 15px;
+    :not(.collapsed) {
+      .icon-bar:nth-last-child(1),
+      .icon-bar:nth-last-child(3) {
+        transition: transform 150ms ease-in 150ms,
+          top 150ms ease-in 0s;
+      }
 
-      &:hover,
-      &:focus {
-        color: ${theme.color.global.textAlt};
-        background-color: transparent;
+      .icon-bar:nth-last-child(1) {
+        transform: rotate(-45deg) translate(4px, -4px);
+      }
+
+      .icon-bar:nth-last-child(3) {
+        transform: rotate(45deg) translate(4px, 4px);
+      }
+
+      .icon-bar:nth-last-child(2) {
+        transition: opacity 0s ease 150ms;
+        opacity: 0;
       }
     }
 
-    .navbar-text {
-      color: ${chroma(theme.color.global.textDefault).brighten(0.15)};
+    .icon-bar {
+      background-color: ${theme.colors.variant.default};
+      transition: background-color 150ms ease-in-out,
+        transform 150ms ease-in 0s,
+        opacity 300ms ease-in 0s;
+      transform: rotate(0deg);
+      position: relative;
+      opacity: 1;
     }
 
-    .navbar-nav {
-      > li > a,
-      > li > .btn-link {
-        color: ${theme.color.gray[90]};
-
-        &:hover,
-        &:focus {
-          color: ${theme.color.variant.light.info};
-          background-color: transparent;
-        }
-      }
-
-      > .active > a {
-        &,
-        &:hover,
-        &:focus {
-          color: ${theme.color.global.textAlt};
-          background-color: ${theme.color.gray[20]};
-        }
-      }
-
-      > .disabled > a {
-        &,
-        &:hover,
-        &:focus {
-          color: ${chroma(theme.color.global.textDefault).brighten(0.50)};
-          background-color: transparent;
-        }
-      }
-
-      > .open > a {
-        &,
-        &:hover,
-        &:focus {
-          color: ${theme.color.global.textAlt};
-          background-color: ${theme.color.gray[20]};
-        }
-      }
-
-      @media (max-width: ${breakpoint.max.sm}) {
-        .open .dropdown-menu {
-          > .dropdown-header {
-            border-color: ${theme.color.gray[10]};
-          }
-
-          .divider {
-            background-color: ${theme.color.gray[20]};
-          }
-
-          > li > a,
-          > li > .btn-link {
-            color: ${theme.color.gray[90]};
-
-            &:hover,
-            &:focus {
-              color: ${theme.color.variant.light.info};
-              background-color: transparent;
-            }
-          }
-
-          > .active > a {
-            &,
-            &:hover,
-            &:focus {
-              color: ${theme.color.global.textAlt};
-              background-color: ${theme.color.gray[20]};
-            }
-          }
-
-          > .disabled > a {
-            &,
-            &:hover,
-            &:focus {
-              color: ${chroma(theme.color.global.textDefault).brighten(0.50)};
-              background-color: transparent;
-            }
-          }
-        }
-      }
-    }
-
-    .navbar-toggle {
-      border-color: ${theme.color.gray[70]};
-
-      &:hover,
-      &:focus {
-        background-color: ${theme.color.gray[70]};
-      }
-
+    &:hover,
+    &:focus,
+    :not(.collapsed) {
+      background-color: ${theme.colors.variant.lighter.default};
+      border-color: ${theme.colors.variant.default};
+      
       .icon-bar {
-        background-color: ${theme.color.global.textAlt};
+        background-color: ${theme.colors.variant.dark.default};
       }
     }
+  }
 
-    .navbar-collapse,
-    .navbar-form {
-      border-color: ${theme.color.gray[70]};
+  .navbar-collapse,
+  .navbar-form {
+    border-color: ${chroma(theme.colors.gray[90]).darken(0.065)};
+  }
+
+  .navbar-link {
+    color: ${theme.colors.variant.default};
+
+    &:hover {
+      color: ${chroma(theme.colors.variant.default).darken(0.25)};
+    }
+  }
+
+  .btn-link {
+    color: ${theme.colors.variant.default};
+
+    &:hover,
+    &:focus {
+      color: ${theme.colors.variant.dark.default};
     }
 
-    .navbar-link {
-      color: ${chroma(theme.color.variant.info).brighten(0.15)};
-
-      &:hover {
-        color: ${theme.color.global.textAlt};
-      }
-    }
-
-    .btn-link {
-      color: ${chroma(theme.color.variant.info).brighten(0.15)};
-
+    &[disabled],
+    fieldset[disabled] & {
       &:hover,
       &:focus {
-        color: ${theme.color.global.textAlt};
-      }
-
-      &[disabled],
-      fieldset[disabled] & {
-        &:hover,
-        &:focus {
-          color: ${chroma(theme.color.global.textDefault).brighten(0.50)};
-        }
+        color: ${theme.colors.gray[80]};
       }
     }
   }

@@ -1,43 +1,41 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.indexer.cluster.health;
-
-import org.elasticsearch.common.unit.ByteSizeValue;
 
 import java.util.stream.Stream;
 
 public class ClusterAllocationDiskSettingsFactory {
 
-    public static ClusterAllocationDiskSettings create(boolean enabled, String low, String high, String floodStage) throws Exception {
+    public static ClusterAllocationDiskSettings create(boolean enabled, String low, String high, String floodStage) {
         if (!enabled) {
             return ClusterAllocationDiskSettings.create(enabled, null);
         }
         return ClusterAllocationDiskSettings.create(enabled, createWatermarkSettings(low, high, floodStage));
     }
 
-    private static WatermarkSettings<?> createWatermarkSettings(String low, String high, String floodStage) throws Exception {
+    private static WatermarkSettings<?> createWatermarkSettings(String low, String high, String floodStage) {
         WatermarkSettings.SettingsType lowType = getType(low);
         WatermarkSettings.SettingsType highType = getType(high);
         if (Stream.of(lowType, highType).allMatch(s -> s == WatermarkSettings.SettingsType.ABSOLUTE)) {
             AbsoluteValueWatermarkSettings.Builder builder = new AbsoluteValueWatermarkSettings.Builder()
-                .low(ByteSizeValue.parseBytesSizeValue(low, "lowWatermark"))
-                .high(ByteSizeValue.parseBytesSizeValue(high, "highWatermark"));
+                .low(SIUnitParser.parseBytesSizeValue(low))
+                .high(SIUnitParser.parseBytesSizeValue(high));
             if (!floodStage.isEmpty()) {
-                builder.floodStage(ByteSizeValue.parseBytesSizeValue(floodStage, "floodStageWatermark"));
+                builder.floodStage(SIUnitParser.parseBytesSizeValue(floodStage));
             }
             return builder.build();
         } else if (Stream.of(lowType, highType).allMatch(s -> s == WatermarkSettings.SettingsType.PERCENTAGE)) {
@@ -49,7 +47,7 @@ public class ClusterAllocationDiskSettingsFactory {
             }
             return builder.build();
         }
-        throw new Exception("Error creating ClusterAllocationDiskWatermarkSettings. This should never happen.");
+        throw new IllegalStateException("Error creating ClusterAllocationDiskWatermarkSettings. This should never happen.");
     }
 
     private static WatermarkSettings.SettingsType getType(String value) {

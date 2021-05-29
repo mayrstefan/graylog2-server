@@ -1,7 +1,26 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 // eslint-disable-next-line no-restricted-imports
 import createReactClass from 'create-react-class';
+import lodash from 'lodash';
+import moment from 'moment';
+
 import {
   ControlLabel,
   DropdownButton,
@@ -11,11 +30,8 @@ import {
   InputGroup,
   MenuItem,
 } from 'components/graylog';
-import lodash from 'lodash';
-import moment from 'moment';
-
 import { InputWrapper } from 'components/bootstrap';
-import FormsUtils from 'util/FormsUtils';
+import * as FormsUtils from 'util/FormsUtils';
 
 const unitValues = [
   'NANOSECONDS',
@@ -41,12 +57,15 @@ export const extractDurationAndUnit = (duration, timeUnits) => {
       unit: lodash.last(timeUnits),
     };
   }
+
   const momentDuration = moment.duration(duration);
   const timeUnit = timeUnits.find((unit) => {
     const durationInUnit = momentDuration.as(unit);
+
     return lodash.isInteger(durationInUnit) && durationInUnit !== 0;
   }) || lodash.last(timeUnits);
   const durationInUnit = momentDuration.as(timeUnit);
+
   return {
     duration: durationInUnit,
     unit: timeUnit,
@@ -121,14 +140,16 @@ const TimeUnitInput = createReactClass({
 
   getInitialState() {
     const { defaultEnabled, enabled, units } = this.props;
+
     return {
       enabled: lodash.defaultTo(enabled, defaultEnabled),
       unitOptions: this._getUnitOptions(units),
     };
   },
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { units } = this.props;
+
     if (!lodash.isEqual(units, nextProps.units)) {
       this.setState({ unitOptions: this._getUnitOptions(nextProps.units) });
     }
@@ -136,6 +157,7 @@ const TimeUnitInput = createReactClass({
 
   _getEffectiveValue() {
     const { defaultValue, value, clearable } = this.props;
+
     return clearable ? value : lodash.defaultTo(value, defaultValue);
   },
 
@@ -147,10 +169,13 @@ const TimeUnitInput = createReactClass({
 
   _isChecked() {
     const { required, enabled } = this.props;
+
     if (required) {
       return required;
     }
+
     const { enabled: enabledState } = this.state;
+
     return lodash.defaultTo(enabled, enabledState);
   },
 
@@ -162,11 +187,13 @@ const TimeUnitInput = createReactClass({
       checked: this._isChecked(),
     };
     const nextInput = { ...previousInput, ...update };
+
     onUpdate(nextInput.value, nextInput.unit, nextInput.checked);
   },
 
   _onToggleEnable(e) {
     const isChecked = e.target.checked;
+
     this.setState({ enabled: isChecked });
     this._propagateInput({ checked: isChecked });
   },
@@ -174,11 +201,13 @@ const TimeUnitInput = createReactClass({
   _onUpdate(e) {
     const { defaultValue, clearable } = this.props;
     let value;
+
     if (clearable) {
       value = FormsUtils.getValueFromInput(e.target);
     } else {
       value = lodash.defaultTo(FormsUtils.getValueFromInput(e.target), defaultValue);
     }
+
     this._propagateInput({ value: value });
   },
 

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -7,7 +23,6 @@ import BootstrapModalWrapper from 'components/bootstrap/BootstrapModalWrapper';
 
 import ContentPackApplyParameter from './ContentPackApplyParameter';
 import ContentPackEntityConfig from './ContentPackEntityConfig';
-
 import ContentPackEntitiesListStyle from './ContentPackEntitiesList.css';
 
 class ContentPackEntitiesList extends React.Component {
@@ -28,13 +43,14 @@ class ContentPackEntitiesList extends React.Component {
 
   constructor(props) {
     super(props);
+
     this.state = {
       filteredEntities: props.contentPack.entities || [],
       filter: undefined,
     };
   }
 
-  componentWillReceiveProps(newProps) {
+  UNSAFE_componentWillReceiveProps(newProps) {
     const { filter } = this.state;
 
     this._filterEntities(filter, newProps.contentPack.entities);
@@ -44,8 +60,10 @@ class ContentPackEntitiesList extends React.Component {
     const { contentPack } = this.props;
 
     const entities = entitiesArg || contentPack.entities;
+
     if (!filter || filter.length <= 0) {
       this.setState({ filteredEntities: entities, filter: undefined });
+
       return;
     }
 
@@ -53,6 +71,7 @@ class ContentPackEntitiesList extends React.Component {
     const filteredEntities = entities.filter((entity) => {
       return regexp.test(entity.title) || regexp.test(entity.description);
     });
+
     this.setState({ filteredEntities: filteredEntities, filter: filter });
   };
 
@@ -60,6 +79,7 @@ class ContentPackEntitiesList extends React.Component {
     if (!entity.fromServer) {
       return <span><Icon title="Content Pack" name="archive" className={ContentPackEntitiesListStyle.contentPackEntity} /></span>;
     }
+
     return <span><Icon title="Server" name="server" /></span>;
   };
 
@@ -134,6 +154,7 @@ class ContentPackEntitiesList extends React.Component {
 
     const disableBtn = contentPack.parameters.length <= 0;
     const appliedParameterCount = (appliedParameter[entity.id] || []).length;
+
     return (
       <tr key={entity.id}>
         <td className={ContentPackEntitiesListStyle.bigColumns}>{entity.title}</td>

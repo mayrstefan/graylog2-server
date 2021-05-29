@@ -1,37 +1,33 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.system.stats;
 
+import org.graylog.plugins.views.search.views.DashboardService;
 import org.graylog2.alarmcallbacks.AlarmCallbackConfigurationService;
 import org.graylog2.alerts.AlertService;
-import org.graylog2.dashboards.DashboardService;
-import org.graylog2.database.NotFoundException;
+import org.graylog2.indexer.cluster.Cluster;
 import org.graylog2.inputs.InputService;
-import org.graylog2.security.ldap.LdapSettingsService;
-import org.graylog2.shared.security.ldap.LdapSettings;
 import org.graylog2.shared.users.UserService;
 import org.graylog2.streams.OutputService;
 import org.graylog2.streams.StreamRuleService;
 import org.graylog2.streams.StreamService;
-import org.graylog2.system.stats.elasticsearch.ElasticsearchProbe;
 import org.graylog2.system.stats.elasticsearch.ElasticsearchStats;
 import org.graylog2.system.stats.mongo.MongoProbe;
 import org.graylog2.system.stats.mongo.MongoStats;
-import org.graylog2.users.RoleService;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -39,44 +35,38 @@ import java.util.Map;
 
 @Singleton
 public class ClusterStatsService {
-    private final ElasticsearchProbe elasticsearchProbe;
     private final MongoProbe mongoProbe;
     private final UserService userService;
     private final InputService inputService;
     private final StreamService streamService;
     private final StreamRuleService streamRuleService;
     private final OutputService outputService;
-    private final DashboardService dashboardService;
-    private final LdapSettingsService ldapSettingsService;
-    private final RoleService roleService;
     private final AlertService alertService;
     private final AlarmCallbackConfigurationService alarmCallbackConfigurationService;
+    private final DashboardService dashboardService;
+    private final Cluster cluster;
 
     @Inject
-    public ClusterStatsService(ElasticsearchProbe elasticsearchProbe,
-                               MongoProbe mongoProbe,
+    public ClusterStatsService(MongoProbe mongoProbe,
                                UserService userService,
                                InputService inputService,
                                StreamService streamService,
                                StreamRuleService streamRuleService,
                                OutputService outputService,
-                               DashboardService dashboardService,
-                               LdapSettingsService ldapSettingsService,
-                               RoleService roleService,
                                AlertService alertService,
-                               AlarmCallbackConfigurationService alarmCallbackConfigurationService) {
-        this.elasticsearchProbe = elasticsearchProbe;
+                               AlarmCallbackConfigurationService alarmCallbackConfigurationService,
+                               DashboardService dashboardService,
+                               Cluster cluster) {
         this.mongoProbe = mongoProbe;
         this.userService = userService;
         this.inputService = inputService;
         this.streamService = streamService;
         this.streamRuleService = streamRuleService;
         this.outputService = outputService;
-        this.dashboardService = dashboardService;
-        this.ldapSettingsService = ldapSettingsService;
-        this.roleService = roleService;
         this.alertService = alertService;
         this.alarmCallbackConfigurationService = alarmCallbackConfigurationService;
+        this.dashboardService = dashboardService;
+        this.cluster = cluster;
     }
 
     public ClusterStats clusterStats() {
@@ -89,44 +79,26 @@ public class ClusterStatsService {
                 userService.count(),
                 outputService.count(),
                 outputService.countByType(),
-                dashboardService.count(),
+                countDashboards(),
                 inputService.totalCount(),
                 inputService.globalCount(),
                 inputService.totalCountByType(),
                 inputService.totalExtractorCount(),
                 inputService.totalExtractorCountByType(),
-                ldapStats(),
                 alarmStats()
         );
     }
 
+    private long countDashboards() {
+        return dashboardService.count();
+    }
+
     public ElasticsearchStats elasticsearchStats() {
-        return elasticsearchProbe.elasticsearchStats();
+        return cluster.elasticsearchStats();
     }
 
     public MongoStats mongoStats() {
         return mongoProbe.mongoStats();
-    }
-
-    public LdapStats ldapStats() {
-        int numberOfRoles = 0;
-        LdapSettings ldapSettings = null;
-        try {
-            numberOfRoles = roleService.loadAll().size();
-            ldapSettings = ldapSettingsService.load();
-        } catch (NotFoundException ignored) {}
-        if (ldapSettings == null) {
-            return LdapStats.create(false,
-                                    false,
-                                    0,
-                                    numberOfRoles
-
-            );
-        }
-        return LdapStats.create(ldapSettings.isEnabled(),
-                                ldapSettings.isActiveDirectory(),
-                                ldapSettings.getGroupMapping().size(),
-                                numberOfRoles);
     }
 
     public AlarmStats alarmStats() {

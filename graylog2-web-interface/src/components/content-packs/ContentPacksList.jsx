@@ -1,10 +1,34 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { Link } from 'react-router';
-import { LinkContainer } from 'react-router-bootstrap';
 
+import { LinkContainer, Link } from 'components/graylog/router';
 import Routes from 'routing/Routes';
-import { Button, Row, Col, DropdownButton, MenuItem, Pagination, Modal, ButtonToolbar } from 'components/graylog';
+import {
+  Button,
+  ButtonToolbar,
+  Col,
+  DropdownButton,
+  MenuItem,
+  Modal,
+  Row,
+} from 'components/graylog';
+import { Pagination, PageSizeSelect } from 'components/common';
 import TypeAheadDataFilter from 'components/common/TypeAheadDataFilter';
 import BootstrapModalWrapper from 'components/bootstrap/BootstrapModalWrapper';
 import ControlledTableList from 'components/common/ControlledTableList';
@@ -12,7 +36,6 @@ import ContentPackStatus from 'components/content-packs/ContentPackStatus';
 import ContentPackDownloadControl from 'components/content-packs/ContentPackDownloadControl';
 
 import ContentPackInstall from './ContentPackInstall';
-import ContentPacksListStyle from './ContentPacksList.css';
 
 class ContentPacksList extends React.Component {
   static propTypes = {
@@ -29,8 +52,6 @@ class ContentPacksList extends React.Component {
     contentPackMetadata: {},
   };
 
-  MAX_PAGE_BUTTONS = 10;
-
   constructor(props) {
     super(props);
 
@@ -45,7 +66,7 @@ class ContentPacksList extends React.Component {
     this._onChangePage = this._onChangePage.bind(this);
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState({ filteredContentPacks: nextProps.contentPacks });
   }
 
@@ -155,41 +176,25 @@ class ContentPacksList extends React.Component {
   }
 
   _itemsShownChange(event) {
-    this.setState({ pageSize: event.target.value });
+    this.setState({ pageSize: Number(event.target.value), currentPage: 1 });
   }
 
-  _onChangePage(eventKey, event) {
-    event.preventDefault();
-    const pageNo = Number(eventKey);
-    this.setState({ currentPage: pageNo });
+  _onChangePage(nextPage) {
+    this.setState({ currentPage: nextPage });
   }
 
   render() {
     const { filteredContentPacks, pageSize, currentPage } = this.state;
     const { contentPacks } = this.props;
     const numberPages = Math.ceil(filteredContentPacks.length / pageSize);
+
     const pagination = (
-      <Pagination bsSize="small"
-                  bsStyle={`pagination ${ContentPacksListStyle.pager}`}
-                  items={numberPages}
-                  maxButtons={this.MAX_PAGE_BUTTONS}
-                  activePage={currentPage}
-                  onSelect={this._onChangePage}
-                  prev
-                  next
-                  first
-                  last />
+      <Pagination totalPages={numberPages}
+                  currentPage={currentPage}
+                  onChange={this._onChangePage} />
     );
-    const pageSizeSelector = (
-      <span>Show:&nbsp;
-        <select onChange={this._itemsShownChange} value={pageSize}>
-          <option>10</option>
-          <option>25</option>
-          <option>50</option>
-          <option>100</option>
-        </select>
-      </span>
-    );
+
+    const pageSizeSelect = <PageSizeSelect onChange={this._itemsShownChange} pageSize={pageSize} pageSizes={[10, 25, 50, 100]} />;
 
     const noContentMessage = contentPacks.length <= 0
       ? 'No content packs found. Please create or upload one'
@@ -219,7 +224,7 @@ class ContentPacksList extends React.Component {
             {pagination}
           </Col>
           <Col md={2} className="text-right">
-            {pageSizeSelector}
+            {pageSizeSelect}
           </Col>
         </Row>
         {content}
@@ -229,7 +234,7 @@ class ContentPacksList extends React.Component {
             {pagination}
           </Col>
           <Col md={2} className="text-right">
-            {pageSizeSelector}
+            {pageSizeSelect}
           </Col>
         </Row>
       </div>

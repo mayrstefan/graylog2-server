@@ -1,11 +1,24 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
+import React, { createRef } from 'react';
 import PropTypes from 'prop-types';
-import React from 'react';
 import lodash from 'lodash';
-import { MenuItem } from 'components/graylog';
 
-import { BootstrapModalForm, Input } from 'components/bootstrap';
-
-import style from './CopyModal.css';
+import CloneMenuItem from '../common/CloneMenuItem';
 
 class CopyCollectorModal extends React.Component {
   static propTypes = {
@@ -14,28 +27,30 @@ class CopyCollectorModal extends React.Component {
     validateCollector: PropTypes.func.isRequired,
   };
 
-  static defaultProps = {
-    id: '',
-    name: '',
-  };
+  constructor(props) {
+    super(props);
 
-  state = {
-    id: this.props.collector.id,
-    name: '',
-    error: false,
-    error_message: '',
-  };
+    this.modalRef = createRef();
+
+    this.state = {
+      id: props.collector.id,
+      name: '',
+      errorMessage: undefined,
+    };
+  }
 
   openModal = () => {
-    this.refs.modal.open();
+    this.modalRef.current.open();
   };
 
   _getId = (prefixIdName) => {
-    return `${prefixIdName}-${this.state.id}`;
+    const { id } = this.state;
+
+    return `${prefixIdName}-${id}`;
   };
 
   _closeModal = () => {
-    this.refs.modal.close();
+    this.modalRef.current.close();
   };
 
   _saved = () => {
@@ -44,52 +59,43 @@ class CopyCollectorModal extends React.Component {
   };
 
   _save = () => {
-    const collector = this.state;
+    const { errorMessage, id, name } = this.state;
+    const { copyCollector } = this.props;
 
-    if (!collector.error) {
-      this.props.copyCollector(this.state.id, this.state.name, this._saved);
+    if (!errorMessage) {
+      copyCollector(id, name, this._saved);
     }
   };
 
   _changeName = (event) => {
-    const nextName = event.target.value;
-    this.setState({ name: nextName });
+    const { collector, validateCollector } = this.props;
+    const name = event.target.value;
 
-    const nextCollector = lodash.cloneDeep(this.props.collector);
-    nextCollector.name = nextName;
+    this.setState({ name, errorMessage: undefined });
+
+    const nextCollector = lodash.cloneDeep(collector);
+
+    nextCollector.name = name;
     nextCollector.id = '';
 
-    this.props.validateCollector(nextCollector).then((validation) => {
-      let errorMessage = '';
+    validateCollector(nextCollector).then((validation) => {
       if (validation.errors.name) {
-        errorMessage = validation.errors.name[0];
+        this.setState({ errorMessage: validation.errors.name[0] });
       }
-      this.setState({ error: validation.failed, error_message: errorMessage });
     });
   };
 
   render() {
+    const { errorMessage, name } = this.state;
+
     return (
-      <span>
-        <MenuItem className={style.menuItem} onSelect={this.openModal}>Clone</MenuItem>
-        <BootstrapModalForm ref="modal"
-                            title="Clone"
-                            onSubmitForm={this._save}
-                            submitButtonDisabled={this.state.error}
-                            submitButtonText="Done">
-          <fieldset>
-            <Input type="text"
-                   id={this._getId('collector-name')}
-                   label="Name"
-                   defaultValue={this.state.name}
-                   onChange={this._changeName}
-                   bsStyle={this.state.error ? 'error' : null}
-                   help={this.state.error ? this.state.error_message : 'Type a name for the new collector'}
-                   autoFocus
-                   required />
-          </fieldset>
-        </BootstrapModalForm>
-      </span>
+      <CloneMenuItem onSelect={this.openModal}
+                     onSave={this._save}
+                     id={this._getId('collector-name')}
+                     onChange={this._changeName}
+                     error={errorMessage}
+                     name={name}
+                     modalRef={this.modalRef} />
     );
   }
 }

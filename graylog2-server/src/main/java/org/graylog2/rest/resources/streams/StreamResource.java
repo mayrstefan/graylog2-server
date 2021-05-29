@@ -1,24 +1,23 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.resources.streams;
 
 import com.codahale.metrics.annotation.Timed;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -32,6 +31,7 @@ import io.swagger.annotations.ApiResponses;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
 import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.bson.types.ObjectId;
+import org.graylog.security.UserContext;
 import org.graylog2.alarmcallbacks.AlarmCallbackConfiguration;
 import org.graylog2.alarmcallbacks.AlarmCallbackConfigurationService;
 import org.graylog2.alerts.AlertService;
@@ -39,6 +39,7 @@ import org.graylog2.audit.AuditEventTypes;
 import org.graylog2.audit.jersey.AuditEvent;
 import org.graylog2.audit.jersey.NoAuditEvent;
 import org.graylog2.database.NotFoundException;
+import org.graylog2.database.PaginatedList;
 import org.graylog2.indexer.IndexSet;
 import org.graylog2.indexer.IndexSetRegistry;
 import org.graylog2.plugin.Message;
@@ -46,7 +47,6 @@ import org.graylog2.plugin.Tools;
 import org.graylog2.plugin.alarms.AlertCondition;
 import org.graylog2.plugin.configuration.ConfigurationException;
 import org.graylog2.plugin.database.ValidationException;
-import org.graylog2.plugin.database.users.User;
 import org.graylog2.plugin.streams.Output;
 import org.graylog2.plugin.streams.Stream;
 import org.graylog2.plugin.streams.StreamRule;
@@ -59,10 +59,16 @@ import org.graylog2.rest.models.system.outputs.responses.OutputSummary;
 import org.graylog2.rest.resources.streams.requests.CloneStreamRequest;
 import org.graylog2.rest.resources.streams.requests.CreateStreamRequest;
 import org.graylog2.rest.resources.streams.responses.StreamListResponse;
+import org.graylog2.rest.resources.streams.responses.StreamPageListResponse;
 import org.graylog2.rest.resources.streams.responses.StreamResponse;
 import org.graylog2.rest.resources.streams.responses.TestMatchResponse;
+import org.graylog2.search.SearchQuery;
+import org.graylog2.search.SearchQueryField;
+import org.graylog2.search.SearchQueryParser;
 import org.graylog2.shared.rest.resources.RestResource;
 import org.graylog2.shared.security.RestPermissions;
+import org.graylog2.streams.PaginatedStreamService;
+import org.graylog2.streams.StreamDTO;
 import org.graylog2.streams.StreamImpl;
 import org.graylog2.streams.StreamRouterEngine;
 import org.graylog2.streams.StreamRuleImpl;
@@ -81,12 +87,15 @@ import javax.validation.constraints.NotNull;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -101,6 +110,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
@@ -111,15 +121,24 @@ import static com.google.common.base.MoreObjects.firstNonNull;
 public class StreamResource extends RestResource {
     private static final Logger LOG = LoggerFactory.getLogger(StreamResource.class);
 
+    protected static final ImmutableMap<String, SearchQueryField> SEARCH_FIELD_MAPPING = ImmutableMap.<String, SearchQueryField>builder()
+            .put("id", SearchQueryField.create(StreamDTO.FIELD_ID, SearchQueryField.Type.OBJECT_ID))
+            .put(StreamDTO.FIELD_TITLE, SearchQueryField.create(StreamDTO.FIELD_TITLE))
+            .put(StreamDTO.FIELD_DESCRIPTION, SearchQueryField.create(StreamDTO.FIELD_DESCRIPTION))
+            .build();
+
+    private final PaginatedStreamService paginatedStreamService;
     private final StreamService streamService;
     private final StreamRuleService streamRuleService;
     private final StreamRouterEngine.Factory streamRouterEngineFactory;
     private final IndexSetRegistry indexSetRegistry;
     private final AlarmCallbackConfigurationService alarmCallbackConfigurationService;
     private final AlertService alertService;
+    private final SearchQueryParser searchQueryParser;
 
     @Inject
     public StreamResource(StreamService streamService,
+                          PaginatedStreamService paginatedStreamService,
                           StreamRuleService streamRuleService,
                           StreamRouterEngine.Factory streamRouterEngineFactory,
                           IndexSetRegistry indexSetRegistry,
@@ -131,6 +150,8 @@ public class StreamResource extends RestResource {
         this.indexSetRegistry = indexSetRegistry;
         this.alarmCallbackConfigurationService = alarmCallbackConfigurationService;
         this.alertService = alertService;
+        this.paginatedStreamService = paginatedStreamService;
+        this.searchQueryParser = new SearchQueryParser(StreamImpl.FIELD_TITLE, SEARCH_FIELD_MAPPING);
     }
 
     @POST
@@ -140,7 +161,8 @@ public class StreamResource extends RestResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     @AuditEvent(type = AuditEventTypes.STREAM_CREATE)
-    public Response create(@ApiParam(name = "JSON body", required = true) final CreateStreamRequest cr) throws ValidationException {
+    public Response create(@ApiParam(name = "JSON body", required = true) final CreateStreamRequest cr,
+                           @Context UserContext userContext) throws ValidationException {
         // Create stream.
         final Stream stream = streamService.create(cr, getCurrentUser().getName());
         stream.setDisabled(true);
@@ -152,9 +174,7 @@ public class StreamResource extends RestResource {
         final Set<StreamRule> streamRules = cr.rules().stream()
                 .map(streamRule -> streamRuleService.create(null, streamRule))
                 .collect(Collectors.toSet());
-        final String id = streamService.saveWithRules(stream, streamRules);
-
-        ensureUserHasPermissionsForStream(getCurrentUser(), id);
+        final String id = streamService.saveWithRulesAndOwnership(stream, streamRules, userContext.getUser());
 
         final Map<String, String> result = ImmutableMap.of("stream_id", id);
         final URI streamUri = getUriBuilderToSelf().path(StreamResource.class)
@@ -164,34 +184,47 @@ public class StreamResource extends RestResource {
         return Response.created(streamUri).entity(result).build();
     }
 
-    private boolean ensureUserHasPermissionsForStream(User user, String id) throws ValidationException {
-        boolean permissionsChanged = false;
-        final ImmutableList.Builder<String> permissionsBuilder = ImmutableList.<String>builder()
-                .addAll(user.getPermissions());
-        if (!isPermitted(RestPermissions.STREAMS_READ, id)) {
-            permissionsChanged = true;
-            permissionsBuilder.add(RestPermissions.STREAMS_READ + ":" + id);
-        }
-        if (!isPermitted(RestPermissions.STREAMS_EDIT, id)) {
-            permissionsChanged = true;
-            permissionsBuilder.add(RestPermissions.STREAMS_EDIT + ":" + id);
-        }
-        if (!isPermitted(RestPermissions.STREAMS_CHANGESTATE, id)) {
-            permissionsChanged = true;
-            permissionsBuilder.add(RestPermissions.STREAMS_CHANGESTATE + ":" + id);
-        }
+    @GET
+    @Timed
+    @Path("/paginated")
+    @ApiOperation(value = "Get a paginated list of streams")
+    @Produces(MediaType.APPLICATION_JSON)
+    public StreamPageListResponse getPage(@ApiParam(name = "page") @QueryParam("page") @DefaultValue("1") int page,
+        @ApiParam(name = "per_page") @QueryParam("per_page") @DefaultValue("50") int perPage,
+        @ApiParam(name = "query") @QueryParam("query") @DefaultValue("") String query,
+        @ApiParam(name = "sort",
+                value = "The field to sort the result on",
+                required = true,
+                allowableValues = "title,description")
+        @DefaultValue(StreamImpl.FIELD_TITLE) @QueryParam("sort") String sort,
+        @ApiParam(name = "order", value = "The sort direction", allowableValues = "asc, desc")
+        @DefaultValue("asc") @QueryParam("order") String order) {
 
-        if (permissionsChanged) {
-            user.setPermissions(permissionsBuilder.build());
-            userService.save(user);
+        SearchQuery searchQuery;
+        try {
+            searchQuery = searchQueryParser.parse(query);
+        } catch (IllegalArgumentException e) {
+            throw new BadRequestException("Invalid argument in search query: " + e.getMessage());
         }
-
-        return permissionsChanged;
+        final Predicate<StreamDTO> permissionFilter = streamDTO -> isPermitted(RestPermissions.STREAMS_READ, streamDTO.id());
+        final PaginatedList<StreamDTO> result = paginatedStreamService
+                .findPaginated(searchQuery, permissionFilter, page, perPage, sort, order);
+        final List<String> streamIds = result.stream().map(streamDTO -> streamDTO.id()).collect(Collectors.toList());
+        final Map<String, List<StreamRule>> streamRuleMap = streamRuleService.loadForStreamIds(streamIds);
+        final List<StreamDTO> streams = result.stream().map(streamDTO -> {
+            List<StreamRule> rules = streamRuleMap.getOrDefault(streamDTO.id(), Collections.emptyList());
+            return streamDTO.toBuilder().rules(rules).build();
+        }).collect(Collectors.toList());
+        final long total = paginatedStreamService.count();
+        final PaginatedList<StreamDTO> streamDTOS = new PaginatedList<>(streams,
+                result.pagination().total(), result.pagination().page(), result.pagination().perPage());
+        return StreamPageListResponse.create(query, streamDTOS.pagination(), total, sort, order, streams);
     }
 
     @GET
     @Timed
     @ApiOperation(value = "Get a list of all streams")
+    @Deprecated
     @Produces(MediaType.APPLICATION_JSON)
     public StreamListResponse get() {
         final List<Stream> allStreams = streamService.loadAll();
@@ -405,7 +438,8 @@ public class StreamResource extends RestResource {
     @Produces(MediaType.APPLICATION_JSON)
     @AuditEvent(type = AuditEventTypes.STREAM_CREATE)
     public Response cloneStream(@ApiParam(name = "streamId", required = true) @PathParam("streamId") String streamId,
-                                @ApiParam(name = "JSON body", required = true) @Valid @NotNull CloneStreamRequest cr) throws ValidationException, NotFoundException {
+                                @ApiParam(name = "JSON body", required = true) @Valid @NotNull CloneStreamRequest cr,
+                                @Context UserContext userContext) throws ValidationException, NotFoundException {
         checkPermission(RestPermissions.STREAMS_CREATE);
         checkPermission(RestPermissions.STREAMS_READ, streamId);
         checkNotDefaultStream(streamId, "The default stream cannot be cloned.");
@@ -439,7 +473,7 @@ public class StreamResource extends RestResource {
         streamData.put(StreamImpl.FIELD_INDEX_SET_ID, cr.indexSetId());
 
         final Stream stream = streamService.create(streamData);
-        final String savedStreamId = streamService.saveWithRules(stream, newStreamRules.build());
+        final String savedStreamId = streamService.saveWithRulesAndOwnership(stream, newStreamRules.build(), userContext.getUser());
         final ObjectId savedStreamObjectId = new ObjectId(savedStreamId);
 
         for (AlertCondition alertCondition : streamService.getAlertConditions(sourceStream)) {
@@ -466,8 +500,6 @@ public class StreamResource extends RestResource {
                 .map(ObjectId::new)
                 .collect(Collectors.toSet());
         streamService.addOutputs(savedStreamObjectId, outputIds);
-
-        ensureUserHasPermissionsForStream(getCurrentUser(), savedStreamId);
 
         final Map<String, String> result = ImmutableMap.of("stream_id", savedStreamId);
         final URI streamUri = getUriBuilderToSelf().path(StreamResource.class)
@@ -500,10 +532,7 @@ public class StreamResource extends RestResource {
             stream.getDisabled(),
             stream.getStreamRules(),
             alertConditions,
-            AlertReceivers.create(
-                firstNonNull(emailAlertReceivers, Collections.emptyList()),
-                firstNonNull(usersAlertReceivers, Collections.emptyList())
-            ),
+            AlertReceivers.create(emailAlertReceivers, usersAlertReceivers),
             stream.getTitle(),
             stream.getContentPack(),
             stream.isDefaultStream(),

@@ -1,22 +1,41 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React, { memo } from 'react';
 import PropTypes from 'prop-types';
 // eslint-disable-next-line no-restricted-imports
 import { FormGroup as BootstrapFormGroup } from 'react-bootstrap';
 import styled, { css } from 'styled-components';
-import styledTheme from 'styled-theming';
 import chroma from 'chroma-js';
 
-import { themeModes, util } from 'theme';
+import { CONTROL_CLASS as COMMON_SELECT_CONTROL_CLASS } from 'components/common/Select.tsx';
+
 import FormControl from './FormControl';
 import { StyledAddon } from './InputGroup';
 
-const VALID_STATES = ['error', 'warning', 'success'];
-
-const createCss = (validationState) => css(({ theme }) => {
+const StyledFormGroup = styled(BootstrapFormGroup)(({ theme, validationState }) => {
   const variant = validationState === 'error' ? 'danger' : validationState;
-  const text = util.colorLevel(theme.color.variant[variant], 6);
-  const border = theme.color.variant[variant];
-  const background = util.colorLevel(theme.color.variant[variant], -6);
+
+  if (!variant) {
+    return undefined;
+  }
+
+  const text = theme.colors.variant.dark[variant];
+  const border = theme.colors.variant.light[variant];
+  const background = theme.colors.variant.lightest[variant];
 
   return css`
     &.has-${validationState} {
@@ -33,7 +52,7 @@ const createCss = (validationState) => css(({ theme }) => {
         color: ${text};
       }
 
-      ${FormControl} {
+      ${FormControl}, .${COMMON_SELECT_CONTROL_CLASS} {
         border-color: ${border};
 
         &:focus {
@@ -55,23 +74,6 @@ const createCss = (validationState) => css(({ theme }) => {
   `;
 });
 
-const validationStates = {};
-VALID_STATES.forEach((validState) => {
-  const colorModes = {};
-
-  themeModes.forEach((mode) => {
-    colorModes[mode] = createCss(validState);
-  });
-
-  validationStates[validState] = colorModes;
-});
-
-const validationStyleVariants = styledTheme.variants('mode', 'validationState', validationStates);
-
-const StyledFormGroup = styled(BootstrapFormGroup)`
-  ${validationStyleVariants};
-`;
-
 const FormGroup = memo(({ children, validationState, ...props }) => {
   return (
     <StyledFormGroup validationState={validationState} {...props}>
@@ -82,7 +84,7 @@ const FormGroup = memo(({ children, validationState, ...props }) => {
 
 FormGroup.propTypes = {
   children: PropTypes.node.isRequired,
-  validationState: PropTypes.oneOf([null, ...VALID_STATES]),
+  validationState: PropTypes.oneOf([null, 'error', 'success', 'warning']),
 };
 
 FormGroup.defaultProps = {

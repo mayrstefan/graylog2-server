@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.commands.journal;
 
@@ -26,8 +26,8 @@ import org.graylog2.plugin.Plugin;
 import org.graylog2.plugin.ServerStatus;
 import org.graylog2.shared.bindings.SchedulerBindings;
 import org.graylog2.shared.bindings.ServerStatusBindings;
-import org.graylog2.shared.journal.KafkaJournal;
-import org.graylog2.shared.journal.KafkaJournalModule;
+import org.graylog2.shared.journal.LocalKafkaJournal;
+import org.graylog2.shared.journal.LocalKafkaJournalModule;
 import org.graylog2.shared.plugins.ChainingClassLoader;
 
 import java.nio.file.Path;
@@ -39,7 +39,7 @@ import java.util.Set;
 public abstract class AbstractJournalCommand extends CmdLineTool {
     protected static final Configuration configuration = new Configuration();
     protected final KafkaJournalConfiguration kafkaJournalConfiguration = new KafkaJournalConfiguration();
-    protected KafkaJournal journal;
+    protected LocalKafkaJournal journal;
 
     public AbstractJournalCommand() {
         this(null);
@@ -51,10 +51,10 @@ public abstract class AbstractJournalCommand extends CmdLineTool {
     @Override
     protected List<Module> getCommandBindings() {
         return Arrays.asList(new ConfigurationModule(configuration),
-                             new ServerStatusBindings(capabilities()),
-                             new SchedulerBindings(),
-                             new KafkaJournalModule(),
-                             new AuditBindings());
+                new ServerStatusBindings(capabilities()),
+                new SchedulerBindings(),
+                new LocalKafkaJournalModule(),
+                new AuditBindings());
     }
 
     @Override
@@ -82,13 +82,15 @@ public abstract class AbstractJournalCommand extends CmdLineTool {
     @Override
     protected void startCommand() {
         try {
-            journal = injector.getInstance(KafkaJournal.class);
+            journal = injector.getInstance(LocalKafkaJournal.class);
             runCommand();
         } catch (Exception e) {
             System.err.println(
                     "Unable to read the message journal. Please make sure no other Graylog process is using the journal.");
         } finally {
-            if (journal != null) journal.stopAsync().awaitTerminated();
+            if (journal != null) {
+                journal.stopAsync().awaitTerminated();
+            }
         }
     }
 

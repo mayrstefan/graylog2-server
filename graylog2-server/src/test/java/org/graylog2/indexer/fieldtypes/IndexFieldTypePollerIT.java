@@ -1,23 +1,22 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.indexer.fieldtypes;
 
 import com.codahale.metrics.MetricRegistry;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.eventbus.EventBus;
 import org.graylog.testing.elasticsearch.ElasticsearchBaseTest;
@@ -27,14 +26,12 @@ import org.graylog2.indexer.TestIndexSet;
 import org.graylog2.indexer.cluster.Node;
 import org.graylog2.indexer.indexset.IndexSetConfig;
 import org.graylog2.indexer.indices.Indices;
-import org.graylog2.indexer.messages.Messages;
+import org.graylog2.indexer.indices.IndicesAdapter;
 import org.graylog2.indexer.retention.strategies.DeletionRetentionStrategy;
 import org.graylog2.indexer.retention.strategies.DeletionRetentionStrategyConfig;
 import org.graylog2.indexer.rotation.strategies.MessageCountRotationStrategy;
 import org.graylog2.indexer.rotation.strategies.MessageCountRotationStrategyConfig;
 import org.graylog2.plugin.system.NodeId;
-import org.graylog2.shared.bindings.providers.ObjectMapperProvider;
-import org.graylog2.system.processing.InMemoryProcessingStatusRecorder;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -46,10 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 // JSON data in: src/test/resources/org/graylog2/indexer/fieldtypes/IndexFieldTypePollerIT.json
-public class IndexFieldTypePollerIT extends ElasticsearchBaseTest {
+public abstract class IndexFieldTypePollerIT extends ElasticsearchBaseTest {
     private static final String INDEX_NAME = "graylog_0";
 
-    private final ObjectMapper objectMapper = new ObjectMapperProvider().get();
     private IndexFieldTypePoller poller;
 
     private static final IndexSetConfig indexSetConfig = IndexSetConfig.builder()
@@ -71,20 +67,23 @@ public class IndexFieldTypePollerIT extends ElasticsearchBaseTest {
             .build();
     private TestIndexSet indexSet;
 
+    protected abstract IndicesAdapter createIndicesAdapter();
+    protected abstract IndexFieldTypePollerAdapter createIndexFieldTypePollerAdapter();
 
     @Before
     public void setUp() throws Exception {
-        final Indices indices = new Indices(jestClient(),
-                new ObjectMapperProvider().get(),
-                new IndexMappingFactory(new Node(jestClient())),
-                new Messages(new MetricRegistry(), jestClient(), new InMemoryProcessingStatusRecorder(), true),
+        final Node node = mock(Node.class);
+        @SuppressWarnings("UnstableApiUsage") final Indices indices = new Indices(
+                new IndexMappingFactory(node),
                 mock(NodeId.class),
                 new NullAuditEventSender(),
-                new EventBus("index-field-type-poller-it"));
-        poller = new IndexFieldTypePoller(jestClient(), indices, new MetricRegistry());
+                mock(EventBus.class),
+                createIndicesAdapter()
+        );
+        poller = new IndexFieldTypePoller(indices, new MetricRegistry(), createIndexFieldTypePollerAdapter());
         indexSet = new TestIndexSet(indexSetConfig);
 
-        importFixture("IndexFieldTypePollerIT.json");
+        importFixture("org/graylog2/indexer/fieldtypes/IndexFieldTypePollerIT.json");
     }
 
     @Test

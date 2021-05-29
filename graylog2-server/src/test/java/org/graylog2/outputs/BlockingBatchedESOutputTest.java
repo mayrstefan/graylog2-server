@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.outputs;
 
@@ -25,6 +25,7 @@ import org.graylog2.indexer.messages.Messages;
 import org.graylog2.plugin.Message;
 import org.graylog2.plugin.Tools;
 import org.graylog2.shared.journal.NoopJournal;
+import org.graylog2.shared.messageq.MessageQueueAcknowledger;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -51,6 +52,9 @@ public class BlockingBatchedESOutputTest {
     @Mock
     private Messages messages;
 
+    @Mock
+    private MessageQueueAcknowledger acknowledger;
+
     @Before
     public void setUp() throws Exception {
         this.metricRegistry = new MetricRegistry();
@@ -65,7 +69,7 @@ public class BlockingBatchedESOutputTest {
 
     @Test
     public void write() throws Exception {
-        final BlockingBatchedESOutput output = new BlockingBatchedESOutput(metricRegistry, messages, config, journal);
+        final BlockingBatchedESOutput output = new BlockingBatchedESOutput(metricRegistry, messages, config, journal, acknowledger);
 
         final List<Map.Entry<IndexSet, Message>> messageList = buildMessages(config.getOutputBatchSize());
 
@@ -78,7 +82,7 @@ public class BlockingBatchedESOutputTest {
 
     @Test
     public void forceFlushIfTimedOut() throws Exception {
-        final BlockingBatchedESOutput output = new BlockingBatchedESOutput(metricRegistry, messages, config, journal);
+        final BlockingBatchedESOutput output = new BlockingBatchedESOutput(metricRegistry, messages, config, journal, acknowledger);
 
         final List<Map.Entry<IndexSet, Message>> messageList = buildMessages(config.getOutputBatchSize() - 1);
 

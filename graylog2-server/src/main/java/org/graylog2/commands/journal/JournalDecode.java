@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.commands.journal;
 
@@ -106,7 +106,7 @@ public class JournalDecode extends AbstractJournalCommand {
                         "Could not use codec {} to decode raw message id {} at offset {}",
                         new Object[]{raw.getCodecName(), raw.getId(), entry.getOffset()}));
             } else {
-                message.setJournalOffset(raw.getJournalOffset());
+                message.setMessageQueueId(raw.getMessageQueueId());
             }
 
             final ResolvableInetSocketAddress remoteAddress = raw.getRemoteAddress();
@@ -116,7 +116,7 @@ public class JournalDecode extends AbstractJournalCommand {
             sb.append("Message ").append(raw.getId()).append('\n')
                     .append(" at ").append(raw.getTimestamp()).append('\n')
                     .append(" in format ").append(raw.getCodecName()).append('\n')
-                    .append(" at offset ").append(raw.getJournalOffset()).append('\n')
+                    .append(" at offset ").append(raw.getMessageQueueId()).append('\n')
                     .append(" received from remote address ").append(remote).append('\n')
                     .append(" (source field: ").append(message == null ? "unparsed" : message.getSource()).append(')').append('\n');
             if (message != null) {

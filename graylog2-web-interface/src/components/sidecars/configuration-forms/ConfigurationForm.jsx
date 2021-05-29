@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -56,7 +72,7 @@ const ConfigurationForm = createReactClass({
     };
   },
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this._debouncedValidateFormData = lodash.debounce(this._validateFormData, 200);
   },
 
@@ -79,10 +95,12 @@ const ConfigurationForm = createReactClass({
   _validateFormData(nextFormData, checkForRequiredFields) {
     CollectorConfigurationsActions.validate(nextFormData).then((validation) => {
       const nextValidation = lodash.clone(validation);
+
       if (checkForRequiredFields && !this._isTemplateSet(nextFormData.template)) {
         nextValidation.errors.template = ['Please fill out the configuration field.'];
         nextValidation.failed = true;
       }
+
       this.setState({ validation_errors: nextValidation.errors, error: nextValidation.failed });
     });
   },
@@ -94,6 +112,7 @@ const ConfigurationForm = createReactClass({
     if (this._hasErrors()) {
       // Ensure we display an error on the template field, as this is not validated by the browser
       this._validateFormData(formData, true);
+
       return;
     }
 
@@ -110,6 +129,7 @@ const ConfigurationForm = createReactClass({
 
     return (nextValue, _, hideCallback) => {
       const nextFormData = lodash.cloneDeep(formData);
+
       nextFormData[key] = nextValue;
       this._debouncedValidateFormData(nextFormData, false);
       this.setState({ formData: nextFormData }, hideCallback);
@@ -122,24 +142,29 @@ const ConfigurationForm = createReactClass({
     if (oldname === '' || oldname === newname) {
       return;
     }
+
     // replaceAll without having to use a Regex
     const updatedTemplate = formData.template.split(`\${user.${oldname}}`).join(`\${user.${newname}}`);
+
     this._onTemplateChange(updatedTemplate);
   },
 
   _onNameChange(event) {
     const nextName = event.target.value;
+
     this._formDataUpdate('name')(nextName);
   },
 
   _getCollectorDefaultTemplate(collectorId) {
     const storedTemplate = this.defaultTemplates[collectorId];
+
     if (storedTemplate !== undefined) {
       return new Promise((resolve) => resolve(storedTemplate));
     }
 
     return CollectorsActions.getCollector(collectorId).then((collector) => {
       this.defaultTemplates[collectorId] = collector.default_template;
+
       return collector.default_template;
     });
   },
@@ -151,7 +176,9 @@ const ConfigurationForm = createReactClass({
     const defaultTemplatePromise = this._getCollectorDefaultTemplate(nextId);
 
     const nextFormData = lodash.cloneDeep(formData);
+
     nextFormData.collector_id = nextId;
+
     // eslint-disable-next-line no-alert
     if (!nextFormData.template || window.confirm('Do you want to use the default template for the selected Configuration?')) {
       // Wait for the promise to resolve and then update the whole formData state
@@ -168,6 +195,7 @@ const ConfigurationForm = createReactClass({
     const { formData } = this.state;
 
     const nextFormData = lodash.cloneDeep(formData);
+
     // eslint-disable-next-line no-alert
     if (!nextFormData.template || window.confirm('Do you want to overwrite your current work with this Configuration?')) {
       this._onTemplateChange(nextTemplate);
@@ -221,6 +249,7 @@ const ConfigurationForm = createReactClass({
     if (validationErrors[fieldName]) {
       return <span>{validationErrors[fieldName][0]}</span>;
     }
+
     return <span>{defaultText}</span>;
   },
 
@@ -230,6 +259,7 @@ const ConfigurationForm = createReactClass({
     if (validationErrors[fieldName]) {
       return 'error';
     }
+
     return null;
   },
 
@@ -238,6 +268,7 @@ const ConfigurationForm = createReactClass({
 
     if (isConfigurationInUse) {
       const collector = collectors ? collectors.find((c) => c.id === collectorId) : undefined;
+
       return (
         <span>
           <FormControl.Static>{this._formatCollector(collector)}</FormControl.Static>
@@ -305,7 +336,7 @@ const ConfigurationForm = createReactClass({
               <ControlLabel>Configuration</ControlLabel>
               <SourceCodeEditor id="template"
                                 height={400}
-                                value={formData.template}
+                                value={formData.template || ''}
                                 onChange={this._onTemplateChange} />
               <Button className="pull-right"
                       bsStyle="link"

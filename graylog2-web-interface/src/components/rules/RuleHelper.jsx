@@ -1,13 +1,27 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import ObjectUtils from 'util/ObjectUtils';
 import connect from 'stores/connect';
-
 import { Row, Col, Panel, Table, Tabs, Tab } from 'components/graylog';
 import { Icon, PaginatedList, Spinner, SearchForm } from 'components/common';
 import DocumentationLink from 'components/support/DocumentationLink';
-
 import DocsHelper from 'util/DocsHelper';
 import CombinedProvider from 'injection/CombinedProvider';
 
@@ -48,6 +62,7 @@ class RuleHelper extends React.Component {
   _toggleFunctionDetail = (functionName) => {
     const { expanded } = this.state;
     const newState = ObjectUtils.clone(expanded);
+
     newState[functionName] = !newState[functionName];
 
     this.setState({ expanded: newState });
@@ -55,6 +70,7 @@ class RuleHelper extends React.Component {
 
   _functionSignature = (descriptor) => {
     const args = descriptor.params.map((p) => (p.optional ? `[${p.name}]` : p.name));
+
     return `${descriptor.name}(${args.join(', ')}) : ${this._niceType(descriptor.return_type)}`;
   }
 
@@ -80,6 +96,7 @@ class RuleHelper extends React.Component {
 
     return descriptors.map((d) => {
       let details = null;
+
       if (expanded[d.name]) {
         details = (
           <tr>
@@ -132,11 +149,13 @@ class RuleHelper extends React.Component {
         currentPage: pageBeforeFilter || 1,
         pageBeforeFilter: undefined,
       });
+
       return;
     }
 
     const filteredDescriptiors = functionDescriptors.filter((descriptor) => {
       const regexp = RegExp(filter);
+
       return regexp.test(this._functionSignature(descriptor)) || regexp.test(descriptor.description);
     });
 
@@ -236,11 +255,11 @@ class RuleHelper extends React.Component {
 }
 
 RuleHelper.propTypes = {
-  functionDescriptors: PropTypes.object,
+  functionDescriptors: PropTypes.array,
 };
 
 RuleHelper.defaultProps = {
-  functionDescriptors: PropTypes.undefined,
+  functionDescriptors: undefined,
 };
 
 export default connect(RuleHelper,

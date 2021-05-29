@@ -1,17 +1,32 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
-import { Button, ButtonToolbar, Col, Row } from 'components/graylog';
 import { PluginStore } from 'graylog-web-plugin/plugin';
 
+import { Button, ButtonToolbar, Col, Row } from 'components/graylog';
 import { Wizard } from 'components/common';
+
 import EventDetailsForm from './EventDetailsForm';
 import EventConditionForm from './EventConditionForm';
 import FieldsForm from './FieldsForm';
 import NotificationsForm from './NotificationsForm';
 import EventDefinitionSummary from './EventDefinitionSummary';
-
-import styles from './EventDefinitionForm.css';
 
 const STEP_KEYS = ['event-details', 'condition', 'fields', 'notifications', 'summary'];
 
@@ -33,9 +48,13 @@ class EventDefinitionForm extends React.Component {
     action: 'edit',
   };
 
-  state = {
-    activeStep: STEP_KEYS[0],
-  };
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      activeStep: STEP_KEYS[0],
+    };
+  }
 
   // TODO: Add validation when step changes
   handleStepChange = (nextStep) => {
@@ -51,6 +70,7 @@ class EventDefinitionForm extends React.Component {
 
     if (activeStep === lodash.last(STEP_KEYS)) {
       const { onSubmit } = this.props;
+
       onSubmit();
     }
   };
@@ -59,12 +79,14 @@ class EventDefinitionForm extends React.Component {
     if (type === undefined) {
       return {};
     }
+
     return PluginStore.exports('eventDefinitionTypes').find((edt) => edt.type === type) || {};
   };
 
   renderButtons = (activeStep) => {
     if (activeStep === lodash.last(STEP_KEYS)) {
       const { onCancel } = this.props;
+
       return (
         <div className="pull-right">
           <ButtonToolbar>
@@ -163,7 +185,6 @@ class EventDefinitionForm extends React.Component {
                   onStepChange={this.handleStepChange}
                   horizontal
                   justified
-                  navigationClassName={styles.steps}
                   containerClassName=""
                   hidePreviousNextButtons />
           {this.renderButtons(activeStep)}

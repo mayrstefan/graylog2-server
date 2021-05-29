@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -38,8 +54,7 @@ class EditExtractor extends React.Component {
     };
   }
 
-
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { exampleMessage } = this.props;
 
     if (exampleMessage !== nextProps.exampleMessage) {
@@ -67,6 +82,7 @@ class EditExtractor extends React.Component {
     return (event) => {
       const nextState = {};
       const { updatedExtractor } = this.state;
+
       updatedExtractor[key] = FormUtils.getValueFromInput(event.target);
       nextState.updatedExtractor = updatedExtractor;
 
@@ -81,6 +97,7 @@ class EditExtractor extends React.Component {
 
   _onConfigurationChange = (newConfiguration) => {
     const { updatedExtractor } = this.state;
+
     updatedExtractor.extractor_config = newConfiguration;
     this.setState({ updatedExtractor: updatedExtractor });
   };
@@ -92,6 +109,7 @@ class EditExtractor extends React.Component {
     if (previousConverter) {
       // Remove converter from the list
       const position = updatedExtractor.converters.indexOf(previousConverter);
+
       updatedExtractor.converters.splice(position, 1);
     }
 
@@ -106,11 +124,13 @@ class EditExtractor extends React.Component {
     const { exampleMessage, updatedExtractor } = this.state;
     const tester = (updatedExtractor.condition_type === 'string' ? ToolsStore.testContainsString : ToolsStore.testRegex);
     const promise = tester(updatedExtractor.condition_value, exampleMessage);
+
     promise.then((result) => this.setState({ conditionTestResult: result.matched }));
   };
 
   _tryButtonDisabled = () => {
     const { updatedExtractor, exampleMessage } = this.state;
+
     return (updatedExtractor.condition_value === ''
       || updatedExtractor.condition_value === undefined
       || !exampleMessage);
@@ -136,6 +156,7 @@ class EditExtractor extends React.Component {
     }
 
     let inputStyle;
+
     if (conditionTestResult === true) {
       inputStyle = 'success';
       conditionInputHelp = 'Matches! Extractor would run against this example.';
@@ -179,6 +200,7 @@ class EditExtractor extends React.Component {
     const { updatedExtractor } = this.state;
 
     event.preventDefault();
+
     ExtractorsActions.save.triggerPromise(inputId, updatedExtractor)
       .then(() => onSave());
   };
@@ -216,6 +238,7 @@ class EditExtractor extends React.Component {
     );
 
     let storeAsFieldInput;
+
     // Grok and JSON extractors create their required fields, so no need to add an input for them
     if (updatedExtractor.type !== ExtractorUtils.ExtractorTypes.GROK && updatedExtractor.type !== ExtractorUtils.ExtractorTypes.JSON) {
       storeAsFieldInput = (

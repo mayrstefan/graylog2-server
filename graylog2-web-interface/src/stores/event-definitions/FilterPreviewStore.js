@@ -1,13 +1,28 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import Reflux from 'reflux';
 import URI from 'urijs';
 import lodash from 'lodash';
 import Bluebird from 'bluebird';
 
-import URLUtils from 'util/URLUtils';
+import * as URLUtils from 'util/URLUtils';
 import fetch from 'logic/rest/FetchProvider';
 import UserNotification from 'util/UserNotification';
 import CombinedProvider from 'injection/CombinedProvider';
-
 import Search from 'views/logic/search/Search';
 import SearchResult from 'views/logic/SearchResult';
 
@@ -37,6 +52,7 @@ const FilterPreviewStore = Reflux.createStore({
   resourceUrl({ segments = [], query = {} }) {
     const uri = new URI(this.sourceUrl);
     const nextSegments = lodash.concat(uri.segment(), segments);
+
     uri.segmentCoded(nextSegments);
     uri.query(query);
 
@@ -57,6 +73,7 @@ const FilterPreviewStore = Reflux.createStore({
       this.searchJob = Search.fromJSON(response);
       this.result = undefined;
       this.propagateChanges();
+
       return response;
     });
 
@@ -68,6 +85,7 @@ const FilterPreviewStore = Reflux.createStore({
       if (job && job.execution.done) {
         return resolve(new SearchResult(job));
       }
+
       return resolve(Bluebird.delay(250)
         .then(() => this.jobStatus(job.id))
         .then((jobStatus) => this.trackJobStatus(jobStatus, search)));
@@ -94,6 +112,7 @@ const FilterPreviewStore = Reflux.createStore({
     if (this.executePromise) {
       this.executePromise.cancel();
     }
+
     if (this.searchJob) {
       this.executePromise = this.trackJob(this.searchJob, executionState)
         .then(
@@ -101,14 +120,17 @@ const FilterPreviewStore = Reflux.createStore({
             this.result = result;
             this.executePromise = undefined;
             this.propagateChanges();
+
             return result;
           },
           () => UserNotification.error('Could not execute search, wat'),
         );
 
       FilterPreviewActions.execute.promise(this.executePromise);
+
       return this.executePromise;
     }
+
     throw new Error('Unable to execute search if no search was created before!');
   },
 

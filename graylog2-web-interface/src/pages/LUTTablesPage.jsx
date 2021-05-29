@@ -1,15 +1,32 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import { LinkContainer } from 'react-router-bootstrap';
+
+import { LinkContainer } from 'components/graylog/router';
 import connect from 'stores/connect';
 import Routes from 'routing/Routes';
 import history from 'util/History';
-
 import { ButtonToolbar, Col, Row, Button } from 'components/graylog';
 import { DocumentTitle, PageHeader, Spinner } from 'components/common';
 import { LookupTable, LookupTableCreate, LookupTableForm, LookupTablesOverview } from 'components/lookup-tables';
-
 import CombinedProvider from 'injection/CombinedProvider';
+import withParams from 'routing/withParams';
+import withLocation from 'routing/withLocation';
 
 const { LookupTablesStore, LookupTablesActions } = CombinedProvider.get('LookupTables');
 
@@ -25,6 +42,7 @@ class LUTTablesPage extends React.Component {
   componentDidUpdate(prevProps) {
     const { location: { pathname } } = this.props;
     const { location: { pathname: prevPathname } } = prevProps;
+
     if (pathname !== prevPathname) {
       this._loadData(this.props);
     }
@@ -36,14 +54,19 @@ class LUTTablesPage extends React.Component {
 
   _startErrorStatesTimer = () => {
     const { tables, dataAdapters } = this.props;
+
     this._stopErrorStatesTimer();
+
     this.errorStatesTimer = setInterval(() => {
       let tableNames = null;
+
       if (tables) {
         tableNames = tables.map((t) => t.name);
       }
+
       if (tableNames) {
         const adapterNames = Object.values(dataAdapters).map((a) => a.name);
+
         LookupTablesActions.getErrors(tableNames, null, adapterNames || null);
       }
     }, this.errorStatesInterval);
@@ -58,7 +81,9 @@ class LUTTablesPage extends React.Component {
 
   _loadData = (props) => {
     const { pagination } = this.props;
+
     this._stopErrorStatesTimer();
+
     if (props.params && props.params.tableName) {
       LookupTablesActions.get(props.params.tableName);
     } else if (this._isCreating(props)) {
@@ -74,8 +99,8 @@ class LUTTablesPage extends React.Component {
     history.push(Routes.SYSTEM.LOOKUPTABLES.OVERVIEW);
   }
 
-  _isCreating = (props) => {
-    return props.route.action === 'create';
+  _isCreating = ({ action }) => {
+    return action === 'create';
   }
 
   _validateTable = (table) => {
@@ -84,7 +109,7 @@ class LUTTablesPage extends React.Component {
 
   render() {
     const {
-      route: { action },
+      action,
       table,
       validationErrors,
       dataAdapter,
@@ -149,7 +174,7 @@ class LUTTablesPage extends React.Component {
             <span>
               <ButtonToolbar>
                 <LinkContainer to={Routes.SYSTEM.LOOKUPTABLES.OVERVIEW}>
-                  <Button bsStyle="info" className="active">Lookup Tables</Button>
+                  <Button bsStyle="info">Lookup Tables</Button>
                 </LinkContainer>
                 <LinkContainer to={Routes.SYSTEM.LOOKUPTABLES.CACHES.OVERVIEW}>
                   <Button bsStyle="info">Caches</Button>
@@ -179,8 +204,9 @@ LUTTablesPage.propTypes = {
   pagination: PropTypes.object,
   location: PropTypes.object,
   errorStates: PropTypes.object,
-  route: PropTypes.object.isRequired,
+  action: PropTypes.string,
 };
+
 LUTTablesPage.defaultProps = {
   errorStates: null,
   validationErrors: {},
@@ -192,9 +218,10 @@ LUTTablesPage.defaultProps = {
   location: null,
   pagination: null,
   dataAdapter: null,
+  action: undefined,
 };
 
-export default connect(LUTTablesPage, { lookupTableStore: LookupTablesStore }, ({ lookupTableStore, ...otherProps }) => ({
+export default connect(withParams(withLocation(LUTTablesPage)), { lookupTableStore: LookupTablesStore }, ({ lookupTableStore, ...otherProps }) => ({
   ...otherProps,
   ...lookupTableStore,
 }));

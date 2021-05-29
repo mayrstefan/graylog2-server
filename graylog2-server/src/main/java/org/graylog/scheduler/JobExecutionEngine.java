@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog.scheduler;
 
@@ -172,16 +172,12 @@ public class JobExecutionEngine {
             executionSuccessful.inc();
 
             LOG.trace("Update trigger: trigger={} update={}", trigger.id(), triggerUpdate);
-            if (!jobTriggerService.releaseTrigger(trigger, triggerUpdate)) {
-                LOG.error("Couldn't release trigger {}", trigger.id());
-            }
+            jobTriggerService.releaseTrigger(trigger, triggerUpdate);
         } catch (JobExecutionException e) {
             LOG.error("Job execution error - trigger={} job={}", trigger.id(), jobDefinition.id(), e);
             executionFailed.inc();
 
-            if (!jobTriggerService.releaseTrigger(e.getTrigger(), e.getUpdate())) {
-                LOG.error("Couldn't release trigger {}", trigger.id());
-            }
+            jobTriggerService.releaseTrigger(e.getTrigger(), e.getUpdate());
         } catch (Exception e) {
             executionFailed.inc();
             // This is an unhandled job execution error so we mark the trigger as defective
@@ -191,9 +187,7 @@ public class JobExecutionEngine {
             // don't know what happened and we also got no instructions from the job. (no JobExecutionException)
             final DateTime nextFutureTime = scheduleStrategies.nextFutureTime(trigger).orElse(null);
 
-            if (!jobTriggerService.releaseTrigger(trigger, JobTriggerUpdate.withNextTime(nextFutureTime))) {
-                LOG.error("Couldn't release trigger {}", trigger.id());
-            }
+            jobTriggerService.releaseTrigger(trigger, JobTriggerUpdate.withNextTime(nextFutureTime));
         }
     }
 }

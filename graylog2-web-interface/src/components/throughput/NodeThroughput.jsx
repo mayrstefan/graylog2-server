@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 import createReactClass from 'create-react-class';
@@ -5,11 +21,8 @@ import Reflux from 'reflux';
 import numeral from 'numeral';
 
 import { Spinner } from 'components/common';
-
 import MetricsExtractor from 'logic/metrics/MetricsExtractor';
-
 import StoreProvider from 'injection/StoreProvider';
-
 import ActionsProvider from 'injection/ActionsProvider';
 
 const MetricsStore = StoreProvider.getStore('Metrics');
@@ -32,7 +45,7 @@ const NodeThroughput = createReactClass({
     };
   },
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.metricNames = {
       totalIn: 'org.graylog2.throughput.input.1-sec-rate',
       totalOut: 'org.graylog2.throughput.output.1-sec-rate',
@@ -55,10 +68,11 @@ const NodeThroughput = createReactClass({
         <span>
           Processing <strong>{numeral(metrics.totalIn).format('0,0')}</strong> incoming and <strong>
             {numeral(metrics.totalOut).format('0,0')}
-          </strong> outgoing msg/s.
+                                                                                            </strong> outgoing msg/s.
         </span>
       );
     }
+
     return (
       <span>
         In {numeral(metrics.totalIn).format('0,0')} / Out {numeral(metrics.totalOut).format('0,0')} msg/s.

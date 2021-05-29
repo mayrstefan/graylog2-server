@@ -1,20 +1,35 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
-import styled from 'styled-components';
+import styled, { css } from 'styled-components';
 
 import { Input } from 'components/bootstrap';
-
 import StoreProvider from 'injection/StoreProvider';
 import UserNotification from 'util/UserNotification';
 
 const StreamsStore = StoreProvider.getStore('Streams');
 
-const StreamRuleConnector = styled.div`
+const StreamRuleConnector = styled.div(({ theme }) => css`
   margin-top: 10px;
   margin-bottom: 13px;
 
   label {
-    font-size: 12px;
+    font-size: ${theme.fonts.size.small};
   }
 
   .form-group {
@@ -30,7 +45,7 @@ const StreamRuleConnector = styled.div`
     margin-top: 2px;
     margin-bottom: 2px;
   }
-`;
+`);
 
 class MatchingTypeSwitcher extends React.Component {
   static propTypes = {
@@ -47,29 +62,36 @@ class MatchingTypeSwitcher extends React.Component {
   }
 
   handleTypeChange = (newValue) => {
+    const { onChange, stream } = this.props;
+
+    // eslint-disable-next-line no-alert
     if (window.confirm('You are about to change how rules are applied to this stream, do you want to continue? Changes will take effect immediately.')) {
-      StreamsStore.update(this.props.stream.id, { matching_type: newValue }, (response) => {
-        this.props.onChange();
+      StreamsStore.update(stream.id, { matching_type: newValue }, (response) => {
+        onChange();
+
         UserNotification.success(`Messages will now be routed into the stream when ${newValue === 'AND' ? 'all' : 'any'} rules are matched`,
           'Success');
+
         return response;
       });
     }
   }
 
   render() {
+    const { stream } = this.props;
+
     return (
       <StreamRuleConnector>
         <div>
           <Input id="streamrule-and-connector"
                  type="radio"
                  label="A message must match all of the following rules"
-                 checked={this.props.stream.matching_type === 'AND'}
+                 checked={stream.matching_type === 'AND'}
                  onChange={this.handleTypeChangeToAnd} />
           <Input id="streamrule-or-connector"
                  type="radio"
                  label="A message must match at least one of the following rules"
-                 checked={this.props.stream.matching_type === 'OR'}
+                 checked={stream.matching_type === 'OR'}
                  onChange={this.handleTypeChangeToOr} />
         </div>
       </StreamRuleConnector>

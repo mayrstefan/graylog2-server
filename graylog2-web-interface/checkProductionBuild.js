@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 /* eslint-disable no-console */
 const fs = require('fs');
 const path = require('path');
@@ -49,7 +65,7 @@ function generateIndexHtml(assets) {
       <head>
       </head>
       <body>
-        ${assets.map(asset => `<script src="${asset}"></script>`).join('\n')}
+        ${assets.map((asset) => `<script src="${asset}"></script>`).join('\n')}
       </body>
     <html>
   `;
@@ -109,7 +125,7 @@ async function loadPage(url, handleError, handleConsole) {
 const buildDir = process.argv[2] || 'target/web/build';
 const plugins = process.argv.slice(3);
 
-const config = url => `
+const config = (url) => `
 window.appConfig = {
   gl2ServerUrl: '${url}',
   gl2AppPathPrefix: '/',
@@ -128,23 +144,17 @@ function collectMounts(pluginModuleNames) {
 function collectAssets(pluginModules) {
   const vendorModule = JSON.parse(fs.readFileSync(`${buildDir}/${VENDORMODULE}`));
   const buildModule = JSON.parse(fs.readFileSync(`${buildDir}/${BUILDMODULE}`));
-  const pluginAssets = pluginModules.map((pluginModule) => {
-    const name = Object.keys(pluginModule.files.chunks)[0];
-    const file = pluginModule.files.chunks[name].entry;
-    return `${name}/${file}`;
-  });
+  const pluginAssets = pluginModules.flatMap((pluginModule) => pluginModule.files.js);
 
   return [
     'config.js',
     ...vendorModule.files.js,
-    buildModule.files.chunks.polyfill.entry,
-    buildModule.files.chunks.builtins.entry,
+    ...buildModule.files.js,
     ...pluginAssets,
-    buildModule.files.chunks.app.entry,
-  ].map(asset => `/assets/${asset}`);
+  ].map((asset) => `/assets/${asset}`);
 }
 
-const pluginModules = plugins.map(plugin => JSON.parse(fs.readFileSync(plugin)));
+const pluginModules = plugins.map((plugin) => JSON.parse(fs.readFileSync(plugin)));
 const assets = collectAssets(pluginModules);
 const pluginMounts = collectMounts(plugins);
 
@@ -159,7 +169,7 @@ const trackEvent = (evt, arr) => {
   arr.push(evt);
 };
 
-const pagePromise = loadPage(url, msg => trackEvent(msg, pageErrors), msg => trackEvent(msg, consoleLogs));
+const pagePromise = loadPage(url, (msg) => trackEvent(msg, pageErrors), (msg) => trackEvent(msg, consoleLogs));
 pagePromise
   .catch((err) => {
     console.error('Error: ', err.toString());

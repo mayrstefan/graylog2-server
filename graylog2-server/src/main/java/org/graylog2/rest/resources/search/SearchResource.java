@@ -1,18 +1,18 @@
-/**
- * This file is part of Graylog.
+/*
+ * Copyright (C) 2020 Graylog, Inc.
  *
- * Graylog is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
  *
- * Graylog is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with Graylog.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
  */
 package org.graylog2.rest.resources.search;
 
@@ -21,7 +21,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.glassfish.jersey.server.ChunkedOutput;
 import org.graylog2.decorators.DecoratorProcessor;
-import org.graylog2.indexer.FieldTypeException;
 import org.graylog2.indexer.ranges.IndexRange;
 import org.graylog2.indexer.results.ResultMessage;
 import org.graylog2.indexer.results.ScrollResult;
@@ -33,17 +32,10 @@ import org.graylog2.plugin.Message;
 import org.graylog2.plugin.cluster.ClusterConfigService;
 import org.graylog2.plugin.indexer.searches.timeranges.AbsoluteRange;
 import org.graylog2.rest.models.messages.responses.ResultMessageSummary;
-import org.graylog2.rest.models.search.responses.FieldStatsResult;
-import org.graylog2.rest.models.search.responses.HistogramResult;
-import org.graylog2.rest.models.search.responses.TermsResult;
-import org.graylog2.rest.models.search.responses.TermsStatsResult;
-import org.graylog2.rest.models.search.responses.TimeRange;
 import org.graylog2.rest.models.system.indexer.responses.IndexRangeSummary;
 import org.graylog2.rest.resources.search.responses.SearchResponse;
 import org.graylog2.shared.rest.resources.RestResource;
 import org.graylog2.shared.security.RestPermissions;
-import org.graylog2.shared.utilities.ExceptionUtils;
-import org.graylog2.utilities.SearchUtils;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.slf4j.Logger;
@@ -53,9 +45,7 @@ import javax.ws.rs.BadRequestException;
 import javax.ws.rs.ForbiddenException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -77,13 +67,6 @@ public abstract class SearchResource extends RestResource {
         this.searches = searches;
         this.clusterConfigService = clusterConfigService;
         this.decoratorProcessor = decoratorProcessor;
-    }
-
-    protected void validateInterval(String interval) {
-        if (!SearchUtils.validateInterval(interval)) {
-            LOG.warn("Invalid interval type <{}>. Returning HTTP 400.", interval);
-            throw new BadRequestException("Invalid interval type: " + interval + "\"");
-        }
     }
 
     protected List<String> parseFields(String fields) {
@@ -111,63 +94,6 @@ public abstract class SearchResource extends RestResource {
         }
 
         return fieldList;
-    }
-
-    protected org.graylog2.indexer.results.FieldStatsResult fieldStats(String field, String query, String filter,
-                                                                       org.graylog2.plugin.indexer.searches.timeranges.TimeRange timeRange) {
-        try {
-            return searches.fieldStats(field, query, filter, timeRange);
-        } catch (FieldTypeException e) {
-            try {
-                LOG.debug("Stats query failed, make sure that field [{}] is a numeric type. Retrying without numeric statistics to calculate the field's cardinality.", field);
-                return searches.fieldStats(field, query, filter, timeRange, true, false, true);
-            } catch (FieldTypeException e1) {
-                LOG.error("Retrieving field statistics for field {} failed while calculating the cardinality. Cause: {}", field, ExceptionUtils.getRootCauseMessage(e1));
-                throw new BadRequestException("Field " + field + " is not of a numeric type and the cardinality could not be calculated either.", e1);
-            }
-        }
-    }
-
-    protected org.graylog2.indexer.results.HistogramResult fieldHistogram(String field,
-                                                                          String query,
-                                                                          String interval,
-                                                                          String filter,
-                                                                          org.graylog2.plugin.indexer.searches.timeranges.TimeRange timeRange,
-                                                                          boolean includeCardinality) {
-        try {
-            return searches.fieldHistogram(
-                    query,
-                    field,
-                    Searches.DateHistogramInterval.valueOf(interval),
-                    filter,
-                    timeRange,
-                    true,
-                    includeCardinality);
-        } catch (FieldTypeException e) {
-            try {
-                LOG.debug("Field histogram query failed. Make sure that field [{}] is a numeric type. Retrying without numerical statistics.", field);
-                return searches.fieldHistogram(
-                        query,
-                        field,
-                        Searches.DateHistogramInterval.valueOf(interval),
-                        filter,
-                        timeRange,
-                        false,
-                        true);
-            } catch (FieldTypeException e1) {
-                final String msg = "Field histogram for field [" + field + "] failed while calculating its cardinality.";
-                LOG.error(msg, ExceptionUtils.getRootCauseMessage(e1));
-                throw new BadRequestException(msg, e1);
-            }
-        }
-    }
-
-    protected TermsResult buildTermsResult(org.graylog2.indexer.results.TermsResult tr) {
-        return TermsResult.create(tr.tookMs(), tr.getTerms(), tr.termsMapping(), tr.getMissing(), tr.getOther(), tr.getTotal(), tr.getBuiltQuery());
-    }
-
-    protected TermsStatsResult buildTermsStatsResult(org.graylog2.indexer.results.TermsStatsResult tr) {
-        return TermsStatsResult.create(tr.tookMs(), tr.getResults(), tr.getBuiltQuery());
     }
 
     protected SearchResponse buildSearchResponse(SearchResult sr,
@@ -209,23 +135,6 @@ public abstract class SearchResource extends RestResource {
             .collect(Collectors.toList());
     }
 
-    protected FieldStatsResult buildFieldStatsResult(org.graylog2.indexer.results.FieldStatsResult sr) {
-        return FieldStatsResult.create(
-            sr.tookMs(), sr.getCount(), sr.getSum(), sr.getSumOfSquares(), sr.getMean(),
-            sr.getMin(), sr.getMax(), sr.getVariance(), sr.getStdDeviation(), sr.getBuiltQuery(), sr.getCardinality());
-
-    }
-
-    protected HistogramResult buildHistogramResult(org.graylog2.indexer.results.HistogramResult histogram) {
-        final AbsoluteRange histogramBoundaries = histogram.getHistogramBoundaries();
-        return HistogramResult.create(
-            histogram.getInterval().toString().toLowerCase(Locale.ENGLISH),
-            histogram.getResults(),
-            histogram.tookMs(),
-            histogram.getBuiltQuery(),
-            TimeRange.create(histogramBoundaries.getFrom(), histogramBoundaries.getTo()));
-    }
-
     protected Sorting buildSorting(String sort) {
         if (isNullOrEmpty(sort)) {
             return Sorting.DEFAULT;
@@ -239,11 +148,11 @@ public abstract class SearchResource extends RestResource {
         }
     }
 
-    protected ChunkedOutput<ScrollResult.ScrollChunk> buildChunkedOutput(final ScrollResult scroll, int limit) {
+    protected ChunkedOutput<ScrollResult.ScrollChunk> buildChunkedOutput(final ScrollResult scroll) {
         final ChunkedOutput<ScrollResult.ScrollChunk> output = new ChunkedOutput<>(ScrollResult.ScrollChunk.class);
 
         LOG.debug("[{}] Scroll result contains a total of {} messages", scroll.getQueryHash(), scroll.totalHits());
-        Runnable scrollIterationAction = createScrollChunkProducer(scroll, output, limit);
+        Runnable scrollIterationAction = createScrollChunkProducer(scroll, output);
         // TODO use a shared executor for async responses here instead of a single thread that's not limited
         new Thread(scrollIterationAction).start();
         return output;
@@ -279,39 +188,27 @@ public abstract class SearchResource extends RestResource {
     }
 
     protected Runnable createScrollChunkProducer(final ScrollResult scroll,
-                                                 final ChunkedOutput<ScrollResult.ScrollChunk> output,
-                                                 final int limit) {
-        return new Runnable() {
-            private int collectedHits = 0;
-
-            @Override
-            public void run() {
-                try {
-                    ScrollResult.ScrollChunk chunk = scroll.nextChunk();
-                    while (chunk != null) {
-                        LOG.debug("[{}] Writing scroll chunk with {} messages",
-                            scroll.getQueryHash(),
-                            chunk.getMessages().size());
-                        if (output.isClosed()) {
-                            LOG.debug("[{}] Client connection is closed, client disconnected. Aborting scroll.",
-                                scroll.getQueryHash());
-                            scroll.cancel();
-                            return;
-                        }
-                        output.write(chunk);
-                        collectedHits += chunk.getMessages().size();
-                        if (limit != 0 && collectedHits >= limit) {
-                            scroll.cancel();
-                            output.close();
-                            return;
-                        }
-                        chunk = scroll.nextChunk();
+                                                 final ChunkedOutput<ScrollResult.ScrollChunk> output) {
+        return () -> {
+            try {
+                ScrollResult.ScrollChunk chunk = scroll.nextChunk();
+                while (chunk != null) {
+                    LOG.debug("[{}] Writing scroll chunk with {} messages",
+                        scroll.getQueryHash(),
+                        chunk.getMessages().size());
+                    if (output.isClosed()) {
+                        LOG.debug("[{}] Client connection is closed, client disconnected. Aborting scroll.",
+                            scroll.getQueryHash());
+                        scroll.cancel();
+                        return;
                     }
-                    LOG.debug("[{}] Reached end of scroll result.", scroll.getQueryHash());
-                    output.close();
-                } catch (IOException e) {
-                    LOG.warn("[{}] Could not close chunked output stream for query scroll.", scroll.getQueryHash());
+                    output.write(chunk);
+                    chunk = scroll.nextChunk();
                 }
+                LOG.debug("[{}] Reached end of scroll result.", scroll.getQueryHash());
+                output.close();
+            } catch (IOException e) {
+                LOG.warn("[{}] Could not close chunked output stream for query scroll.", scroll.getQueryHash());
             }
         };
     }
@@ -331,12 +228,5 @@ public abstract class SearchResource extends RestResource {
         }
 
         return AbsoluteRange.create(from, to);
-    }
-
-    protected List<String> splitStackedFields(String stackedFieldsParam) {
-        if (stackedFieldsParam == null || stackedFieldsParam.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Splitter.on(',').trimResults().omitEmptyStrings().splitToList(stackedFieldsParam);
     }
 }

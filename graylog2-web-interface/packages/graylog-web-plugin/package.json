@@ -1,6 +1,6 @@
 {
   "name": "graylog-web-plugin",
-  "version": "3.3.0-beta.2-SNAPSHOT",
+  "version": "4.1.0-SNAPSHOT",
   "description": "Helper code for streamlining Graylog web interface plugin development",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "preparebuild": "yarn install --ignore-scripts",
     "compile": "yarn run preparebuild && yarn run build",
     "prepublish": "yarn run compile",
-    "preinstall": "test -d src/ && yarn run compile || echo \"src\" folder missing, skipping preinstall"
+    "preinstall": "test -d src/ && yarn run compile"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
     "plugin"
   ],
   "author": "Graylog, Inc. <hello@graylog.com>",
-  "license": "MIT",
+  "license": "SSPL-1.0",
   "bugs": {
     "url": "https://github.com/Graylog2/graylog-web-plugin/issues"
   },
@@ -33,33 +33,41 @@
     "plugin.js",
     "README.md"
   ],
+  "eslintConfig": {
+    "extends": "graylog"
+  },
   "dependencies": {
-    "@babel/preset-env": "7.9.5",
-    "babel-eslint": "9.0.0",
+    "@babel/preset-env": "7.13.10",
+    "@babel/preset-typescript": "7.13.0",
+    "create-react-class": "15.7.0",
     "eslint-config-graylog": "file:../eslint-config-graylog",
-    "html-webpack-plugin": "^3.2.0",
+    "formik": "2.2.6",
+    "html-webpack-plugin": "^4.2.0",
     "javascript-natural-sort": "0.7.1",
-    "jquery": "3.4.1",
-    "moment": "2.24.0",
-    "moment-timezone": "0.5.28",
+    "jest-preset-graylog": "file:../jest-preset-graylog",
+    "jquery": "3.5.1",
+    "moment": "2.29.1",
+    "moment-timezone": "0.5.31",
     "prop-types": "15.7.2",
     "react": "16.13.1",
-    "react-addons-pure-render-mixin": "15.6.2",
     "react-bootstrap": "0.33.1",
     "react-dom": "16.13.1",
-    "react-router": "3.2.1",
-    "react-router-bootstrap": "0.23.2",
+    "react-query": "3.13.10",
+    "react-router": "5.2.0",
+    "react-router-bootstrap": "0.25.0",
+    "react-router-dom": "5.2.0",
     "reflux": "0.2.13",
-    "styled-components": "4.4.1",
-    "styled-theming": "2.2.0",
-    "webpack": "4.43.0",
+    "styled-components": "5.2.3",
+    "stylelint-config-graylog": "file:../stylelint-config-graylog",
+    "typescript": "4.2.3",
+    "webpack": "4.44.2",
     "webpack-cleanup-plugin": "0.5.1",
-    "webpack-cli": "3.3.11",
+    "webpack-cli": "3.3.12",
     "webpack-merge": "4.2.2"
   },
   "devDependencies": {
-    "@babel/cli": "^7.8.0",
-    "@babel/core": "^7.8.7",
+    "@babel/cli": "7.13.10",
+    "@babel/core": "7.13.10",
     "babel-plugin-add-module-exports": "^1.0.2"
   }
 }

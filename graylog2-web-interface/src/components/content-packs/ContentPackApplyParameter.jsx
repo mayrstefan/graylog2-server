@@ -1,12 +1,28 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import { findIndex } from 'lodash';
+import naturalSort from 'javascript-natural-sort';
 
 import { Row, Col, Button } from 'components/graylog';
 import { Input } from 'components/bootstrap';
 import DataTable from 'components/common/DataTable';
 import ValueReferenceData from 'util/ValueReferenceData';
-import naturalSort from 'javascript-natural-sort';
 
 import Style from './ContentPackApplyParameter.css';
 
@@ -41,6 +57,7 @@ class ContentPackApplyParameter extends React.Component {
     const lastCol = enableClear
       ? <td><Button bsStyle="info" bsSize="small" onClick={() => { this._parameterClear(paramMap.configKey); }}>Clear</Button></td>
       : <td />;
+
     return (
       <tr key={paramMap.configKey}>
         <td>{paramMap.configKey}</td>
@@ -52,6 +69,7 @@ class ContentPackApplyParameter extends React.Component {
 
   _bindValue = (event) => {
     const newValue = {};
+
     newValue[event.target.name] = event.target.value;
     this.setState(newValue);
   };
@@ -62,15 +80,19 @@ class ContentPackApplyParameter extends React.Component {
 
   _applyParameter = (e) => {
     e.preventDefault();
+
     if (!this._valuesSelected()) {
       return;
     }
+
     const configKeyIndex = this.props.appliedParameter.findIndex((appliedParameter) => {
       return appliedParameter.configKey === this.state.config_key;
     });
+
     if (configKeyIndex >= 0) {
       return;
     }
+
     this.props.onParameterApply(this.state.config_key, this.state.parameter);
     this.setState({ config_key: '', parameter: '' });
   };
@@ -95,15 +117,20 @@ class ContentPackApplyParameter extends React.Component {
     const configOptions = [emptyOption('Choose Config Key')].concat(configKeys.map((key) => <option key={key} value={key}>{key}</option>));
     let { parameters } = this.props;
     let emptyName = parameters.length <= 0 ? 'Create a parameter first' : 'Choose...';
+
     if (this.state.config_key !== '' && parameters.length > 0) {
       const configKeyType = configPaths[this.state.config_key].getValueType();
+
       if (['string', 'integer', 'boolean', 'double'].findIndex((type) => type === configKeyType) >= 0) {
         parameters = parameters.filter((parameter) => parameter.type === configKeyType);
       }
+
       emptyName = parameters.length <= 0 ? `No parameter from type ${configKeyType}` : 'Choose...';
     }
+
     const parameterOptions = [emptyOption(emptyName)]
       .concat(parameters.map((key) => <option key={key.name} value={key.name}>{key.title} ({key.name})</option>));
+
     return (
       <div>
         <form className="apply-parameter-form" id="apply-parameter-form" onSubmit={this._applyParameter}>

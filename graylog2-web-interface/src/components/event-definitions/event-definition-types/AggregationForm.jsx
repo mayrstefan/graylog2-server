@@ -1,11 +1,28 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import React from 'react';
 import PropTypes from 'prop-types';
 import lodash from 'lodash';
+
 import { Col, ControlLabel, FormGroup, HelpBlock, Row } from 'components/graylog';
 
+// TODO: This should be moved to a general place outside of `views`
+import { defaultCompare } from 'views/logic/DefaultCompare';
 import { MultiSelect } from 'components/common';
-
-import { naturalSortIgnoreCase } from 'util/SortUtils';
 
 import AggregationConditionsForm from './AggregationConditionsForm';
 
@@ -16,7 +33,7 @@ class AggregationForm extends React.Component {
   formatFields = lodash.memoize(
     (fieldTypes) => {
       return fieldTypes
-        .sort((ftA, ftB) => naturalSortIgnoreCase(ftA.name, ftB.name))
+        .sort((ftA, ftB) => defaultCompare(ftA.name, ftB.name))
         .map((fieldType) => {
           return {
             label: `${fieldType.name} – ${fieldType.value.type.type}`,
@@ -38,6 +55,7 @@ class AggregationForm extends React.Component {
   propagateConfigChange = (update) => {
     const { eventDefinition, onChange } = this.props;
     const nextConfig = { ...eventDefinition.config, ...update };
+
     onChange('config', nextConfig);
   };
 
@@ -64,6 +82,7 @@ class AggregationForm extends React.Component {
                            matchProp="label"
                            onChange={(selected) => this.handleGroupByChange(selected === '' ? [] : selected.split(','))}
                            options={formattedFields}
+                           ignoreAccents={false}
                            value={lodash.defaultTo(eventDefinition.config.group_by, []).join(',')}
                            allowCreate />
               <HelpBlock>

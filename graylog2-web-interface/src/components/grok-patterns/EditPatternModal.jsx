@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2020 Graylog, Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the Server Side Public License, version 1,
+ * as published by MongoDB, Inc.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * Server Side Public License for more details.
+ *
+ * You should have received a copy of the Server Side Public License
+ * along with this program. If not, see
+ * <http://www.mongodb.com/licensing/server-side-public-license>.
+ */
 import PropTypes from 'prop-types';
 import React from 'react';
 
@@ -43,7 +59,6 @@ class EditPatternModal extends React.Component {
     };
   }
 
-
   openModal = () => {
     this.modal.open();
   };
@@ -81,6 +96,7 @@ class EditPatternModal extends React.Component {
     const { create } = this.props;
 
     this._closeModal();
+
     if (create) {
       this.setState({ name: '', pattern: '', sampleData: '', test_result: '' });
     }
@@ -101,6 +117,7 @@ class EditPatternModal extends React.Component {
 
     if (name === '' || pattern === '') {
       this.setState({ error: true, error_message: 'To test the pattern a name and a pattern must be given!' });
+
       return;
     }
 
@@ -126,11 +143,13 @@ class EditPatternModal extends React.Component {
     } = this.state;
 
     let triggerButtonContent;
+
     if (create) {
       triggerButtonContent = 'Create pattern';
     } else {
       triggerButtonContent = <span>Edit</span>;
     }
+
     return (
       <span>
         <Button onClick={this.openModal}
